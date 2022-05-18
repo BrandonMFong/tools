@@ -1,21 +1,34 @@
 #!/bin/bash
 
 result=0;
-commandString=$1;
-inputKey=$2;
-inputFile=$3;
-outputFile=$4;
+COMMAND=$1;
+INPUT_KEY=$2;
+INPUT_FILE=$3;
+OUTPUT_FILE=$4;
+SCRIPT_NAME=$(basename "$0");
+ENCRYPT_ARG="encrypt";
+DECRYPT_ARG="decrypt";
+GENKEYS_ARG="genkeys";
+
+function Help() {
+	printf "usage: $SCRIPT_NAME <cmd>\n";
+
+	printf "commands: \n";
+	printf "\t$ENCRYPT_ARG <public key> <input file> <output file>\n";
+	printf "\t$DECRYPT_ARG <private key> <input file> <output file>\n";
+	printf "\t$GENKEYS_ARG - Generates rsa keys\n";
+}
 
 function Encrypt() {
 	if [ $result -eq 0 ]; then
-		openssl rsautl -encrypt -inkey $inputKey -pubin -in $inputFile -out $outputFile;
+		openssl rsautl -encrypt -inkey $INPUT_KEY -pubin -in $INPUT_FILE -out $OUTPUT_FILE;
 		result=$?;
 	fi 
 }
 
 function Decrypt() {
 	if [ $result -eq 0 ]; then 
-		openssl rsautl -decrypt -inkey $inputKey -in $inputFile > $outputFile;
+		openssl rsautl -decrypt -inkey $INPUT_KEY -in $INPUT_FILE > $OUTPUT_FILE;
 		result=$?;
 	fi
 }
@@ -43,12 +56,14 @@ function main() {
 
 	# If openssl exists, then we will continue with the process!
 	if [ $result -eq 0 ]; then 
-		if [[ $commandString == "encrypt" ]]; then
+		if [[ $COMMAND == "$ENCRYPT_ARG" ]]; then
 		       Encrypt;	
-		elif [[ $commandString == "decrypt" ]]; then
+		elif [[ $COMMAND == "$DECRYPT_ARG" ]]; then
 		       Decrypt;	
-		elif [[ $commandString == "genkeys" ]]; then 
+		elif [[ $COMMAND == "$GENKEYS_ARG" ]]; then 
 			GenerateKeys;
+		else 
+			Help;
 		fi
 	fi 
 }
