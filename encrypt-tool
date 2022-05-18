@@ -9,6 +9,7 @@ SCRIPT_NAME=$(basename "$0");
 ENCRYPT_ARG="encrypt";
 DECRYPT_ARG="decrypt";
 GENKEYS_ARG="genkeys";
+PUB2PEM_ARG="pub2pem";
 
 function Help() {
 	printf "usage: $SCRIPT_NAME <cmd>\n";
@@ -17,6 +18,7 @@ function Help() {
 	printf "\t$ENCRYPT_ARG <public key> <input file> <output file>\n";
 	printf "\t$DECRYPT_ARG <private key> <input file> <output file>\n";
 	printf "\t$GENKEYS_ARG - Generates rsa keys\n";
+	printf "\t$PUB2PEM_ARG <public key> - Converts public key created by 'ssh-keygen' to 'openssl' format (which is what we need)\n";
 }
 
 function Encrypt() {
@@ -46,6 +48,21 @@ function GenerateKeys() {
 
 }
 
+function ConvertPub2Pem() {
+	if [ $result -eq 0 ]; then 
+		which ssh-keygen >/dev/null 2>&1;
+
+		if [ $? -ne 0 ]; then 
+			printf "ssh-keygen does not exist!\n";
+			result=1;
+		fi 
+	fi
+
+	if [ $result -eq 0 ]; then 
+		ssh-keygen -f $INPUT_KEY -m 'PEM' -e > "$(basename $INPUT_KEY)".pem
+	fi 
+}
+
 function main() {
 	which openssl >/dev/null 2>&1;
 
@@ -62,6 +79,8 @@ function main() {
 		       Decrypt;	
 		elif [[ $COMMAND == "$GENKEYS_ARG" ]]; then 
 			GenerateKeys;
+		elif [[ $COMMAND == "$PUB2PEM_ARG" ]]; then 
+			ConvertPub2Pem;
 		else 
 			Help;
 		fi
