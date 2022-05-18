@@ -1,0 +1,58 @@
+#!/bin/bash
+
+result=0;
+commandString=$1;
+inputKey=$2;
+inputFile=$3;
+outputFile=$4;
+
+function Encrypt() {
+	if [ $result -eq 0 ]; then
+		openssl rsautl -encrypt -inkey $inputKey -pubin -in $inputFile -out $outputFile;
+		result=$?;
+	fi 
+}
+
+function Decrypt() {
+	if [ $result -eq 0 ]; then 
+		openssl rsautl -decrypt -inkey $inputKey -in $inputFile > $outputFile;
+		result=$?;
+	fi
+}
+
+function GenerateKeys() {
+	if [ $result -eq 0 ]; then 
+		openssl genrsa -out private.key 1024;
+		result=$?;
+	fi
+
+	if [ $result -eq 0 ]; then 	
+		openssl rsa -in private.key -pubout -out public.key; 
+		result=$?;
+	fi
+
+}
+
+function main() {
+	which openssl >/dev/null 2>&1;
+
+	if [ $? -ne 0 ]; then 
+		result=1;
+		printf "Openssl does not exist on your system\n";
+	fi 
+
+	# If openssl exists, then we will continue with the process!
+	if [ $result -eq 0 ]; then 
+		if [[ $commandString == "encrypt" ]]; then
+		       Encrypt;	
+		elif [[ $commandString == "decrypt" ]]; then
+		       Decrypt;	
+		elif [[ $commandString == "genkeys" ]]; then 
+			GenerateKeys;
+		fi
+	fi 
+}
+
+main;
+
+exit $result;
