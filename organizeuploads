@@ -1,0 +1,102 @@
+#!/usr/bin/env python3.10
+"""
+organizeupldoates
+=================
+Sorts all photos in the upload folder into their respective folders
+"""
+__author__ = "Brando"
+
+import os
+import sys
+import time as t
+
+## Variables Start
+
+photoDir 		= "/home/brandonmfong/brando/volumes/blaq/media"
+destFolderFormat 	= "/%Y-%m"
+uploadFolderName	= "/upload2"
+
+## Variables End
+
+def Organize(uploads):
+	"""
+	Organize
+	================
+	Takes each path in the uploads list and organizes them into their
+	own folder
+	"""
+	result = True
+
+	for path in uploads:
+		# Get last modification time for the file
+		time = os.path.getmtime(path)
+
+		# Get the folder path
+		dest 	= str()
+		tStruct = t.gmtime(time)
+		if tStruct is not None:
+			dest = photoDir + t.strftime(destFolderFormat, tStruct)
+		else:
+			result = False
+			print("Error getting time struct_time variable for path", path)
+			break
+
+		# If the destination does not exist then we will create the folder
+		if os.path.exists(dest) is False:
+			print("Creating new folder:", dest)
+
+			os.mkdir(dest)
+			result = os.path.exists(dest)
+
+			if result is False:
+				print("Could not create path", dest)
+				break
+
+		# Construct destination path
+		dest += "/" + os.path.basename(path)
+
+		print("'{s}' => '{d}'".format(s=path, d=dest))
+
+		# Change the current path name to the destination name to simulate a move
+		os.rename(path, dest)
+		if os.path.exists(dest) is False:
+			print("Could not move '{s}' to '{d}'".format(s=path, d=dest))
+
+	return result
+
+def main():
+	success 	= True
+	allUploadItems 	= list()
+
+	uploadDir 	= photoDir + uploadFolderName
+	success 	= os.path.exists(uploadDir)
+	if success is False:
+		print(uploadDir, "does not exist")
+
+	if success:
+		dirContent = os.listdir(uploadDir)
+
+		for item in dirContent:
+			path = uploadDir + "/" + item
+
+			if os.path.exists(path):
+				allUploadItems.append(path)
+			else:
+				success = False
+				print("Path", path, "does not exist")
+				print("There may be an error with concatenating paths")
+
+	if success:
+		if len(allUploadItems) > 0:
+			success = Organize(allUploadItems)
+		else:
+			print("No uploads to work with!")
+
+	if success:
+		sys.exit(0)
+	else:
+		print("Failed organizing uploads to their folders")
+		sys.exit(1)
+
+if __name__ == "__main__":
+	main()
