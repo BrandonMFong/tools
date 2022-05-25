@@ -149,7 +149,7 @@ int main(int argc, char * argv[]) {
 
 	// Display size
 	if (!result) {
-
+		result = PrintSize(size);
 	}
 	
 	return result;
@@ -173,6 +173,7 @@ unsigned long long CalculateFileSize(const char * path, int * error) {
 
 int PrintSize(unsigned long long byteSize) {
 	int result = 0;
-
+	
+	printf("%llu\n", byteSize);
 	return result;
 }
