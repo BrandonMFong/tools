@@ -10,13 +10,30 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 
+// MACROS
+
 #define PATH_MAX 4096
 
-char SCRIPT_ARG[PATH_MAX];
-char PATH_ARG[PATH_MAX];
+// CONSTANTS
 
-int CalculateDirectorySize(void);
-int CalculateFileSize(void);
+char SCRIPT_ARG[PATH_MAX];
+
+// PROTOTYPES
+
+int CalculateDirectorySize(int * error);
+
+/**
+ * Calculates the file size of the path  
+ */
+unsigned long long CalculateFileSize(const char * path, int * error);
+
+/**
+ * Prints the byteSize value into a format that represents
+ * a comprehensible byte format
+ */
+int PrintSize(unsigned long long byteSize);
+
+// FUNCTIONS
 
 /**
  * Prints std help
@@ -76,6 +93,8 @@ bool IsDirectory(const char * path) {
 int main(int argc, char * argv[]) {
 	int result = 0;
 	char * buf = 0;
+	unsigned long long size = 0;
+	char path[PATH_MAX];
 
 	buf = basename(argv[0]);
 	
@@ -98,9 +117,9 @@ int main(int argc, char * argv[]) {
 			Help();
 			result = 1;
 		} else {
-			strcpy(PATH_ARG, argv[1]);
+			strcpy(path, argv[1]);
 
-			if (!strlen(PATH_ARG)) {
+			if (!strlen(path)) {
 				result = 1;
 				Error("Arg 1 is empty");
 				Help();
@@ -110,27 +129,49 @@ int main(int argc, char * argv[]) {
 	
 	// Make sure the path the user provided exists
 	if (!result) {
-		if (!PathExists(PATH_ARG)) {
-			Error("Path '%s' does not exist!", PATH_ARG);
+		if (!PathExists(path)) {
+			Error("Path '%s' does not exist!", path);
 		}	
 	}
 
 	// Check what type of path this is
 	if (!result) {
-		if (IsFile(PATH_ARG)) {
+		if (IsFile(path)) {
 			printf("Path is a file\n");
-		} else if (IsDirectory(PATH_ARG)) {
+			size = CalculateFileSize(path, &result);
+		} else if (IsDirectory(path)) {
 			printf("Path is a directory\n");
 		} else {
 			result = 1;
-			Error("Unknown file type for '%s'", PATH_ARG);
+			Error("Unknown file type for '%s'", path);
 		}
+	}
+
+	// Display size
+	if (!result) {
+
 	}
 	
 	return result;
 }
 
-int CalculateFileSize(void) {
+unsigned long long CalculateFileSize(const char * path, int * error) {
+	unsigned long long result = 0;
+	struct stat buf;
+	
+	if (!stat(path, &buf)) {
+		result = buf.st_size;
+	} else {
+		if (error != 0) {
+			*error = 1;
+			Error("Error attempting to calculate file size for: %s", path);
+		}
+	}
+
+	return result;
+}
+
+int PrintSize(unsigned long long byteSize) {
 	int result = 0;
 
 	return result;
