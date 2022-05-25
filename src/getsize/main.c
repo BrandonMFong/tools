@@ -50,6 +50,26 @@ bool PathExists(const char * path) {
 	return (stat(path, &buffer) == 0);
 }
 
+bool IsFile(const char * path) {
+	struct stat buf;
+
+	if (stat(path, &buf)) {
+		return false;
+	} else {
+		return S_ISREG(buf.st_mode);
+	}
+}
+
+bool IsDirectory(const char * path) {
+	struct stat buf;
+
+	if (stat(path, &buf)) {
+		return false;
+	} else {
+		return S_ISDIR(buf.st_mode);
+	}
+}
+
 int main(int argc, char * argv[]) {
 	int result = 0;
 	char * buf = 0;
@@ -93,7 +113,14 @@ int main(int argc, char * argv[]) {
 	}
 
 	if (!result) {
-
+		if (IsFile(PATH_ARG)) {
+			printf("Path is a file\n");
+		} else if (IsDirectory(PATH_ARG)) {
+			printf("Path is a directory\n");
+		} else {
+			result = 1;
+			Error("Unknown file type for '%s'", PATH_ARG);
+		}
 	}
 	
 	return result;
