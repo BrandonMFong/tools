@@ -15,10 +15,16 @@
 char SCRIPT_ARG[PATH_MAX];
 char PATH_ARG[PATH_MAX];
 
+/**
+ * Prints std help
+ */
 void Help() {
 	printf("usage: %s <path>\n", SCRIPT_ARG);
 }
 
+/**
+ * Prints std error
+ */
 void Error(const char * format, ...) {
 	const int logSize = 1024;
 	char logString[logSize];
@@ -36,6 +42,9 @@ void Error(const char * format, ...) {
 	printf("Error: %s\n", logString);
 }
 
+/**
+ * Tests if path exists
+ */
 bool PathExists(const char * path) {
 	struct stat buffer;
 	return (stat(path, &buffer) == 0);
@@ -75,9 +84,16 @@ int main(int argc, char * argv[]) {
 			}
 		}
 	}
+	
+	// Make sure the path the user provided exists
+	if (!result) {
+		if (!PathExists(PATH_ARG)) {
+			Error("Path '%s' does not exist!", PATH_ARG);
+		}	
+	}
 
 	if (!result) {
-		
+
 	}
 	
 	return result;
