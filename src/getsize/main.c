@@ -7,6 +7,8 @@
 #include <string.h>
 #include <stdarg.h>
 #include <libgen.h>
+#include <stdbool.h>
+#include <sys/stat.h>
 
 #define PATH_MAX 4096
 
@@ -32,6 +34,11 @@ void Error(const char * format, ...) {
 	va_end(args);
 
 	printf("Error: %s\n", logString);
+}
+
+bool PathExists(const char * path) {
+	struct stat buffer;
+	return (stat(path, &buffer) == 0);
 }
 
 int main(int argc, char * argv[]) {
