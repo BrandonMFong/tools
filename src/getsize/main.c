@@ -14,6 +14,11 @@
 
 #define PATH_MAX 4096
 
+#define KILOBYTE 1024
+#define MEGABYTE KILOBYTE * 1024
+#define GIGABYTE MEGABYTE * 1024
+#define TERABYTE GIGABYTE * 1024
+
 // CONSTANTS
 
 char SCRIPT_ARG[PATH_MAX];
@@ -172,8 +177,20 @@ unsigned long long CalculateFileSize(const char * path, int * error) {
 }
 
 int PrintSize(unsigned long long byteSize) {
-	int result = 0;
+	char unit[10];
+	double value = 0.0;
+
+	// Byte
+	if (byteSize % KILOBYTE) {
+		if (byteSize == 1) {
+			strcpy(unit, "byte");
+		} else {
+			strcpy(unit, "bytes");
+		}
+
+		value = byteSize;
+	}	
 	
 	printf("%llu\n", byteSize);
-	return result;
+	return 0;
 }
