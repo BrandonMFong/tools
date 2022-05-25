@@ -13,11 +13,11 @@
 char SCRIPT_ARG[PATH_MAX];
 char PATH_ARG[PATH_MAX];
 
-void help() {
+void Help() {
 	printf("usage: %s <path>\n", SCRIPT_ARG);
 }
 
-void error(const char * format, ...) {
+void Error(const char * format, ...) {
 	const int logSize = 1024;
 	char logString[logSize];
 	va_list args;
@@ -43,27 +43,34 @@ int main(int argc, char * argv[]) {
 	strcpy(SCRIPT_ARG, buf);
 	if (!strlen(SCRIPT_ARG)) {
 		result = 1;
-		error("There was a problemt with the first argument");
+		Error("There was a problemt with the first argument");
 	}
-
+	
+	// Get the second argument
+	// 
+	// Should be the path to a file
 	if (!result) {
 		if (argc < 2) {
-			error("Too few arguments\n");
-			help();
+			Error("Too few arguments\n");
+			Help();
 			result = 1;
 		} else if (argc > 2) {
-			error("Too many arguments\n");
-			help();
+			Error("Too many arguments\n");
+			Help();
 			result = 1;
 		} else {
 			strcpy(PATH_ARG, argv[1]);
 
 			if (!strlen(PATH_ARG)) {
 				result = 1;
-				error("Arg 1 is empty");
-				help();
+				Error("Arg 1 is empty");
+				Help();
 			}
 		}
+	}
+
+	if (!result) {
+		
 	}
 	
 	return result;
