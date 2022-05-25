@@ -15,6 +15,9 @@
 char SCRIPT_ARG[PATH_MAX];
 char PATH_ARG[PATH_MAX];
 
+int CalculateDirectorySize(void);
+int CalculateFileSize(void);
+
 /**
  * Prints std help
  */
@@ -112,6 +115,7 @@ int main(int argc, char * argv[]) {
 		}	
 	}
 
+	// Check what type of path this is
 	if (!result) {
 		if (IsFile(PATH_ARG)) {
 			printf("Path is a file\n");
@@ -123,5 +127,11 @@ int main(int argc, char * argv[]) {
 		}
 	}
 	
+	return result;
+}
+
+int CalculateFileSize(void) {
+	int result = 0;
+
 	return result;
 }
