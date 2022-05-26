@@ -146,7 +146,6 @@ int main(int argc, char * argv[]) {
 	// Check what type of path this is
 	if (!result) {
 		if (IsFile(path)) {
-			printf("Path is a file\n");
 			size = CalculateFileSize(path, &result);
 		} else if (IsDirectory(path)) {
 			printf("Path is a directory\n");
@@ -180,34 +179,53 @@ unsigned long long CalculateFileSize(const char * path, int * error) {
 	return result;
 }
 
+/**
+ * Converts the value to the level specified by regulation
+ */
+double Regulate(unsigned long long value, long long regulation) {
+	double result = 0, d1 = 0;
+
+	result = value / regulation;
+	d1 = (value % regulation);
+
+	result += (d1 / regulation);
+
+	return result;
+}
+
 int PrintSize(unsigned long long byteSize) {
 	char unit[10];
 	double value = 0.0, d1 = 0.0;
+	long long byteLength = 0;
 
 	strcpy(unit, ""); // init 
 
-	// MegaByte
-	if (byteSize > MEGABYTE) {
-		value = byteSize / MEGABYTE;
-		d1 = (byteSize % MEGABYTE);
+	// Byte
+	// 
+	// Default
+	value = byteSize;
+	strcpy(unit, "b");
 
-		value += (d1 / MEGABYTE);
+	
+	// GigaByte
+	if (byteSize > GIGABYTE) {
+
+	// MegaByte
+	} if (byteSize > MEGABYTE) {
+		//value = byteSize / MEGABYTE;
+		//d1 = (byteSize % MEGABYTE);
+
+		//value += (d1 / MEGABYTE);
+		value = Regulate(byteSize, MEGABYTE);
 		strcpy(unit, "gb");
 	// KiloByte
 	} else if (byteSize > KILOBYTE) {
-		value = byteSize / KILOBYTE;
-		d1 = (byteSize % KILOBYTE);
+		//value = byteSize / KILOBYTE;
+		//d1 = (byteSize % KILOBYTE);
 
-		value += (d1 / KILOBYTE);
+		//value += (d1 / KILOBYTE);
+		value = Regulate(byteSize, KILOBYTE);
 		strcpy(unit, "kb");
-	// Byte
-	} else {
-		value = byteSize;
-		if (value == 1) {
-			strcpy(unit, "byte");
-		} else {
-			strcpy(unit, "bytes");
-		}
 	}
 	
 	printf("%.2f %s\n", value, unit);
