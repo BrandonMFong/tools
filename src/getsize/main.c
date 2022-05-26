@@ -57,6 +57,9 @@ int PrintSize(unsigned long long byteSize);
  */
 void Help() {
 	printf("usage: %s <path>\n", SCRIPT_ARG);
+
+	printf("\nArguments:\n");
+	printf("\t<path> : Can be absolute or relative.  Cannot be a symbolic link\n");
 }
 
 /**
@@ -146,7 +149,6 @@ int main(int argc, char * argv[]) {
 	// Should be the path to a file
 	if (!result) {
 		if (argc < 2) {
-			Error("Too few arguments\n");
 			Help();
 			result = 1;
 		} else if (argc > 2) {
