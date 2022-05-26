@@ -3,8 +3,6 @@
  * date: 5/1/2022
  *
  * Checklist:
- * 	[] Do file 
- * 	[] Do directory
  */
 
 // INCLUDES 
@@ -29,10 +27,16 @@
 
 // CONSTANTS
 
+/**
+ * Holds the name of the script
+ */
 char SCRIPT_ARG[PATH_MAX];
 
 // PROTOTYPES
 
+/**
+ * Calculates the directory size recursively
+ */
 unsigned long long CalculateDirectorySize(const char * path, int * error);
 
 /**
@@ -83,6 +87,9 @@ bool PathExists(const char * path) {
 	return (stat(path, &buffer) == 0);
 }
 
+/**
+ * Tests if path is a file
+ */
 bool IsFile(const char * path) {
 	struct stat buf;
 
@@ -93,6 +100,9 @@ bool IsFile(const char * path) {
 	}
 }
 
+/**
+ * Tests if path is a directory
+ */
 bool IsDirectory(const char * path) {
 	struct stat buf;
 
@@ -103,15 +113,29 @@ bool IsDirectory(const char * path) {
 	}
 }
 
+/**
+ * Tests if the path is a symbolic link 
+ */
+bool IsSymbolicLink(const char * path) {
+	struct stat statbuf;
+
+	if (lstat(path, &statbuf)) {
+		return false;
+	} else {
+		return S_ISLNK(statbuf.st_mode);
+	}
+}
+
 int main(int argc, char * argv[]) {
 	int result = 0;
 	char * buf = 0;
 	unsigned long long size = 0;
 	char path[PATH_MAX];
 
+	// Get a copy of the script name 
 	buf = basename(argv[0]);
-	
 	strcpy(SCRIPT_ARG, buf);
+
 	if (!strlen(SCRIPT_ARG)) {
 		result = 1;
 		Error("There was a problemt with the first argument");
@@ -149,11 +173,15 @@ int main(int argc, char * argv[]) {
 	}
 
 	// Check what type of path this is
+	// and if depending of the type, we 
+	// will calculate the total size of it
 	if (!result) {
-		if (IsFile(path)) {
+		if (IsSymbolicLink(path)) {
+			result = 1;
+			Error("Path '%s' is a symbolic link.  We cannot calculate size for sym links", path);
+		} else if (IsFile(path)) {
 			size = CalculateFileSize(path, &result);
 		} else if (IsDirectory(path)) {
-			printf("Path is a directory\n");
 			size = CalculateDirectorySize(path, &result);
 		} else {
 			result = 1;
@@ -183,14 +211,28 @@ unsigned long long CalculateDirectorySize(const char * path, int * err) {
 		error = 1;
 		Error("Could not open directory: '%s'", path);
 	} else {
+		// Go through each item in this directory
 		while ((sdirent = readdir(dir)) && !error) {
 			// We do not want to calculate the size of parent or current dir
 			if (strcmp(sdirent->d_name, "..") && strcmp(sdirent->d_name, ".")) {
+				// We want the full directory path
 				sprintf(tempPath, "%s/%s", path, sdirent->d_name);
-				printf("%s\n", tempPath);
 
-				if (IsDirectory(tempPath)) {
+				size = 0;
+
+				// If we are working with a directory, then we need 
+				// too recursively call this function again 
+				//
+				// If path is not a diretory or a path then we will 
+				// do nothing 
+				//
+				// We will also be ignoring symbolic links 
+				if (IsSymbolicLink(tempPath)) {
+					size = 0;
+				} else if (IsDirectory(tempPath)) {
 					size = CalculateDirectorySize(tempPath, &error);
+				
+				// Otherwise, we will just get the size of this path 
 				} else if (IsFile(tempPath)) {
 					size = CalculateFileSize(tempPath, &error);
 				}
@@ -202,7 +244,7 @@ unsigned long long CalculateDirectorySize(const char * path, int * err) {
 		}
 
 		if (closedir(dir)) {
-			error = 1; 
+			error = !error ? 1 : error; 
 			Error("Could not close directory: '%s'", path);
 		}
 	}
