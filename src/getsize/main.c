@@ -183,31 +183,25 @@ unsigned long long CalculateFileSize(const char * path, int * error) {
 int PrintSize(unsigned long long byteSize) {
 	char unit[10];
 	double value = 0.0;
-	bool done = false;
 
 	strcpy(unit, ""); // init 
 
-	// Default unit 
-	// Byte
-	value = byteSize;
-	if (value == 1) {
-		strcpy(unit, "byte");
-	} else {
-		strcpy(unit, "bytes");
-	}
-
-	// KiloByte
-	if (byteSize < MEGABYTE) {
-		value = byteSize / KILOBYTE;
-		strcpy(unit, "kb");
-		done = true;
-	}
-
 	// MegaByte
-	if (!done && (byteSize < GIGABYTE)) {
+	if (byteSize > MEGABYTE) {
 		value = byteSize / MEGABYTE;
 		strcpy(unit, "gb");
-		done = true;
+	// KiloByte
+	} else if (byteSize > KILOBYTE) {
+		value = byteSize / KILOBYTE;
+		strcpy(unit, "kb");
+	// Byte
+	} else {
+		value = byteSize;
+		if (value == 1) {
+			strcpy(unit, "byte");
+		} else {
+			strcpy(unit, "bytes");
+		}
 	}
 	
 	printf("%.2f %s\n", value, unit);
