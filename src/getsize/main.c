@@ -7,12 +7,16 @@
  * 	[] Do directory
  */
 
+// INCLUDES 
+
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 #include <libgen.h>
 #include <stdbool.h>
 #include <sys/stat.h>
+#include <dirent.h>
+#include <sys/types.h>
 
 // MACROS
 
@@ -29,7 +33,7 @@ char SCRIPT_ARG[PATH_MAX];
 
 // PROTOTYPES
 
-int CalculateDirectorySize(int * error);
+unsigned long long CalculateDirectorySize(const char * path, int * error);
 
 /**
  * Calculates the file size of the path  
@@ -150,6 +154,7 @@ int main(int argc, char * argv[]) {
 			size = CalculateFileSize(path, &result);
 		} else if (IsDirectory(path)) {
 			printf("Path is a directory\n");
+			size = CalculateDirectorySize(path, &result);
 		} else {
 			result = 1;
 			Error("Unknown file type for '%s'", path);
@@ -161,6 +166,48 @@ int main(int argc, char * argv[]) {
 		result = PrintSize(size);
 	}
 	
+	return result;
+}
+
+unsigned long long CalculateDirectorySize(const char * path, int * err) {
+	unsigned long long result = 0;
+	int error = 0;
+	DIR * dir = 0;
+	struct dirent * sdirent = 0;
+	char tempPath[PATH_MAX];
+	unsigned long long size = 0;
+
+	dir = opendir(path);
+	
+	if (dir == 0) {
+		error = 1;
+		Error("Could not open directory: '%s'", path);
+	} else {
+		while ((sdirent = readdir(dir)) && !error) {
+			// We do not want to calculate the size of parent or current dir
+			if (strcmp(sdirent->d_name, "..") && strcmp(sdirent->d_name, ".")) {
+				sprintf(tempPath, "%s/%s", path, sdirent->d_name);
+				printf("%s\n", tempPath);
+
+				if (IsDirectory(tempPath)) {
+					size = CalculateDirectorySize(tempPath, &error);
+				} else if (IsFile(tempPath)) {
+					size = CalculateFileSize(tempPath, &error);
+				}
+
+				if (!error) {
+					result += size;
+				}
+			}
+		}
+
+		if (closedir(dir)) {
+			error = 1; 
+			Error("Could not close directory: '%s'", path);
+		}
+	}
+
+
 	return result;
 }
 
