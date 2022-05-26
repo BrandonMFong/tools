@@ -180,15 +180,15 @@ unsigned long long CalculateFileSize(const char * path, int * error) {
 }
 
 /**
- * Converts the value to the level specified by regulation
+ * Converts the value to the level specified by scale
  */
-double Regulate(unsigned long long value, long long regulation) {
+double ConvertValueToScale(unsigned long long value, long long scale) {
 	double result = 0, d1 = 0;
 
-	result = value / regulation;
-	d1 = (value % regulation);
+	result = value / scale;
+	d1 = (value % scale);
 
-	result += (d1 / regulation);
+	result += (d1 / scale);
 
 	return result;
 }
@@ -209,22 +209,15 @@ int PrintSize(unsigned long long byteSize) {
 	
 	// GigaByte
 	if (byteSize > GIGABYTE) {
-
+		value = ConvertValueToScale(byteSize, MEGABYTE);
+		strcpy(unit, "gb");
 	// MegaByte
 	} if (byteSize > MEGABYTE) {
-		//value = byteSize / MEGABYTE;
-		//d1 = (byteSize % MEGABYTE);
-
-		//value += (d1 / MEGABYTE);
-		value = Regulate(byteSize, MEGABYTE);
-		strcpy(unit, "gb");
+		value = ConvertValueToScale(byteSize, MEGABYTE);
+		strcpy(unit, "mb");
 	// KiloByte
 	} else if (byteSize > KILOBYTE) {
-		//value = byteSize / KILOBYTE;
-		//d1 = (byteSize % KILOBYTE);
-
-		//value += (d1 / KILOBYTE);
-		value = Regulate(byteSize, KILOBYTE);
+		value = ConvertValueToScale(byteSize, KILOBYTE);
 		strcpy(unit, "kb");
 	}
 	
