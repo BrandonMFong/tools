@@ -182,17 +182,23 @@ unsigned long long CalculateFileSize(const char * path, int * error) {
 
 int PrintSize(unsigned long long byteSize) {
 	char unit[10];
-	double value = 0.0;
+	double value = 0.0, d1 = 0.0;
 
 	strcpy(unit, ""); // init 
 
 	// MegaByte
 	if (byteSize > MEGABYTE) {
 		value = byteSize / MEGABYTE;
+		d1 = (byteSize % MEGABYTE);
+
+		value += (d1 / MEGABYTE);
 		strcpy(unit, "gb");
 	// KiloByte
 	} else if (byteSize > KILOBYTE) {
 		value = byteSize / KILOBYTE;
+		d1 = (byteSize % KILOBYTE);
+
+		value += (d1 / KILOBYTE);
 		strcpy(unit, "kb");
 	// Byte
 	} else {
