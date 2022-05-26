@@ -19,9 +19,9 @@
 #define PATH_MAX 4096
 
 #define KILOBYTE 1024
-#define MEGABYTE KILOBYTE * 1024
-#define GIGABYTE MEGABYTE * 1024
-#define TERABYTE GIGABYTE * 1024
+#define MEGABYTE (long long) (KILOBYTE * 1024)
+#define GIGABYTE (long long) (MEGABYTE * 1024)
+#define TERABYTE (long long) (GIGABYTE * 1024)
 
 // CONSTANTS
 
@@ -140,6 +140,7 @@ int main(int argc, char * argv[]) {
 	if (!result) {
 		if (!PathExists(path)) {
 			Error("Path '%s' does not exist!", path);
+			result = 1;
 		}	
 	}
 
@@ -206,13 +207,15 @@ int PrintSize(unsigned long long byteSize) {
 	value = byteSize;
 	strcpy(unit, "b");
 
-	
+	if (byteSize > TERABYTE) {
+		value = ConvertValueToScale(byteSize, MEGABYTE);
+		strcpy(unit, "tb");
 	// GigaByte
-	if (byteSize > GIGABYTE) {
+	} else if (byteSize > GIGABYTE) {
 		value = ConvertValueToScale(byteSize, MEGABYTE);
 		strcpy(unit, "gb");
 	// MegaByte
-	} if (byteSize > MEGABYTE) {
+	} else if (byteSize > MEGABYTE) {
 		value = ConvertValueToScale(byteSize, MEGABYTE);
 		strcpy(unit, "mb");
 	// KiloByte
