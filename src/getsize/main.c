@@ -197,16 +197,16 @@ int PrintSize(unsigned long long byteSize) {
 	}
 
 	// KiloByte
-	if (!(byteSize % KILOBYTE)) {
+	if (byteSize < MEGABYTE) {
 		value = byteSize / KILOBYTE;
 		strcpy(unit, "kb");
 		done = true;
 	}
 
 	// MegaByte
-	if (!done && (byteSize % MEGABYTE)) {
-		value = byteSize / KILOBYTE;
-		strcpy(unit, "kb");
+	if (!done && (byteSize < GIGABYTE)) {
+		value = byteSize / MEGABYTE;
+		strcpy(unit, "gb");
 		done = true;
 	}
 	
