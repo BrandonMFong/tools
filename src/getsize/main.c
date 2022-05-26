@@ -296,12 +296,13 @@ int PrintSize(unsigned long long byteSize) {
 	value = byteSize;
 	strcpy(unit, "b");
 
+	// TeraByte
 	if (byteSize > TERABYTE) {
-		value = ConvertValueToScale(byteSize, MEGABYTE);
+		value = ConvertValueToScale(byteSize, TERABYTE);
 		strcpy(unit, "tb");
 	// GigaByte
 	} else if (byteSize > GIGABYTE) {
-		value = ConvertValueToScale(byteSize, MEGABYTE);
+		value = ConvertValueToScale(byteSize, GIGABYTE);
 		strcpy(unit, "gb");
 	// MegaByte
 	} else if (byteSize > MEGABYTE) {
