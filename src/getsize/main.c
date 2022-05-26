@@ -1,6 +1,10 @@
 /**
  * author: Brando 
  * date: 5/1/2022
+ *
+ * Checklist:
+ * 	[] Do file 
+ * 	[] Do directory
  */
 
 #include <stdio.h>
@@ -179,18 +183,34 @@ unsigned long long CalculateFileSize(const char * path, int * error) {
 int PrintSize(unsigned long long byteSize) {
 	char unit[10];
 	double value = 0.0;
+	bool done = false;
 
+	strcpy(unit, ""); // init 
+
+	// Default unit 
 	// Byte
-	if (byteSize % KILOBYTE) {
-		if (byteSize == 1) {
-			strcpy(unit, "byte");
-		} else {
-			strcpy(unit, "bytes");
-		}
+	value = byteSize;
+	if (value == 1) {
+		strcpy(unit, "byte");
+	} else {
+		strcpy(unit, "bytes");
+	}
 
-		value = byteSize;
-	}	
+	// KiloByte
+	if (!(byteSize % KILOBYTE)) {
+		value = byteSize / KILOBYTE;
+		strcpy(unit, "kb");
+		done = true;
+	}
+
+	// MegaByte
+	if (!done && (byteSize % MEGABYTE)) {
+		value = byteSize / KILOBYTE;
+		strcpy(unit, "kb");
+		done = true;
+	}
 	
-	printf("%llu\n", byteSize);
+	printf("%.2f %s\n", value, unit);
 	return 0;
 }
+
