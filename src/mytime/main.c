@@ -12,6 +12,7 @@
 
 #define HELP_ARG "-h"
 #define DATE_ARG "-c"
+#define MILT_ARG "-m"
 
 /**
  * Holds the name of the script
@@ -19,7 +20,11 @@
 char SCRIPT_ARG[PATH_MAX];
 
 void Help() {
-	printf("usage: %s [ %s ] [ %s ]\n", SCRIPT_ARG, DATE_ARG, HELP_ARG);
+	printf("usage: %s <args> [ %s ]\n", SCRIPT_ARG, HELP_ARG);
+
+	printf("arguments:\n");
+	printf("  %s : Prints today's date\n", DATE_ARG);
+	printf("  %s : Prints military time\n", MILT_ARG);
 }
 
 /**
@@ -44,16 +49,23 @@ int main(int argc, char * argv[]) {
 	} else {
 		time_t t = time(NULL);
 		struct tm tm = *localtime(&t);
+		int h, m, s;
+		bool milTime = DoesStringArrayContain(argv, argc, MILT_ARG);
+
+		if (milTime) {
+			h = tm.tm_hour;
+		} else {
+			h = tm.tm_hour > 12 ? tm.tm_hour - 12 : tm.tm_hour;
+		}
+
+		m = tm.tm_min;
+		s = tm.tm_sec;
 		
-		// example 
-		//printf("now: %d-%02d-%02d %02d:%02d:%02d\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-		
-		printf(
-			"%02d:%02d:%02d %s", 
-			tm.tm_hour > 12 ? tm.tm_hour - 12 : tm.tm_hour, 
-			tm.tm_min, 
-			tm.tm_sec,
-			tm.tm_hour < 12 ? "AM" : "PM"
+		printf("%02d:%02d:%02d%s", 
+			h,
+			m, 
+			s,
+			milTime ? "" : (tm.tm_hour < 12 ? "AM" : "PM")
 		);
 
 		if (DoesStringArrayContain(argv, argc, DATE_ARG)) {
@@ -62,5 +74,7 @@ int main(int argc, char * argv[]) {
 
 		printf("\n");
 	}
+
+	return 0;
 }
 
