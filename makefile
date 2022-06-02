@@ -1,7 +1,7 @@
 # author: Brando
 # date: 6/2/22
 
-all: getsize mytime 
+all: getsize mytime fsinfo
 
 getsize: src/getsize/main.c src/cutils/utilities.c
 	gcc -o bin/getsize src/getsize/main.c src/cutils/utilities.c -I.
@@ -9,5 +9,7 @@ getsize: src/getsize/main.c src/cutils/utilities.c
 mytime: src/mytime/main.c src/cutils/utilities.c
 	gcc -o bin/mytime src/mytime/main.c src/cutils/utilities.c -I.
 
+fsinfo: src/fsinfo/main.c src/cutils/utilities.c
+	gcc -o bin/fsinfo src/fsinfo/main.c src/cutils/utilities.c -I.
 clean:
 	rm -rfv bin/*
