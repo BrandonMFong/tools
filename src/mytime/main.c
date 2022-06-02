@@ -24,7 +24,7 @@ int main(int argc, char * argv[]) {
 	
 	printf(
 		"%02d:%02d:%02d %s", 
-		tm.tm_hour > 13 ? tm.tm_hour - 12 : tm.tm_hour, 
+		tm.tm_hour > 12 ? tm.tm_hour - 12 : tm.tm_hour, 
 		tm.tm_min, 
 		tm.tm_sec,
 		tm.tm_hour < 12 ? "AM" : "PM"
