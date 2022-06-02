@@ -1,3 +1,18 @@
+/**
+ * author: Brando 
+ * date: 6/2/22
+ */
+
+#include "utilities.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
+#include <libgen.h>
+#include <stdbool.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <sys/types.h>
+
 unsigned long long CalculateDirectorySize(const char * path, int * err) {
 	unsigned long long result = 0;
 	int error = 0;
@@ -42,9 +57,82 @@ unsigned long long CalculateDirectorySize(const char * path, int * err) {
 					result += size;
 				}
 			}
-		}
+               }
 
-		if (closedir(dir)) {
-			error = !error ? 1 : error; 
-			Error("Could not close directory: '%s'", path);
-		}
+               if (closedir(dir)) {
+                       error = !error ? 1 : error;
+                       Error("Could not close directory: '%s'", path);
+               }
+       }
+
+       return result;
+}
+
+unsigned long long CalculateFileSize(const char * path, int * error) {
+       unsigned long long result = 0;
+       struct stat buf;
+       
+       if (!stat(path, &buf)) {
+               result = buf.st_size;
+       } else {
+               if (error != 0) {
+                       *error = 1;
+                       Error("Error attempting to calculate file size for: %s", path);
+               }
+       }
+
+       return result;
+}
+
+void Error(const char * format, ...) {
+	const int logSize = 1024;
+	char logString[logSize];
+	va_list args;
+	
+	va_start(args, format);
+	vsnprintf(
+		logString,
+		logSize,
+		format,
+		args);
+
+	va_end(args);
+
+	printf("Error: %s\n", logString);
+}
+
+bool PathExists(const char * path) {
+	struct stat buffer;
+	return (stat(path, &buffer) == 0);
+}
+
+bool IsFile(const char * path) {
+	struct stat buf;
+
+	if (stat(path, &buf)) {
+		return false;
+	} else {
+		return S_ISREG(buf.st_mode);
+	}
+}
+
+bool IsDirectory(const char * path) {
+	struct stat buf;
+
+	if (stat(path, &buf)) {
+		return false;
+	} else {
+		return S_ISDIR(buf.st_mode);
+	}
+}
+
+bool IsSymbolicLink(const char * path) {
+	struct stat statbuf;
+
+	if (lstat(path, &statbuf)) {
+		return false;
+	} else {
+		return S_ISLNK(statbuf.st_mode);
+	}
+}
+
