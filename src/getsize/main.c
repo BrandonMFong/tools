@@ -15,15 +15,6 @@
 #include <sys/stat.h>
 #include <libgen.h>
 
-// MACROS
-
-#define PATH_MAX 4096
-
-#define KILOBYTE 1024
-#define MEGABYTE (long long) (KILOBYTE * 1024)
-#define GIGABYTE (long long) (MEGABYTE * 1024)
-#define TERABYTE (long long) (GIGABYTE * 1024)
-
 // CONSTANTS
 
 /**
@@ -118,52 +109,16 @@ int main(int argc, char * argv[]) {
 	return result;
 }
 
-/**
- * Converts the value to the level specified by scale
- */
-double ConvertValueToScale(unsigned long long value, long long scale) {
-	double result = 0, d1 = 0;
-
-	result = value / scale;
-	d1 = (value % scale);
-
-	result += (d1 / scale);
-
-	return result;
-}
-
 int PrintSize(unsigned long long byteSize) {
 	char unit[10];
 	double value = 0.0, d1 = 0.0;
 	long long byteLength = 0;
-
-	strcpy(unit, ""); // init 
-
-	// Byte
-	// 
-	// Default
-	value = byteSize;
-	strcpy(unit, "b");
-
-	// TeraByte
-	if (byteSize > TERABYTE) {
-		value = ConvertValueToScale(byteSize, TERABYTE);
-		strcpy(unit, "tb");
-	// GigaByte
-	} else if (byteSize > GIGABYTE) {
-		value = ConvertValueToScale(byteSize, GIGABYTE);
-		strcpy(unit, "gb");
-	// MegaByte
-	} else if (byteSize > MEGABYTE) {
-		value = ConvertValueToScale(byteSize, MEGABYTE);
-		strcpy(unit, "mb");
-	// KiloByte
-	} else if (byteSize > KILOBYTE) {
-		value = ConvertValueToScale(byteSize, KILOBYTE);
-		strcpy(unit, "kb");
+	if (GetByteStringRepresentation(byteSize, unit)) {
+		Error("Error with getting byte representation");
+	} else {
+		printf("%.2f %s\n", value, unit);
 	}
-	
-	printf("%.2f %s\n", value, unit);
+
 	return 0;
 }
 

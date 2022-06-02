@@ -136,3 +136,54 @@ bool IsSymbolicLink(const char * path) {
 	}
 }
 
+/**
+ * Converts the value to the level specified by scale
+ */
+double ConvertValueToScale(unsigned long long value, long long scale) {
+	double result = 0, d1 = 0;
+
+	result = value / scale;
+	d1 = (value % scale);
+
+	result += (d1 / scale);
+
+	return result;
+}
+
+int GetByteStringRepresentation(unsigned long long byteSize, char * outStr) {
+	double value = 0.0, d1 = 0.0;
+	long long byteLength = 0;
+
+	if (outStr == 0) {
+		return 1;
+	} else {
+		strcpy(outStr, ""); // init 
+
+		// Byte
+		// 
+		// Default
+		value = byteSize;
+		strcpy(outStr, "b");
+
+		// TeraByte
+		if (byteSize > TERABYTE) {
+			value = ConvertValueToScale(byteSize, TERABYTE);
+			strcpy(outStr, "tb");
+		// GigaByte
+		} else if (byteSize > GIGABYTE) {
+			value = ConvertValueToScale(byteSize, GIGABYTE);
+			strcpy(outStr, "gb");
+		// MegaByte
+		} else if (byteSize > MEGABYTE) {
+			value = ConvertValueToScale(byteSize, MEGABYTE);
+			strcpy(outStr, "mb");
+		// KiloByte
+		} else if (byteSize > KILOBYTE) {
+			value = ConvertValueToScale(byteSize, KILOBYTE);
+			strcpy(outStr, "kb");
+		}
+	}
+
+	return 0;
+}
+

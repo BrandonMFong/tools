@@ -5,6 +5,15 @@
 
 #include <stdbool.h>
 
+// MACROS
+
+#define PATH_MAX 4096
+
+#define KILOBYTE 1024
+#define MEGABYTE (long long) (KILOBYTE * 1024)
+#define GIGABYTE (long long) (MEGABYTE * 1024)
+#define TERABYTE (long long) (GIGABYTE * 1024)
+
 /**
  * Calculates the directory size recursively
  */
@@ -40,3 +49,9 @@ bool IsDirectory(const char * path);
  */
 bool IsSymbolicLink(const char * path);
 
+/**
+ * Creates a string that represents the byteSize
+ *
+ * outStr needs to be a valid string buffer that can accept at least 10 bytes of data
+ */
+int GetByteStringRepresentation(unsigned long long byteSize, char * outStr);
