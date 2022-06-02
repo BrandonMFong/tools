@@ -9,4 +9,5 @@ getsize: src/getsize/main.c src/cutils/utilities.c
 mytime: src/mytime/main.c src/cutils/utilities.c
 	gcc -o bin/mytime src/mytime/main.c src/cutils/utilities.c -I.
 
-
+clean:
+	rm -rfv bin/*
