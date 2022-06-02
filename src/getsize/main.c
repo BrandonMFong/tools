@@ -35,16 +35,6 @@ char SCRIPT_ARG[PATH_MAX];
 // PROTOTYPES
 
 /**
- * Calculates the directory size recursively
- */
-unsigned long long CalculateDirectorySize(const char * path, int * error);
-
-/**
- * Calculates the file size of the path  
- */
-unsigned long long CalculateFileSize(const char * path, int * error);
-
-/**
  * Prints the byteSize value into a format that represents
  * a comprehensible byte format
  */
