@@ -65,7 +65,7 @@ int main(int argc, char * argv[]) {
 			h,
 			m, 
 			s,
-			milTime ? "" : (tm.tm_hour < 12 ? "AM" : "PM")
+			milTime ? "" : (tm.tm_hour < 12 ? " AM" : " PM")
 		);
 
 		if (DoesStringArrayContain(argv, argc, DATE_ARG)) {
