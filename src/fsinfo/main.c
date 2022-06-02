@@ -16,6 +16,11 @@ void Help() {
 	printf("usage: %s <path>\n", SCRIPT_ARG);	
 }
 
+/**
+ * Prints the info of path
+ */
+int PrintInfo(const char * path);
+
 int main(int argc, char * argv[]) {
 	int result = 0;
 	char path[PATH_MAX];
@@ -32,5 +37,19 @@ int main(int argc, char * argv[]) {
 		}
 	}
 
+	if (!result) {
+		result = PrintInfo(path);
+	}
+
 	return 0;
 }
+
+int PrintInfo(const char * path) {
+	int result = 0;
+	
+	printf(	"Full path: %s\n"
+		"Created: %s\n"
+		"\n", path, "tmp");
+	return result;
+}
+
