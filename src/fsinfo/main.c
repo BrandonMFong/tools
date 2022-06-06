@@ -9,6 +9,7 @@
 #include <libgen.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 const char SCRIPT_ARG[PATH_MAX];
 
@@ -45,11 +46,14 @@ int main(int argc, char * argv[]) {
 }
 
 int PrintInfo(const char * path) {
+	char absPath[PATH_MAX];
 	int result = 0;
+
+	realpath(path, absPath);
 	
 	printf(	"Full path: %s\n"
 		"Created: %s\n"
-		"\n", path, "tmp");
+		"\n", absPath, "tmp");
 	return result;
 }
 
