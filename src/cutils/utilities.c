@@ -184,7 +184,7 @@ int GetByteStringRepresentation(unsigned long long byteSize, char * outStr) {
 			strcpy(unit, "kb");
 		}
 
-		sprintf(outStr, "%.2f %s\n", value, unit);
+		sprintf(outStr, "%.2f %s", value, unit);
 	}
 
 	return 0;
