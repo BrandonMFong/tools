@@ -71,22 +71,35 @@ int PrintInfo(const char * path) {
 	char unit[10];
 	unsigned long long size = 0;
 
-	realpath(path, absPath);
-	stat(path, &st);
-	SetDateStringForTime(lastModified, &st.st_mtime);
+	if (realpath(path, absPath) == 0) {
+		result = 1;	
+	} 
 
-	if (IsDirectory(absPath)) {
-		size = CalculateDirectorySize(absPath, &result);
-	} else if (IsFile(absPath)) {
-		size = CalculateFileSize(absPath, &result);
+	if (!result) {
+		if (stat(path, &st)) {
+			result = 1;
+		}
 	}
 
-	result = GetByteStringRepresentation(size, unit);
+	if (!result) {
+		if (IsDirectory(absPath)) {
+			size = CalculateDirectorySize(absPath, &result);
+		} else if (IsFile(absPath)) {
+			size = CalculateFileSize(absPath, &result);
+		}
+	}
 
-	printf(	"Full path: %s\n"
-		"Size: %s\n"
-		"Last modified: %s\n"
-		"\n", absPath, unit, lastModified);
+	if (!result) {
+		result = GetByteStringRepresentation(size, unit);
+	}
+
+	if (!result) {
+		SetDateStringForTime(lastModified, &st.st_mtime);
+		printf(	"Full path: %s\n"
+			"Size: %s\n"
+			"Last modified: %s\n"
+			"\n", absPath, unit, lastModified);
+	}
 
 	return result;
 }
