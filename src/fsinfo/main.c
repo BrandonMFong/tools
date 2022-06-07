@@ -47,6 +47,21 @@ int main(int argc, char * argv[]) {
 	return 0;
 }
 
+void SetDateStringForTime(char * outStr, const time_t * tm) {
+	const char * dateFormat = "%02d:%02d:%02d%s %02d/%02d/%d";
+	struct tm ct = *localtime(tm);
+
+	sprintf(outStr, dateFormat,
+		ct.tm_hour > 12 ? ct.tm_hour - 12 : ct.tm_hour,
+		ct.tm_min,
+		ct.tm_sec,
+		ct.tm_hour < 12 ? " AM" : " PM",
+		ct.tm_mon + 1,
+		ct.tm_mday,
+		ct.tm_year + 1900
+	);
+}
+
 int PrintInfo(const char * path) {
 	const char * dateFormat = "%02d:%02d:%02d%s %02d/%02d/%d";
 	char absPath[PATH_MAX];
@@ -56,17 +71,7 @@ int PrintInfo(const char * path) {
 
 	realpath(path, absPath);
 	stat(path, &st);
-	struct tm ct = *localtime(&st.st_ctime);
-
-	sprintf(creation, dateFormat,
-		ct.tm_hour > 12 ? ct.tm_hour - 12 : ct.tm_hour,
-		ct.tm_min,
-		ct.tm_sec,
-		ct.tm_hour < 12 ? " AM" : " PM",
-		ct.tm_mon + 1,
-		ct.tm_mday,
-		ct.tm_year + 1900
-	);
+	SetDateStringForTime(creation, &st.st_ctime);
 
 	printf(	"Full path: %s\n"
 		"Created: %s\n"
