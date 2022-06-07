@@ -153,6 +153,7 @@ double ConvertValueToScale(unsigned long long value, long long scale) {
 int GetByteStringRepresentation(unsigned long long byteSize, char * outStr) {
 	double value = 0.0, d1 = 0.0;
 	long long byteLength = 0;
+	char unit[10];
 
 	if (outStr == 0) {
 		return 1;
@@ -163,25 +164,27 @@ int GetByteStringRepresentation(unsigned long long byteSize, char * outStr) {
 		// 
 		// Default
 		value = byteSize;
-		strcpy(outStr, "b");
+		strcpy(unit, "b");
 
 		// TeraByte
 		if (byteSize > TERABYTE) {
 			value = ConvertValueToScale(byteSize, TERABYTE);
-			strcpy(outStr, "tb");
+			strcpy(unit, "tb");
 		// GigaByte
 		} else if (byteSize > GIGABYTE) {
 			value = ConvertValueToScale(byteSize, GIGABYTE);
-			strcpy(outStr, "gb");
+			strcpy(unit, "gb");
 		// MegaByte
 		} else if (byteSize > MEGABYTE) {
 			value = ConvertValueToScale(byteSize, MEGABYTE);
-			strcpy(outStr, "mb");
+			strcpy(unit, "mb");
 		// KiloByte
 		} else if (byteSize > KILOBYTE) {
 			value = ConvertValueToScale(byteSize, KILOBYTE);
-			strcpy(outStr, "kb");
+			strcpy(unit, "kb");
 		}
+
+		sprintf(outStr, "%.2f %s\n", value, unit);
 	}
 
 	return 0;

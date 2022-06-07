@@ -13,6 +13,8 @@
 #include <sys/stat.h>
 #include <time.h>
 
+#define DATE_FORMAT "%02d:%02d:%02d%s %02d/%02d/%d"
+
 const char SCRIPT_ARG[PATH_MAX];
 
 void Help() {
@@ -48,10 +50,9 @@ int main(int argc, char * argv[]) {
 }
 
 void SetDateStringForTime(char * outStr, const time_t * tm) {
-	const char * dateFormat = "%02d:%02d:%02d%s %02d/%02d/%d";
 	struct tm ct = *localtime(tm);
 
-	sprintf(outStr, dateFormat,
+	sprintf(outStr, DATE_FORMAT,
 		ct.tm_hour > 12 ? ct.tm_hour - 12 : ct.tm_hour,
 		ct.tm_min,
 		ct.tm_sec,
@@ -63,21 +64,29 @@ void SetDateStringForTime(char * outStr, const time_t * tm) {
 }
 
 int PrintInfo(const char * path) {
-	const char * dateFormat = "%02d:%02d:%02d%s %02d/%02d/%d";
 	char absPath[PATH_MAX];
 	int result = 0;
-	char creation[strlen(dateFormat)], lastModified[strlen(dateFormat)];
+	char lastModified[strlen(DATE_FORMAT)];
 	struct stat st;
+	char unit[10];
+	unsigned long long size = 0;
 
 	realpath(path, absPath);
 	stat(path, &st);
-	SetDateStringForTime(creation, &st.st_ctime);
 	SetDateStringForTime(lastModified, &st.st_mtime);
 
+	if (IsDirectory(absPath)) {
+		size = CalculateDirectorySize(absPath, &result);
+	} else if (IsFile(absPath)) {
+		size = CalculateFileSize(absPath, &result);
+	}
+
+	result = GetByteStringRepresentation(size, unit);
+
 	printf(	"Full path: %s\n"
-		"Created: %s\n"
+		"Size: %s\n"
 		"Last modified: %s\n"
-		"\n", absPath, creation, lastModified);
+		"\n", absPath, unit, lastModified);
 
 	return result;
 }
