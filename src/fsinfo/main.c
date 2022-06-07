@@ -72,10 +72,13 @@ int PrintInfo(const char * path) {
 	realpath(path, absPath);
 	stat(path, &st);
 	SetDateStringForTime(creation, &st.st_ctime);
+	SetDateStringForTime(lastModified, &st.st_mtime);
 
 	printf(	"Full path: %s\n"
 		"Created: %s\n"
-		"\n", absPath, creation);
+		"Last modified: %s\n"
+		"\n", absPath, creation, lastModified);
+
 	return result;
 }
 
