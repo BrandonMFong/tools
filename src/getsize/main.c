@@ -116,7 +116,7 @@ int PrintSize(unsigned long long byteSize) {
 	if (GetByteStringRepresentation(byteSize, unit)) {
 		Error("Error with getting byte representation");
 	} else {
-		printf("%s", unit);
+		printf("%s\n", unit);
 	}
 
 	return 0;

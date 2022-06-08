@@ -1,7 +1,10 @@
 # author: Brando
 # date: 6/2/22
 
-all: getsize mytime fsinfo
+all: setup getsize mytime fsinfo
+
+setup:
+	mkdir -p bin/
 
 getsize: src/getsize/main.c src/cutils/utilities.c
 	gcc -o bin/getsize src/getsize/main.c src/cutils/utilities.c -I.
