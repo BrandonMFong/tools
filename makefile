@@ -1,7 +1,7 @@
 # author: Brando
 # date: 6/2/22
 
-all: setup getsize mytime fsinfo
+all: setup getsize mytime fsinfo getcount
 
 setup:
 	mkdir -p bin/
@@ -14,5 +14,9 @@ mytime: src/mytime/main.c src/cutils/utilities.c
 
 fsinfo: src/fsinfo/main.c src/cutils/utilities.c
 	gcc -o bin/fsinfo src/fsinfo/main.c src/cutils/utilities.c -I.
+
+getcount: src/getcount/main.c src/cutils/utilities.c
+	gcc -o bin/getcount src/fsinfo/main.c src/cutils/utilities.c -I.
+
 clean:
 	rm -rfv bin/*
