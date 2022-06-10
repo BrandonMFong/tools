@@ -6,6 +6,7 @@
 #include "../cutils/utilities.h"
 #include <stdio.h>
 #include <string.h>
+#include <dirent.h>
 
 char TOOL_ARG[PATH_MAX];
 
@@ -13,15 +14,66 @@ void Help() {
 	printf("usage: %s <path>\n", TOOL_ARG);
 }
 
+unsigned long long CountItemsInPath(const char * path, int * err) {
+	unsigned long long result = 0;
+	int error = 0;
+	DIR * dir = 0;
+	struct dirent * derec = 0;
+	char s1[PATH_MAX];
+
+	if (IsFile(path)) {
+		result++;
+	} else if (IsDirectory(path)) {
+		if (!(dir = opendir(path))) {
+			error = 1;
+			Error("Could not read directory: %s", path);
+		}
+
+		if (!error) {
+			while ((derec = readdir(dir)) && !error) {
+				if (strcmp(derec->d_name, ".") && strcmp(derec->d_name, "..")) {
+					sprintf(s1, "%s/%s", path, derec->d_name);
+					result += CountItemsInPath(s1, &error);
+				}
+			}
+		}
+
+		if (dir) {
+			if (closedir(dir)) {
+				Error("Error finishing reading directory: %s", path);
+			}
+		}
+	} else { 
+		Error("Unknown item: %s", path);
+	}
+
+	if (err != 0) {
+		*err = error;
+	}
+
+	return result;
+}
+
 int main(int argc, char * argv[]) {
 	int result = 0;
-	
+		
 	strcpy(TOOL_ARG, argv[0]);
 
 	if (argc != 2) {
 		Help();
 	} else {
+		const char * path = argv[1];
 
+		if (!path) {
+			Error("The path argument is null!");
+			result = 1;
+		} else {
+			unsigned long long count = CountItemsInPath(path, &result);
+
+			if (!result) {
+				printf("%llu\n", count);
+			}
+		}
 	}
 
 	return result;

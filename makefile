@@ -16,7 +16,7 @@ fsinfo: src/fsinfo/main.c src/cutils/utilities.c
 	gcc -o bin/fsinfo src/fsinfo/main.c src/cutils/utilities.c -I.
 
 getcount: src/getcount/main.c src/cutils/utilities.c
-	gcc -o bin/getcount src/fsinfo/main.c src/cutils/utilities.c -I.
+	gcc -o bin/getcount src/getcount/main.c src/cutils/utilities.c -I.
 
 clean:
 	rm -rfv bin/*
