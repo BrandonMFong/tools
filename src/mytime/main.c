@@ -27,19 +27,6 @@ void Help() {
 	printf("  %s : Prints military time\n", MILT_ARG);
 }
 
-/**
- * Sweeps the array to see of it contains the string specified by element
- */
-bool DoesStringArrayContain(char ** strArr, int arrSize, const char * element) {
-	for (int i = 0; i < arrSize; i++) {
-		if (!strcmp(element, strArr[i])) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
 int main(int argc, char * argv[]) {
 	char * buf = basename(argv[0]);
 	strcpy(SCRIPT_ARG, buf);

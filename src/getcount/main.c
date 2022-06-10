@@ -9,12 +9,16 @@
 #include <dirent.h>
 
 char TOOL_ARG[PATH_MAX];
+const char * RECURS_ARG = "-r";
 
 void Help() {
-	printf("usage: %s <path>\n", TOOL_ARG);
+	printf("usage: %s %s <path>\n", TOOL_ARG, RECURS_ARG);
+
+	printf("\nArguments:\n");
+	printf("\t%s : Recursively runs through path (if possible) to count items\n", RECURS_ARG);
 }
 
-unsigned long long CountItemsInPath(const char * path, int * err) {
+unsigned long long CountItemsInPath(const char * path, bool recursive, int * err) {
 	unsigned long long result = 0;
 	int error = 0;
 	DIR * dir = 0;
@@ -32,8 +36,12 @@ unsigned long long CountItemsInPath(const char * path, int * err) {
 		if (!error) {
 			while ((derec = readdir(dir)) && !error) {
 				if (strcmp(derec->d_name, ".") && strcmp(derec->d_name, "..")) {
-					sprintf(s1, "%s/%s", path, derec->d_name);
-					result += CountItemsInPath(s1, &error);
+					if (recursive) {
+						sprintf(s1, "%s/%s", path, derec->d_name);
+						result += CountItemsInPath(s1, recursive, &error);
+					} else {
+						result++;
+					}
 				}
 			}
 		}
@@ -68,7 +76,7 @@ int main(int argc, char * argv[]) {
 			Error("The path argument is null!");
 			result = 1;
 		} else {
-			unsigned long long count = CountItemsInPath(path, &result);
+			unsigned long long count = CountItemsInPath(path, true, &result);
 
 			if (!result) {
 				printf("%llu\n", count);

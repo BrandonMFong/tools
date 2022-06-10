@@ -190,3 +190,12 @@ int GetByteStringRepresentation(unsigned long long byteSize, char * outStr) {
 	return 0;
 }
 
+bool DoesStringArrayContain(char ** strArr, int arrSize, const char * element) {
+	for (int i = 0; i < arrSize; i++) {
+		if (!strcmp(element, strArr[i])) {
+			return true;
+		}
+	}
+
+	return false;
+}

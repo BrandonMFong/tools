@@ -55,3 +55,8 @@ bool IsSymbolicLink(const char * path);
  * outStr needs to be a valid string buffer that can accept at least 10 bytes of data
  */
 int GetByteStringRepresentation(unsigned long long byteSize, char * outStr);
+
+/**
+ * Sweeps the array to see of it contains the string specified by element
+ */
+bool DoesStringArrayContain(char ** strArr, int arrSize, const char * element);
