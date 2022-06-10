@@ -12,12 +12,15 @@ char TOOL_ARG[PATH_MAX];
 const char * RECURS_ARG = "-r";
 
 void Help() {
-	printf("usage: %s %s <path>\n", TOOL_ARG, RECURS_ARG);
+	printf("usage: %s [ %s ] <path>\n", TOOL_ARG, RECURS_ARG);
 
 	printf("\nArguments:\n");
 	printf("\t%s : Recursively runs through path (if possible) to count items\n", RECURS_ARG);
 }
 
+/**
+ * Counts the items at path and (if recursive=true) its child directories
+ */
 unsigned long long CountItemsInPath(const char * path, bool recursive, int * err) {
 	unsigned long long result = 0;
 	int error = 0;
