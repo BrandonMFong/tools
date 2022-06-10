@@ -64,7 +64,8 @@ unsigned long long CountItemsInPath(const char * path, bool recursive, int * err
 
 int main(int argc, char * argv[]) {
 	int result = 0;
-		
+	bool recursive = false;
+
 	strcpy(TOOL_ARG, argv[0]);
 
 	if (argc != 2) {
@@ -75,8 +76,12 @@ int main(int argc, char * argv[]) {
 		if (!path) {
 			Error("The path argument is null!");
 			result = 1;
-		} else {
-			unsigned long long count = CountItemsInPath(path, true, &result);
+		}
+
+		if (!result) {
+			recursive = (DoesStringArrayContain(argv, argc, RECURS_ARG));
+
+			unsigned long long count = CountItemsInPath(path, recursive, &result);
 
 			if (!result) {
 				printf("%llu\n", count);
