@@ -11,6 +11,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <ifaddrs.h>
 
 #define HOSTNAME_BUF_LENGTH 200
 
@@ -34,6 +35,27 @@ int GetIPAddressForHostname(const char * hostname, char * buf) {
 			result = 1;
 		}
 	}
+
+	struct ifaddrs *ifaddr, *ifa;
+    int family, s;
+    char host[NI_MAXHOST];
+
+    if (getifaddrs(&ifaddr) == -1) {
+        perror("getifaddrs");
+    }
+
+    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+        family = ifa->ifa_addr->sa_family;
+
+        if (family == AF_INET) {
+            s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in),
+                                           host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+            if (s != 0) {
+                printf("getnameinfo() failed: %s\n", gai_strerror(s));
+            }
+            printf("<Interface>: %s \t <Address> %s\n", ifa->ifa_name, host);
+        }
+    }
 
 	return result;
 }
