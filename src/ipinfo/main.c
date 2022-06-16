@@ -80,6 +80,7 @@ int GetMacAddress(char * buffer, int bufSize) {
     	struct ifconf ifc;
 	char buf[1024];
 
+	// open socket
 	int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
 	if (sock == -1) {
 		result = 1;
@@ -100,6 +101,7 @@ int GetMacAddress(char * buffer, int bufSize) {
 		const struct ifreq * const end = it + (ifc.ifc_len / sizeof(struct ifreq));
 		bool foundData = false;
 
+		// Loop until I find the data
 		for (; !foundData && (it != end) && !result; ++it) {
 			strcpy(ifr.ifr_name, it->ifr_name);
 			if (ioctl(sock, SIOCGIFFLAGS, &ifr) == 0) {
@@ -116,18 +118,24 @@ int GetMacAddress(char * buffer, int bufSize) {
 		}
 	}
 
+	// Copy address to output
 	if (!result) {
-		if (bufSize >= strlen(ifr.ifr_hwaddr.sa_data)) {
-			memcpy(buf, ifr.ifr_hwaddr.sa_data, 6);
+		int addrSize = 6;
+		if (bufSize >= addrSize) {
+			memcpy(buf, ifr.ifr_hwaddr.sa_data, addrSize);
 		}
 	}
+
+	close(sock);
 
 	return result;
 }
 
 int main(int argc, char * argv[]) {
 	int result = 0;
-	char hostname[HOSTNAME_BUF_LENGTH], ** addresses, macAddress[6];
+	char hostname[HOSTNAME_BUF_LENGTH], ** addresses;
+	const int macAddrSize = 6;
+	unsigned char macAddress[macAddrSize];
 	int addrArraySize = 0;
 
 	if (gethostname(hostname, HOSTNAME_BUF_LENGTH)) {
@@ -136,12 +144,20 @@ int main(int argc, char * argv[]) {
 	} else if (GetIPAddresses(&addresses, &addrArraySize)) {
 		result = 1;
 		Error("Error getting ip address for device");
-	} else if (GetMacAddress(macAddress, sizeof(macAddress))) {
+	} else if (GetMacAddress(macAddress, macAddrSize)) {
 		result = 1;
 		Error("Mac Address fetch error");
 	} else {
 		printf("Hostname: %s\n", hostname);
-		printf("MAC Address: %s\n", macAddress);
+		
+		printf("MAC Address: ");
+		for (int i = 0; i < macAddrSize; i++) {
+			printf("%.2x", macAddress[i]);
+
+			if (i < (macAddrSize - 1)) printf(":");
+		}
+		printf("\n");
+
 		printf("IP Addresses: [ ");
 		for(int i = 0; i < addrArraySize; i++) {
 			printf("%s ", addresses[i]);
