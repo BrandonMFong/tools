@@ -60,3 +60,9 @@ int GetByteStringRepresentation(unsigned long long byteSize, char * outStr);
  * Sweeps the array to see of it contains the string specified by element
  */
 bool DoesStringArrayContain(char ** strArr, int arrSize, const char * element);
+
+/**
+ * Creates a copy of string
+ */
+char * CopyString(const char * string, int * err);
+

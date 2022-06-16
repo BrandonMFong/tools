@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <sys/types.h>
+#include <stdlib.h>
 
 unsigned long long CalculateDirectorySize(const char * path, int * err) {
 	unsigned long long result = 0;
@@ -199,3 +200,22 @@ bool DoesStringArrayContain(char ** strArr, int arrSize, const char * element) {
 
 	return false;
 }
+
+char * CopyString(const char * string, int * err) {
+	int error = 0;
+	unsigned long long size = strlen(string);
+
+	char * result = (char *) malloc(size + 1);
+
+	if (result) {
+		memset(result, 0, size + 1);
+		strcpy(result, string);
+	} else {
+		error = 1;
+	}
+
+	if (err != 0) *err = error;
+
+	return result;
+}
+

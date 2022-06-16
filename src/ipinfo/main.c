@@ -12,67 +12,82 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ifaddrs.h>
+#include <stdlib.h>
 
 #define HOSTNAME_BUF_LENGTH 200
 
 /**
  * https://www.sanfoundry.com/c-program-get-ip-address/
  */
-int GetIPAddressForHostname(const char * hostname, char * buf) {
+int GetIPAddresses(char ** addrs, int * size) {
 	int result = 0;
-	struct hostent * ent = gethostbyname(hostname);
-	
-	if (ent == 0) {
-		result = 1;
-		Error("Cannot get host by name");
-	} else {
-		char * s1 = inet_ntoa(*((struct in_addr *) ent->h_addr_list[0]));
+	char ** ipAddrs = 0;
+	int arrSize = 0;
+	struct ifaddrs *ifaddr, *ifa;
+	char host[NI_MAXHOST];
 
-		if (s1) {
-			strcpy(buf, s1);
-		} else {
-			Error("Unknown return value");
-			result = 1;
-		}
+	if (getifaddrs(&ifaddr) == -1) {
+		result = 1;
+		Error("Error with getifaddrs");
 	}
 
-	struct ifaddrs *ifaddr, *ifa;
-    int family, s;
-    char host[NI_MAXHOST];
+	if (!result) {
+		for (ifa = ifaddr; (ifa != NULL) && !result; ifa = ifa->ifa_next) {
+			int family = ifa->ifa_addr->sa_family;
 
-    if (getifaddrs(&ifaddr) == -1) {
-        perror("getifaddrs");
-    }
+			if (family == AF_INET) {
+				char * address = 0;
 
-    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-        family = ifa->ifa_addr->sa_family;
+				if (getnameinfo(
+					ifa->ifa_addr, 
+					sizeof(struct sockaddr_in),
+					host, 
+					NI_MAXHOST, 
+					NULL, 
+					0, 
+					NI_NUMERICHOST
+				)) {
+					result = 1;
+				} else {
+					//printf("<Interface>: %s \t <Address> %s\n", ifa->ifa_name, host);
+					address = CopyString(host, &result);
+				}
 
-        if (family == AF_INET) {
-            s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in),
-                                           host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
-            if (s != 0) {
-                printf("getnameinfo() failed: %s\n", gai_strerror(s));
-            }
-            printf("<Interface>: %s \t <Address> %s\n", ifa->ifa_name, host);
-        }
-    }
+				if (!result) {
+					arrSize++;
+					ipAddrs = (char **) realloc(ipAddrs, sizeof(char *) * arrSize);
+					
+					if (!ipAddrs) {
+						result = -1;
+					} else {
+						ipAddrs[arrSize - 1] = address;
+					}
+				}
+			}
+		}
+	}
 
 	return result;
 }
 
 int main(int argc, char * argv[]) {
 	int result = 0;
-	char hostname[HOSTNAME_BUF_LENGTH], ipaddress4[20];
+	char hostname[HOSTNAME_BUF_LENGTH], ** addresses;
+	int addrArraySize = 0;
 
 	if (gethostname(hostname, HOSTNAME_BUF_LENGTH)) {
 		result = 1;
 		Error("Error getting hostname for device");
-	} else if (GetIPAddressForHostname(hostname, ipaddress4)) {
+	} else if (GetIPAddresses(addresses, &addrArraySize)) {
 		result = 1;
 		Error("Error getting ip address for device");
 	} else {
 		printf("Hostname: %s\n", hostname);
-		printf("IPv4: %s\n", ipaddress4);
+
+		printf("Addresses: [ ");
+		for(int i = 0; i < addrArraySize; i++) 
+			printf("%s ", addresses[i]);
+		printf("]\n");
 	}
 
 	return result;
