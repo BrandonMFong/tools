@@ -12,7 +12,7 @@ import java.net.SocketException;
 import java.lang.Throwable;
 import java.util.NoSuchElementException;
 
-class IPInfo {
+class netinfo {
 	static void PrintException(Throwable e) {
 		System.out.println("[ " + e.toString() + " ]");
 		System.out.println("Message: " + e.getMessage());
@@ -25,12 +25,14 @@ class IPInfo {
 		Enumeration<NetworkInterface> niEnum = null;
 
 		try {
+			// Init the enum
 			niEnum = NetworkInterface.getNetworkInterfaces();
 
 			if (niEnum == null) {
 				result = 1;
 				System.out.println("Could not get the network interfaces");
 			} else {
+				// Sweep the interfaces
 				while (niEnum.hasMoreElements() && (result == 0)) {
 					NetworkInterface ni = null;
 					byte[] mac = null;
