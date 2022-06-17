@@ -74,14 +74,14 @@ int GetIPAddresses(char *** addrs, int * size) {
 	return result;
 }
 
-int GetMacAddress(char * buffer, int bufSize) {
+int GetMacAddress(unsigned char * buffer, int bufSize) {
 	int result = 0;
 	struct ifreq ifr;
     	struct ifconf ifc;
 	char buf[1024];
 
 	// open socket
-	int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+	int sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
 	if (sock == -1) {
 		result = 1;
 		Error("Could not create socket");
@@ -110,8 +110,7 @@ int GetMacAddress(char * buffer, int bufSize) {
 						foundData = true;
 					}
 				}
-			}
-			else {
+			} else {
 				result = 1;
 				Error("ioctl failed");
 			}
@@ -127,7 +126,7 @@ int GetMacAddress(char * buffer, int bufSize) {
 	}
 
 	close(sock);
-
+	
 	return result;
 }
 
@@ -138,15 +137,22 @@ int main(int argc, char * argv[]) {
 	unsigned char macAddress[macAddrSize];
 	int addrArraySize = 0;
 
+	// Hostname
 	if (gethostname(hostname, HOSTNAME_BUF_LENGTH)) {
 		result = 1;
 		Error("Error getting hostname for device");
+
+	// IP Address
 	} else if (GetIPAddresses(&addresses, &addrArraySize)) {
 		result = 1;
 		Error("Error getting ip address for device");
+
+	// Mac Address
 	} else if (GetMacAddress(macAddress, macAddrSize)) {
 		result = 1;
 		Error("Mac Address fetch error");
+
+	// Else we have a success
 	} else {
 		printf("Hostname: %s\n", hostname);
 		
