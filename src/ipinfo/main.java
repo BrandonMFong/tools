@@ -39,7 +39,6 @@ class IPInfo {
 						ni = niEnum.nextElement();
 						if (ni == null) {
 							result = 1;
-							System.out.println("Could not get the next element");
 						}
 					} catch (NoSuchElementException e) {
 						result = 1;
@@ -48,18 +47,14 @@ class IPInfo {
 
 					if (result == 0) {
 						mac = ni.getHardwareAddress();
-						if (mac == null) {
-							result = 1;
-							System.out.println("Could not get hardware address");
-						}
 					}
 
-					if (result == 0) {
+					if (mac != null) {
 						String[] hexadecimal = new String[mac.length];
 						for (int i = 0; i < mac.length; i++) {
-						hexadecimal[i] = String.format("%02X", mac[i]);
+							hexadecimal[i] = String.format("%02X", mac[i]);
 						}
-						String macAddress = String.join("-", hexadecimal);
+						String macAddress = String.join(":", hexadecimal);
 						System.out.println(macAddress);
 					}
 				}
