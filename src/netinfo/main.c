@@ -60,9 +60,13 @@ int main(void) {
 			}
 
 			if (!result) {
-				if (inet_ntop(AF_INET, &(((struct sockaddr_in *)addr)->sin_addr), ip, sizeof ip) == NULL)
-				    break;
+				if (inet_ntop(AF_INET, &(((struct sockaddr_in *)addr)->sin_addr), ip, sizeof ip) == NULL) {
+					result = 1;
+					Error("Could not get ip address");
+				}
+			}
 
+			if (!result) {
 				/* Get the MAC address */
 				if(ioctl(sock, SIOCGIFHWADDR, item) < 0) {
 				    result = 1;
@@ -85,6 +89,6 @@ int main(void) {
 		}
 	}
 
-  return result;
+	return result;
 }
 
