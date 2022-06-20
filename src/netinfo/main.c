@@ -47,6 +47,7 @@ int main(void) {
 	 	ifr = ifc.ifc_req;
 		nInterfaces = ifc.ifc_len / sizeof(struct ifreq);
 
+		printf("inter\tmac\t\t\tip\n");
 		for(i = 0; (i < nInterfaces) && !result; i++) 
 		{
 			item = &ifr[i];
@@ -76,7 +77,7 @@ int main(void) {
 
 			/* display result */
 			if (!result) {
-				sprintf(macp, " %02x:%02x:%02x:%02x:%02x:%02x", 
+				sprintf(macp, "%02x:%02x:%02x:%02x:%02x:%02x", 
 				(unsigned char)item->ifr_hwaddr.sa_data[0],
 				(unsigned char)item->ifr_hwaddr.sa_data[1],
 				(unsigned char)item->ifr_hwaddr.sa_data[2],
@@ -84,7 +85,7 @@ int main(void) {
 				(unsigned char)item->ifr_hwaddr.sa_data[4],
 				(unsigned char)item->ifr_hwaddr.sa_data[5]);
 
-				printf("%s: %s %s \n", item->ifr_name, ip, macp);
+				printf("%s\t%s\t%s\n", item->ifr_name, macp, ip);
 			}
 		}
 	}
