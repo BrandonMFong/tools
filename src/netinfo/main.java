@@ -36,8 +36,11 @@ class netinfo {
 				while (niEnum.hasMoreElements() && (result == 0)) {
 					NetworkInterface ni = null;
 					byte[] mac = null;
+					boolean cont = true;
+					Enumeration<InetAddress> iaEnum;
 
 					try {
+						// Get next interface
 						ni = niEnum.nextElement();
 						if (ni == null) {
 							result = 1;
@@ -47,17 +50,39 @@ class netinfo {
 						PrintException(e);
 					}
 
+					// Retrieve the next interface's mac address
 					if (result == 0) {
 						mac = ni.getHardwareAddress();
+						cont = mac != null ? true : false;
 					}
 
-					if (mac != null) {
-						String[] hexadecimal = new String[mac.length];
-						for (int i = 0; i < mac.length; i++) {
-							hexadecimal[i] = String.format("%02X", mac[i]);
+					if (cont) {
+						if (result == 0) {
+							String[] hexadecimal = new String[mac.length];
+
+							// Get the bytes from the address
+							for (int i = 0; i < mac.length; i++) {
+								hexadecimal[i] = String.format("%02X", mac[i]);
+							}
+
+							// Combine each byte element by ':'
+							String macAddress = String.join(":", hexadecimal);
+							
+							// Print the mac address
+							System.out.println(macAddress);
+
+							// Since this interface has a mac address, let's get
+							// the ip address
+							iaEnum = ni.getInetAddress();
+							if (iaEnum == null) {
+								result = 1;
+								System.out.println("Could not get inet address");
+							} else {
+								while (iaEnum.hasMoreElements() && (result == 0)) {
+									InetAddress ia = null;
+								}
+							}
 						}
-						String macAddress = String.join(":", hexadecimal);
-						System.out.println(macAddress);
 					}
 				}
 			}

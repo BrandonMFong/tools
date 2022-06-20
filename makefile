@@ -1,7 +1,7 @@
 # author: Brando
 # date: 6/2/22
 
-all: setup getsize mytime fsinfo getcount ipinfo
+all: setup getsize mytime fsinfo getcount netinfo
 
 setup:
 	mkdir -p bin/
@@ -18,8 +18,8 @@ fsinfo: src/fsinfo/main.c lib/clib/clib.c
 getcount: src/getcount/main.c lib/clib/clib.c
 	gcc -o bin/getcount src/getcount/main.c lib/clib/clib.c -I. -Ilib/
 
-ipinfo: src/ipinfo/main.c lib/clib/clib.c
-	gcc -o bin/ipinfo src/ipinfo/main.c lib/clib/clib.c -I. -Ilib/
+netinfo: src/netinfo/main.c lib/clib/clib.c
+	gcc -o bin/netinfo src/netinfo/main.c lib/clib/clib.c -I. -Ilib/
 
 clean:
 	rm -rfv bin/*
