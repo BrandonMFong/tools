@@ -93,7 +93,7 @@ char * CopyMacAddress(struct sockaddr * sa, int * err) {
 
 int main() {
 	int result = 0;
-	struct ifaddrs * addrs, * tmp;
+	struct ifaddrs * addrs = 0, * tmp = 0;
 	struct sockaddr_in * sa;
 	struct NetInterface * nifRoot = 0;
 
