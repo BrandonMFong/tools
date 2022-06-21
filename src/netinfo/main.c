@@ -47,19 +47,24 @@ char * CopyMacAddress(struct sockaddr * sa, int * err) {
 	char * result = 0;
 	int error = 0;
 	char buf[20]; // buffer for the mac address string
+	unsigned char * s = 0;
 
 	memset(&buf[0], 0, 20);
 
 #ifdef LINUX
-	struct sockaddr_ll * saddr = (struct sockaddr_ll *) sa;
+	//struct sockaddr_ll * saddr = (struct sockaddr_ll *) sa;
+	s = ((struct sockaddr_ll *) sa)->sll_addr;
 
+	/*
 	int l = 0;
 	for (int i = 0; i < 6; i++) {
 		l += sprintf(buf+l, "%02X%s", saddr->sll_addr[i], i < 5 ? ":" : "");
 	}
+	*/
 #elif OSX
-	unsigned char * t = (unsigned char *) LLADDR((struct sockaddr_dl *) sa);
+	s = (unsigned char *) LLADDR((struct sockaddr_dl *) sa);
 
+	/*
 	if (t) {
 		int l = 0;
 		for (int i = 0; i < 6; i++) {
@@ -69,9 +74,19 @@ char * CopyMacAddress(struct sockaddr * sa, int * err) {
 		error = 1;
 		Error("Error with LLADDR");
 	}
+	*/
 #endif
+	if (s == 0) {
+		error = 1;
+		Error("Could not get raw data");
+	}
 
 	if (!error) {
+		int l = 0;
+		for (int i = 0; i < 6; i++) {
+			l += sprintf(buf+l, "%02X%s", s[i], i < 5 ? ":" : "");
+		}
+
 		result = CopyString(buf, &error);
 	}
 
