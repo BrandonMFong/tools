@@ -1,6 +1,7 @@
 # author: Brando
 # date: 6/2/22
 
+# Determine the OS
 ifeq ($(OS),Windows_NT)
     CCFLAGS += -D WIN32
     ifeq ($(PROCESSOR_ARCHITEW6432),AMD64)
