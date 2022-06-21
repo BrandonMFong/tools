@@ -86,7 +86,7 @@ int main() {
 	int result = 0;
 	struct ifaddrs * addrs, * tmp;
 	struct sockaddr_in * sa;
-	struct NetInterface * nif = 0;
+	struct NetInterface * nifRoot = 0;
 
 	if (getifaddrs(&addrs) == -1) {
 		Error("Could not get interfaces");
@@ -99,6 +99,7 @@ int main() {
 		// First get the ip addresses
 		do {
 			bool cont = false;
+			struct NetInterface * nif = 0;
 
 			if (		tmp->ifa_addr  // Valid address
 				&& 	(tmp->ifa_flags & IFF_UP) // The interface is active
@@ -110,12 +111,40 @@ int main() {
 
 			if (cont) {
 				if (!result) {
+					nif = (struct NetInterface *) malloc(sizeof(struct NetInterface));
+					result = nif != 0 ? 0 : 1;
+
+					if (nif == 0) {
+						result = 1;
+					} else {
+						memset(nif, 0, sizeof(struct NetInterface));
+						
+						// Copy the interface name
+						strcpy(nif->_name, tmp->ifa_name);
+					}
+				}
+
+				// Find the last interface
+				if (!result) {
 					sa = (struct sockaddr_in *) tmp->ifa_addr;
 					
 					if (!sa) {
 						Error("Unknown error with sockaddr_in");
 						result = 1;
 					}
+				}
+
+				if (!result) {
+					strcpy(nif->_ipaddr, inet_ntoa(sa->sin_addr));
+
+					if (!strlen(nif->_ipaddr)) {
+						result = 1;
+						Error("Received an empty ip address");
+					}
+				}
+
+				if (!result) {
+
 				}
 			}
 		} while ((tmp = tmp->ifa_next) && !result);
