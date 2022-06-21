@@ -11,8 +11,13 @@
 #include <arpa/inet.h>
 #include <stdint.h>
 #include <string.h>
-#include <linux/if_packet.h>
 #include <stdlib.h>
+
+#ifdef LINUX 
+#include <linux/if_packet.h>
+#elif OSX
+#include <net/if_dl.h>
+#endif
 
 #ifdef LINUX
 #define AF_HW AF_PACKET
@@ -22,6 +27,11 @@
 #error Unknown OS
 #endif
 
+/**
+ * Creates a copy of the mac address
+ *
+ * Caller must free
+ */
 char * CopyMacAddress(struct sockaddr * sa, int * err) {
 	char * result = 0;
 	int error = 0;
@@ -37,7 +47,17 @@ char * CopyMacAddress(struct sockaddr * sa, int * err) {
 		l += sprintf(buf+l, "%02X%s", saddr->sll_addr[i], i < 5 ? ":" : "");
 	}
 #elif OSX
+	unsigned char * t = (unsigned char *) LLADDR((struct sockaddr_dl *) sa);
 
+	if (t) {
+		int l = 0;
+		for (int i = 0; i < 6; i++) {
+			l += sprintf(buf+l, "%02X%s", t[i], i < 5 ? ":" : "");
+		}
+	} else {
+		error = 1;
+		Error("Error with LLADDR");
+	}
 #endif
 
 	if (!error) {
