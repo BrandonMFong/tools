@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <net/if.h>
 
 #ifdef LINUX 
 #include <linux/if_packet.h>
@@ -81,15 +82,15 @@ int main() {
 	while (tmp)
 	{
 		// https://stackoverflow.com/questions/4139405/how-can-i-get-to-know-the-ip-address-for-interfaces-in-c
-		if (tmp->ifa_addr) {
+		if (tmp->ifa_addr && (tmp->ifa_flags & IFF_UP) && !(tmp->ifa_flags & IFF_LOOPBACK)) {
 			if (tmp->ifa_addr->sa_family == AF_INET) {
-				printf("%d: %s %d\n", tmp->ifa_addr->sa_family, tmp->ifa_name, sizeof(tmp->ifa_addr->sa_data));
+				printf("IP Address %d: %s %d\n", tmp->ifa_addr->sa_family, tmp->ifa_name, sizeof(tmp->ifa_addr->sa_data));
 
 				sa = (struct sockaddr_in *) tmp->ifa_addr;
 				char * addr = inet_ntoa(sa->sin_addr);
 				printf("%s\n", addr);
 			} else if (tmp->ifa_addr->sa_family == AF_HW) {
-				printf("%d: %s %d\n", tmp->ifa_addr->sa_family, tmp->ifa_name, sizeof(tmp->ifa_addr->sa_data));
+				printf("MAC Address %d: %s %d\n", tmp->ifa_addr->sa_family, tmp->ifa_name, sizeof(tmp->ifa_addr->sa_data));
 				char * mac = CopyMacAddress(tmp->ifa_addr, 0);
 				printf("%s\n", mac);
 				free(mac);
