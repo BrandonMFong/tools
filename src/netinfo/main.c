@@ -79,10 +79,10 @@ int main() {
 	getifaddrs(&addrs);
 	tmp = addrs;
 
-	while (tmp)
-	{
-		// https://stackoverflow.com/questions/4139405/how-can-i-get-to-know-the-ip-address-for-interfaces-in-c
-		if (tmp->ifa_addr && (tmp->ifa_flags & IFF_UP) && !(tmp->ifa_flags & IFF_LOOPBACK)) {
+	while (tmp) {
+		if (		tmp->ifa_addr  // Valid address
+			&& 	(tmp->ifa_flags & IFF_UP) // The interface is active
+			&& 	!(tmp->ifa_flags & IFF_LOOPBACK)) { // Interface is not a loopback
 			if (tmp->ifa_addr->sa_family == AF_INET) {
 				printf("IP Address %d: %s %d\n", tmp->ifa_addr->sa_family, tmp->ifa_name, sizeof(tmp->ifa_addr->sa_data));
 
