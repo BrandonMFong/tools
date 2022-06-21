@@ -143,11 +143,31 @@ int main() {
 					}
 				}
 
+				// Save into linked list
 				if (!result) {
-
+					if (nifRoot == 0) {
+						nifRoot = nif;
+					} else {
+						// Find the last node
+						struct NetInterface * nifTmp = 0;
+						for (nifTmp = nifRoot; nifTmp != 0; nifTmp = nifTmp->_next) {
+							if (nifTmp->_next == 0) { // Last one is when next==0
+								nifTmp->_next = nif;
+								break;
+							}
+						}
+					}
 				}
 			}
 		} while ((tmp = tmp->ifa_next) && !result);
+	}
+
+	// Print data
+	if (!result) {
+		for (struct NetInterface * nif = nifRoot; nif != 0; nif = nif->_next) {
+			printf("Interface: %s\n", nif->_name);
+			printf("\tIP: %s\n", nif->_ipaddr);
+		}
 	}
 
 	/*
