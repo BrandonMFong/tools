@@ -33,7 +33,7 @@ struct NetInterface {
 	char _name[50];
 
 	char _ipaddr[(3 * 4) + 4];
-	char * _macaddr[(6 * 2) + 6];
+	char _macaddr[(6 * 2) + 6];
 
 	struct NetInterface * _next;
 };
@@ -134,6 +134,7 @@ int main() {
 					}
 				}
 
+				// Copy the ip address
 				if (!result) {
 					strcpy(nif->_ipaddr, inet_ntoa(sa->sin_addr));
 
@@ -162,11 +163,62 @@ int main() {
 		} while ((tmp = tmp->ifa_next) && !result);
 	}
 
+	if (!result) {
+		if (nifRoot == 0) {
+			Error("Could not find any interfaces");
+			result = 1;
+		}
+	}
+
+	// Now find the mac address for the current interfaces we have found
+	if (!result) {
+		tmp = addrs; // Reload
+		
+		do {
+			bool cont = false;
+			struct NetInterface * nif = 0;
+
+			if (		tmp->ifa_addr  // Valid address
+				&& 	(tmp->ifa_flags & IFF_UP) // The interface is active
+				&& 	!(tmp->ifa_flags & IFF_LOOPBACK)) { // Interface is not a loopback
+				if (tmp->ifa_addr->sa_family == AF_HW) {
+					cont = true; // Found an interface with an IP address
+				}
+			}
+
+			// Find the correct interface by comparing the interface names
+			if (cont) {
+				cont = false;
+
+				// We assume nifRoot is nonnull
+				for (nif = nifRoot; nif != 0; nif = nif->_next) {
+					if (!strcmp(nif->_name, tmp->ifa_name)) {
+						cont = true;
+						break;
+					}
+				}
+			} 
+
+			if (cont) {
+				if (!result) {
+					char * mac = CopyMacAddress(tmp->ifa_addr, &result);
+
+					if (!result) {
+						strcpy(nif->_macaddr, mac);
+					}
+
+					free(mac);
+				}
+			}
+		} while ((tmp = tmp->ifa_next) && !result);
+	}
+
 	// Print data
 	if (!result) {
 		for (struct NetInterface * nif = nifRoot; nif != 0; nif = nif->_next) {
 			printf("Interface: %s\n", nif->_name);
 			printf("\tIP: %s\n", nif->_ipaddr);
+			printf("\tMAC: %s\n", nif->_macaddr);
 		}
 	}
 
