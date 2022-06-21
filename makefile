@@ -1,5 +1,14 @@
 # author: Brando
 # date: 6/2/22
+# https://www.cs.colby.edu/maxwell/courses/tutorials/maketutor/
+
+## Compiler definitions
+CC = gcc
+
+## Compile Flags
+
+# Includes
+CCFLAGS += -I. -Ilib/
 
 # Determine the OS
 ifeq ($(OS),Windows_NT)
@@ -34,25 +43,30 @@ else
     endif
 endif
 
-all: setup getsize mytime fsinfo getcount netinfo
+all: setup buildlib getsize mytime fsinfo getcount netinfo
 
 setup:
 	mkdir -p bin/
+	mkdir -p build/
 
-getsize: src/getsize/main.c lib/clib/clib.c
-	gcc -o bin/getsize src/getsize/main.c lib/clib/clib.c -I. -Ilib/ $(CCFLAGS)
+buildlib:
+	$(CC) -c -o build/clib.o lib/clib/clib.c $(CCFLAGS)
 
-mytime: src/mytime/main.c lib/clib/clib.c
-	gcc -o bin/mytime src/mytime/main.c lib/clib/clib.c -I. -Ilib/ $(CCFLAGS)
+getsize:
+	$(CC) -o bin/getsize src/getsize/main.c build/clib.o $(CCFLAGS)
 
-fsinfo: src/fsinfo/main.c lib/clib/clib.c
-	gcc -o bin/fsinfo src/fsinfo/main.c lib/clib/clib.c -I. -Ilib/ $(CCFLAGS)
+mytime:
+	$(CC) -o bin/mytime src/mytime/main.c build/clib.o $(CCFLAGS)
 
-getcount: src/getcount/main.c lib/clib/clib.c
-	gcc -o bin/getcount src/getcount/main.c lib/clib/clib.c -I. -Ilib/ $(CCFLAGS)
+fsinfo:
+	$(CC) -o bin/fsinfo src/fsinfo/main.c build/clib.o $(CCFLAGS)
 
-netinfo: src/netinfo/main.c lib/clib/clib.c
-	gcc -o bin/netinfo src/netinfo/main.c lib/clib/clib.c -I. -Ilib/ $(CCFLAGS)
+getcount:
+	$(CC) -o bin/getcount src/getcount/main.c build/clib.o $(CCFLAGS)
+
+netinfo:
+	$(CC) -o bin/netinfo src/netinfo/main.c build/clib.o $(CCFLAGS)
 
 clean:
-	rm -rfv bin/*
+	rm -rfv bin
+	rm -rfv build
