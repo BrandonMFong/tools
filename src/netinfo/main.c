@@ -10,20 +10,26 @@
 #include <sys/socket.h>
 
 int main() {
-struct ifaddrs *addrs,*tmp;
+	struct ifaddrs *addrs,*tmp;
 
-getifaddrs(&addrs);
-tmp = addrs;
+	getifaddrs(&addrs);
+	tmp = addrs;
 
-while (tmp)
-{
-     if (tmp->ifa_addr && (tmp->ifa_addr->sa_family == AF_INET))
-        printf("%d: %s\n", tmp->ifa_addr->sa_family, tmp->ifa_name);
+	while (tmp)
+	{
+		if (tmp->ifa_addr && (tmp->ifa_addr->sa_family == AF_INET)) {
+			printf("%d: %s %d\n", tmp->ifa_addr->sa_family, tmp->ifa_name, sizeof(tmp->ifa_addr->sa_data));
 
-    tmp = tmp->ifa_next;
-}
+			for (int i = 0; i < sizeof(tmp->ifa_addr->sa_data); i++) {
+				printf("%u ", (unsigned char) tmp->ifa_addr->sa_data[i]);
+			}
+			printf("\n");
+		}
 
-freeifaddrs(addrs);
+		tmp = tmp->ifa_next;
+	}
+
+	freeifaddrs(addrs);
 	return 0;
 }
 
