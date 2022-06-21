@@ -29,6 +29,9 @@
 #error Unknown OS
 #endif
 
+/**
+ * Holds the ip and mac address for the interface
+ */
 struct NetInterface {
 	char _name[50];
 
@@ -37,6 +40,16 @@ struct NetInterface {
 
 	struct NetInterface * _next;
 };
+
+/**
+ * Recursively releases the NetInterface linked list nodes
+ */
+void NetInterfaceRelease(struct NetInterface * node) {
+	if (node->_next != 0) 
+		NetInterfaceRelease(node->_next);
+
+	free(node);	
+}
 
 /**
  * Creates a copy of the mac address
@@ -52,35 +65,16 @@ char * CopyMacAddress(struct sockaddr * sa, int * err) {
 	memset(&buf[0], 0, 20);
 
 #ifdef LINUX
-	//struct sockaddr_ll * saddr = (struct sockaddr_ll *) sa;
-	s = ((struct sockaddr_ll *) sa)->sll_addr;
-
-	/*
-	int l = 0;
-	for (int i = 0; i < 6; i++) {
-		l += sprintf(buf+l, "%02X%s", saddr->sll_addr[i], i < 5 ? ":" : "");
-	}
-	*/
+	s = (unsigned char *) ((struct sockaddr_ll *) sa)->sll_addr;
 #elif OSX
 	s = (unsigned char *) LLADDR((struct sockaddr_dl *) sa);
-
-	/*
-	if (t) {
-		int l = 0;
-		for (int i = 0; i < 6; i++) {
-			l += sprintf(buf+l, "%02X%s", t[i], i < 5 ? ":" : "");
-		}
-	} else {
-		error = 1;
-		Error("Error with LLADDR");
-	}
-	*/
 #endif
 	if (s == 0) {
 		error = 1;
 		Error("Could not get raw data");
 	}
 
+	// format the string using its hexidecimal representation
 	if (!error) {
 		int l = 0;
 		for (int i = 0; i < 6; i++) {
@@ -110,8 +104,8 @@ int main() {
 		tmp = addrs;
 	}
 
+	// First get the ip addresses
 	if (!result) {
-		// First get the ip addresses
 		do {
 			bool cont = false;
 			struct NetInterface * nif = 0;
@@ -124,6 +118,7 @@ int main() {
 				}
 			}
 
+			// Init the struct
 			if (cont) {
 				if (!result) {
 					nif = (struct NetInterface *) malloc(sizeof(struct NetInterface));
@@ -178,6 +173,7 @@ int main() {
 		} while ((tmp = tmp->ifa_next) && !result);
 	}
 
+	// Make sure we have a root
 	if (!result) {
 		if (nifRoot == 0) {
 			Error("Could not find any interfaces");
@@ -214,6 +210,8 @@ int main() {
 				}
 			} 
 
+			// Get the mac address for this interface and save into our
+			// interface structure
 			if (cont) {
 				if (!result) {
 					char * mac = CopyMacAddress(tmp->ifa_addr, &result);
@@ -235,6 +233,10 @@ int main() {
 			printf("\tIP: %s\n", nif->_ipaddr);
 			printf("\tMAC: %s\n", nif->_macaddr);
 		}
+	}
+
+	if (nifRoot != 0) {
+		NetInterfaceRelease(nifRoot);
 	}
 
 	freeifaddrs(addrs);
