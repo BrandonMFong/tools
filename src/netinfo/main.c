@@ -13,6 +13,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <net/if.h>
+#include <stdbool.h>
 
 #ifdef LINUX 
 #include <linux/if_packet.h>
@@ -27,6 +28,15 @@
 #else 
 #error Unknown OS
 #endif
+
+struct NetInterface {
+	char _name[50];
+
+	char _ipaddr[(3 * 4) + 4];
+	char * _macaddr[(6 * 2) + 6];
+
+	struct NetInterface * _next;
+};
 
 /**
  * Creates a copy of the mac address
@@ -73,12 +83,45 @@ char * CopyMacAddress(struct sockaddr * sa, int * err) {
 }
 
 int main() {
-	struct ifaddrs *addrs,*tmp;
-	struct sockaddr_in *sa;
+	int result = 0;
+	struct ifaddrs * addrs, * tmp;
+	struct sockaddr_in * sa;
+	struct NetInterface * nif = 0;
 
-	getifaddrs(&addrs);
-	tmp = addrs;
+	if (getifaddrs(&addrs) == -1) {
+		Error("Could not get interfaces");
+		result = 1;
+	} else {
+		tmp = addrs;
+	}
 
+	if (!result) {
+		// First get the ip addresses
+		do {
+			bool cont = false;
+
+			if (		tmp->ifa_addr  // Valid address
+				&& 	(tmp->ifa_flags & IFF_UP) // The interface is active
+				&& 	!(tmp->ifa_flags & IFF_LOOPBACK)) { // Interface is not a loopback
+				if (tmp->ifa_addr->sa_family == AF_INET) {
+					cont = true; // Found an interface with an IP address
+				}
+			}
+
+			if (cont) {
+				if (!result) {
+					sa = (struct sockaddr_in *) tmp->ifa_addr;
+					
+					if (!sa) {
+						Error("Unknown error with sockaddr_in");
+						result = 1;
+					}
+				}
+			}
+		} while ((tmp = tmp->ifa_next) && !result);
+	}
+
+	/*
 	while (tmp) {
 		if (		tmp->ifa_addr  // Valid address
 			&& 	(tmp->ifa_flags & IFF_UP) // The interface is active
@@ -99,8 +142,10 @@ int main() {
 
 		tmp = tmp->ifa_next;
 	}
+	*/
 
 	freeifaddrs(addrs);
-	return 0;
+
+	return result;
 }
 
