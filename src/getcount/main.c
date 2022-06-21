@@ -55,7 +55,7 @@ unsigned long long CountItemsInPath(const char * path, bool recursive, int * err
 			}
 		}
 	} else { 
-		Error("Unknown item: %s", path);
+		Error("Unknown item '%s'", path);
 	}
 
 	if (err != 0) {
@@ -71,10 +71,10 @@ int main(int argc, char * argv[]) {
 
 	strcpy(TOOL_ARG, argv[0]);
 
-	if (argc != 2) {
+	if ((argc != 3) && (argc != 2)) {
 		Help();
 	} else {
-		const char * path = argv[1];
+		const char * path = argv[argc - 1];
 
 		if (!path) {
 			Error("The path argument is null!");
@@ -82,7 +82,7 @@ int main(int argc, char * argv[]) {
 		}
 
 		if (!result) {
-			recursive = (DoesStringArrayContain(argv, argc, RECURS_ARG));
+			recursive = DoesStringArrayContain(argv, argc, RECURS_ARG);
 
 			unsigned long long count = CountItemsInPath(path, recursive, &result);
 
