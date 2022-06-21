@@ -222,29 +222,6 @@ int main() {
 		}
 	}
 
-	/*
-	while (tmp) {
-		if (		tmp->ifa_addr  // Valid address
-			&& 	(tmp->ifa_flags & IFF_UP) // The interface is active
-			&& 	!(tmp->ifa_flags & IFF_LOOPBACK)) { // Interface is not a loopback
-			if (tmp->ifa_addr->sa_family == AF_INET) {
-				printf("IP Address %d: %s %d\n", tmp->ifa_addr->sa_family, tmp->ifa_name, sizeof(tmp->ifa_addr->sa_data));
-
-				sa = (struct sockaddr_in *) tmp->ifa_addr;
-				char * addr = inet_ntoa(sa->sin_addr);
-				printf("%s\n", addr);
-			} else if (tmp->ifa_addr->sa_family == AF_HW) {
-				printf("MAC Address %d: %s %d\n", tmp->ifa_addr->sa_family, tmp->ifa_name, sizeof(tmp->ifa_addr->sa_data));
-				char * mac = CopyMacAddress(tmp->ifa_addr, 0);
-				printf("%s\n", mac);
-				free(mac);
-			}
-		}
-
-		tmp = tmp->ifa_next;
-	}
-	*/
-
 	freeifaddrs(addrs);
 
 	return result;
