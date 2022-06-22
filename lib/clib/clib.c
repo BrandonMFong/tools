@@ -14,12 +14,13 @@
 #include <sys/types.h>
 #include <stdlib.h>
 
-unsigned long long CalculateDirectorySize(const char * path, int * err) {
+unsigned long long CalculateSizeDirectory(const char * path, unsigned char options, int * err) {
 	unsigned long long result = 0;
 	int error = 0;
 	DIR * dir = 0;
 	struct dirent * sdirent = 0;
 	char tempPath[PATH_MAX];
+	char fullPath[PATH_MAX];
 	unsigned long long size = 0;
 
 	dir = opendir(path);
@@ -32,30 +33,37 @@ unsigned long long CalculateDirectorySize(const char * path, int * err) {
 		while ((sdirent = readdir(dir)) && !error) {
 			// We do not want to calculate the size of parent or current dir
 			if (strcmp(sdirent->d_name, "..") && strcmp(sdirent->d_name, ".")) {
-				// We want the full directory path
+				// Construct the path
 				sprintf(tempPath, "%s/%s", path, sdirent->d_name);
-
-				size = 0;
-
-				// If we are working with a directory, then we need 
-				// too recursively call this function again 
-				//
-				// If path is not a diretory or a path then we will 
-				// do nothing 
-				//
-				// We will also be ignoring symbolic links 
-				if (IsSymbolicLink(tempPath)) {
-					size = 0;
-				} else if (IsDirectory(tempPath)) {
-					size = CalculateDirectorySize(tempPath, &error);
 				
-				// Otherwise, we will just get the size of this path 
-				} else if (IsFile(tempPath)) {
-					size = CalculateFileSize(tempPath, &error);
+				// Get full path
+				if (!realpath(tempPath, fullPath)) {
+					error = 1;
 				}
 
 				if (!error) {
-					result += size;
+					size = 0;
+
+					// If we are working with a directory, then we need 
+					// too recursively call this function again 
+					//
+					// If path is not a diretory or a path then we will 
+					// do nothing 
+					//
+					// We will also be ignoring symbolic links 
+					if (IsSymbolicLink(fullPath)) {
+						size = 0;
+					} else if (IsDirectory(fullPath)) {
+						size = CalculateSizeDirectory(fullPath, options, &error);
+					
+					// Otherwise, we will just get the size of this path 
+					} else if (IsFile(fullPath)) {
+						size = CalculateSizeFile(fullPath, options, &error);
+					}
+
+					if (!error) {
+						result += size;
+					}
 				}
 			}
                }
@@ -69,12 +77,16 @@ unsigned long long CalculateDirectorySize(const char * path, int * err) {
        return result;
 }
 
-unsigned long long CalculateFileSize(const char * path, int * error) {
+unsigned long long CalculateSizeFile(const char * path, unsigned char options, int * error) {
        unsigned long long result = 0;
        struct stat buf;
        
        if (!stat(path, &buf)) {
                result = buf.st_size;
+
+	       if (options & kCalculateSizeOptionsVerbose) {
+			printf("(Bytes: %llu) %s\n", result, path);
+	       }
        } else {
                if (error != 0) {
                        *error = 1;

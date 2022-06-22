@@ -22,6 +22,11 @@
  */
 char SCRIPT_ARG[PATH_MAX];
 
+/**
+ * Allows user to show each path we find
+ */
+const char * VERBOSE_ARG = "-v";
+
 // PROTOTYPES
 
 /**
@@ -33,9 +38,10 @@ int PrintSize(unsigned long long byteSize);
 // FUNCTIONS
 
 void Help() {
-	printf("usage: %s <path>\n", SCRIPT_ARG);
+	printf("usage: %s [ %s ] <path>\n", SCRIPT_ARG, VERBOSE_ARG);
 
 	printf("\nArguments:\n");
+	printf("\t%s : Verbose mode\n", VERBOSE_ARG);
 	printf("\t<path> : Can be absolute or relative.  Cannot be a symbolic link\n");
 }
 
@@ -44,6 +50,7 @@ int main(int argc, char * argv[]) {
 	char * buf = 0;
 	unsigned long long size = 0;
 	char path[PATH_MAX];
+	unsigned char options = 0;
 
 	// Get a copy of the script name 
 	buf = basename(argv[0]);
@@ -61,12 +68,12 @@ int main(int argc, char * argv[]) {
 		if (argc < 2) {
 			Help();
 			result = 1;
-		} else if (argc > 2) {
+		} else if (argc > 3) {
 			Error("Too many arguments\n");
 			Help();
 			result = 1;
 		} else {
-			strcpy(path, argv[1]);
+			strcpy(path, argv[argc - 1]);
 
 			if (!strlen(path)) {
 				result = 1;
@@ -84,6 +91,13 @@ int main(int argc, char * argv[]) {
 		}	
 	}
 
+	// See if user wants to show each path we find
+	if (!result) {
+		if (DoesStringArrayContain(argv, argc, "-v")) {
+			options |= kCalculateSizeOptionsVerbose;
+		}
+	}
+
 	// Check what type of path this is
 	// and if depending of the type, we 
 	// will calculate the total size of it
@@ -92,9 +106,9 @@ int main(int argc, char * argv[]) {
 			result = 1;
 			Error("Path '%s' is a symbolic link.  We cannot calculate size for sym links", path);
 		} else if (IsFile(path)) {
-			size = CalculateFileSize(path, &result);
+			size = CalculateSizeFile(path, options, &result);
 		} else if (IsDirectory(path)) {
-			size = CalculateDirectorySize(path, &result);
+			size = CalculateSizeDirectory(path, options, &result);
 		} else {
 			result = 1;
 			Error("Unknown file type for '%s'", path);

@@ -83,9 +83,9 @@ int PrintInfo(const char * path) {
 
 	if (!result) {
 		if (IsDirectory(absPath)) {
-			size = CalculateDirectorySize(absPath, &result);
+			size = CalculateSizeDirectory(absPath, 0, &result);
 		} else if (IsFile(absPath)) {
-			size = CalculateFileSize(absPath, &result);
+			size = CalculateSizeFile(absPath, 0, &result);
 		}
 	}
 

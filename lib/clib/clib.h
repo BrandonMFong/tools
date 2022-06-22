@@ -15,14 +15,21 @@
 #define TERABYTE (long long) (GIGABYTE * 1024)
 
 /**
- * Calculates the directory size recursively
+ * Tells the CalculateSize methods to print out each path it finds and byte size
  */
-unsigned long long CalculateDirectorySize(const char * path, int * error);
+static const unsigned char kCalculateSizeOptionsVerbose = (0x01) << 0;
+
+/**
+ * Calculates the directory size recursively
+ *
+ * options: using anything from the kCalculationSizeOptions... set
+ */
+unsigned long long CalculateSizeDirectory(const char * path, unsigned char options, int * error);
 
 /**
  * Calculates the file size of the path  
  */
-unsigned long long CalculateFileSize(const char * path, int * error);
+unsigned long long CalculateSizeFile(const char * path, unsigned char options, int * error);
 
 /**
  * Prints std error
