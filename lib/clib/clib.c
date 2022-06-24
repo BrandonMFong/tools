@@ -13,6 +13,8 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <stdlib.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 
 unsigned long long CalculateSizeDirectory(const char * path, unsigned char options, int * err) {
 	unsigned long long result = 0;
@@ -164,8 +166,7 @@ double ConvertValueToScale(unsigned long long value, long long scale) {
 }
 
 int GetByteStringRepresentation(unsigned long long byteSize, char * outStr) {
-	double value = 0.0, d1 = 0.0;
-	long long byteLength = 0;
+	double value = 0.0;
 	char unit[10];
 
 	if (outStr == 0) {
@@ -228,6 +229,34 @@ char * CopyString(const char * string, int * err) {
 
 	if (err != 0) *err = error;
 
+	return result;
+}
+
+int ResolveHostname(const char * hostname, char * ip) {
+	int result = 0;
+	struct hostent * he;
+	struct in_addr ** addrList;
+
+	if (!(he = gethostbyname(hostname))) {
+		result = 1;
+	}
+
+	if (!result) {
+		addrList = (struct in_addr **) he->h_addr_list;
+
+		if (addrList == 0) {
+			result = 2;
+		}
+	}
+	
+	if (!result) {
+		if (addrList[0] == 0) {
+			result = 3;
+		} else{
+			strcpy(ip, inet_ntoa(*addrList[0]));
+		}
+	}
+	
 	return result;
 }
 

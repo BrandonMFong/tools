@@ -125,8 +125,7 @@ int main(int argc, char * argv[]) {
 
 int PrintSize(unsigned long long byteSize) {
 	char unit[10];
-	double value = 0.0, d1 = 0.0;
-	long long byteLength = 0;
+	
 	if (GetByteStringRepresentation(byteSize, unit)) {
 		Error("Error with getting byte representation");
 	} else {

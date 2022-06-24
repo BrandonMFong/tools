@@ -43,13 +43,16 @@ else
     endif
 endif
 
-all: setup buildlib getsize mytime fsinfo getcount netinfo
+# Warnings
+CCFLAGS += -Wall
+
+all: setup clib getsize mytime fsinfo getcount netinfo getip
 
 setup:
 	mkdir -p bin/
 	mkdir -p build/
 
-buildlib:
+clib:
 	$(CC) -c -o build/clib.o lib/clib/clib.c $(CCFLAGS)
 
 getsize:
@@ -66,6 +69,9 @@ getcount:
 
 netinfo:
 	$(CC) -o bin/netinfo src/netinfo/main.c build/clib.o $(CCFLAGS)
+
+getip:
+	$(CC) -o bin/getip src/getip/main.c build/clib.o $(CCFLAGS)
 
 clean:
 	rm -rfv bin

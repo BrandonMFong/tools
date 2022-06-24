@@ -73,3 +73,7 @@ bool DoesStringArrayContain(char ** strArr, int arrSize, const char * element);
  */
 char * CopyString(const char * string, int * err);
 
+/**
+ * returns the ip address for the hostname
+ */
+int ResolveHostname(const char * hostname, char * ip);
