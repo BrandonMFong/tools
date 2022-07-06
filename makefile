@@ -46,33 +46,31 @@ endif
 # Warnings
 CCFLAGS += -Wall
 
-all: setup clib getsize mytime fsinfo getcount netinfo getip
+all: setup getsize mytime fsinfo getcount netinfo getip
 
 setup:
 	mkdir -p bin/
 	mkdir -p build/
 
-clib:
-	$(CC) -c -o build/clib.o lib/clib/clib.c $(CCFLAGS)
-
 getsize:
-	$(CC) -o bin/getsize src/getsize/main.c build/clib.o $(CCFLAGS)
+	$(CC) -o bin/getsize src/getsize/main.c lib/bin/clib.o $(CCFLAGS)
 
 mytime:
-	$(CC) -o bin/mytime src/mytime/main.c build/clib.o $(CCFLAGS)
+	$(CC) -o bin/mytime src/mytime/main.c lib/bin/clib.o $(CCFLAGS)
 
 fsinfo:
-	$(CC) -o bin/fsinfo src/fsinfo/main.c build/clib.o $(CCFLAGS)
+	$(CC) -o bin/fsinfo src/fsinfo/main.c lib/bin/clib.o $(CCFLAGS)
 
 getcount:
-	$(CC) -o bin/getcount src/getcount/main.c build/clib.o $(CCFLAGS)
+	$(CC) -o bin/getcount src/getcount/main.c lib/bin/clib.o $(CCFLAGS)
 
 netinfo:
-	$(CC) -o bin/netinfo src/netinfo/main.c build/clib.o $(CCFLAGS)
+	$(CC) -o bin/netinfo src/netinfo/main.c lib/bin/clib.o $(CCFLAGS)
 
 getip:
-	$(CC) -o bin/getip src/getip/main.c build/clib.o $(CCFLAGS)
+	$(CC) -o bin/getip src/getip/main.c lib/bin/clib.o $(CCFLAGS)
 
 clean:
 	rm -rfv bin
 	rm -rfv build
+

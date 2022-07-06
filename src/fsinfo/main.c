@@ -15,7 +15,7 @@
 
 #define DATE_FORMAT "%02d:%02d:%02d%s %02d/%02d/%d"
 
-const char SCRIPT_ARG[PATH_MAX];
+char SCRIPT_ARG[PATH_MAX];
 
 void Help() {
 	printf("usage: %s <path>\n", SCRIPT_ARG);	
@@ -29,7 +29,7 @@ int PrintInfo(const char * path);
 int main(int argc, char * argv[]) {
 	int result = 0;
 	char path[PATH_MAX];
-	strcpy((char *) SCRIPT_ARG, basename(argv[0]));
+	strcpy(SCRIPT_ARG, basename(argv[0]));
 
 	if (argc < 2) {
 		Help(); 
@@ -97,8 +97,9 @@ int PrintInfo(const char * path) {
 		SetDateStringForTime(lastModified, &st.st_mtime);
 		printf(	"Full path: %s\n"
 			"Size: %s\n"
+			"Available: %s\n"
 			"Last modified: %s\n"
-			"\n", absPath, unit, lastModified);
+			"\n", absPath, unit, "todo", lastModified);
 	}
 
 	return result;
