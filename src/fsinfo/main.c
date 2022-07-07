@@ -70,6 +70,8 @@ int PrintInfo(const char * path) {
 	struct stat st;
 	char unit[10];
 	unsigned long long size = 0;
+	long long available = -1;
+	char availableUnit[10];
 
 	if (realpath(path, absPath) == 0) {
 		result = 1;	
@@ -92,6 +94,20 @@ int PrintInfo(const char * path) {
 	if (!result) {
 		result = GetByteStringRepresentation(size, unit);
 	}
+	
+	if (!result) {
+		if (IsDirectory(absPath)) {
+			available = CalculateSizeForAvailability(absPath, &result);
+		}
+	}
+	
+	if (!result) {
+		if (available == -1) {
+			strcpy(availableUnit, "N/A");
+		} else {
+			result = GetByteStringRepresentation(available, availableUnit);
+		}
+	}
 
 	if (!result) {
 		SetDateStringForTime(lastModified, &st.st_mtime);
@@ -99,7 +115,7 @@ int PrintInfo(const char * path) {
 			"Size: %s\n"
 			"Available: %s\n"
 			"Last modified: %s\n"
-			"\n", absPath, unit, "todo", lastModified);
+			"\n", absPath, unit, availableUnit, lastModified);
 	}
 
 	return result;

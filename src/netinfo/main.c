@@ -17,13 +17,13 @@
 
 #ifdef LINUX 
 #include <linux/if_packet.h>
-#elif OSX
+#elif MACOS
 #include <net/if_dl.h>
 #endif
 
 #ifdef LINUX
 #define AF_HW AF_PACKET
-#elif OSX
+#elif MACOS
 #define AF_HW AF_LINK
 #else 
 #error Unknown OS
