@@ -10,16 +10,19 @@
 #include <stdbool.h>
 #include <libgen.h>
 #include <unistd.h>
+#include <math.h>
 
 #define HELP_ARG "-h"
 #define MILT_ARG "-m"
 #define LOCK_ARG "-l"
+#define NS_ARG "-ns"
 
 /**
  * Holds the name of the script
  */
 char SCRIPT_ARG[PATH_MAX];
 bool SHOW_MIL_TIME = false;
+bool SHOW_NANO_SECS = true;
 
 void Help() {
 	printf("usage: %s <args> [ %s ]\n", SCRIPT_ARG, HELP_ARG);
@@ -27,11 +30,13 @@ void Help() {
 	printf("arguments:\n");
 	printf("  %s : Prints military time\n", MILT_ARG);
 	printf("  %s : Keeps printing time until user cancels program\n", LOCK_ARG);
+	printf("  %s : Prints out time to the nanosecond\n", NS_ARG);
 }
 
 void PrintTime() {
-	time_t t = time(NULL);
-	struct tm tm = *localtime(&t);
+	struct timespec spec;
+	clock_gettime(CLOCK_REALTIME, &spec);
+	struct tm tm = *localtime(&spec.tv_sec);
 	int h, m, s;
 
 	if (SHOW_MIL_TIME) {
@@ -43,12 +48,21 @@ void PrintTime() {
 	m = tm.tm_min;
 	s = tm.tm_sec;
 	
-	printf("%02d:%02d:%02d%s", 
+	printf("%02d:%02d:%02d", 
 		h,
 		m, 
-		s,
-		SHOW_MIL_TIME ? "" : (tm.tm_hour < 12 ? " AM" : " PM")
+		s
 	);
+
+	if (SHOW_NANO_SECS) {
+		int ms = spec.tv_nsec * pow(10, -6);
+		int us = (spec.tv_nsec * pow(10, -3)) - (ms * pow(10, 3));
+		int ns = spec.tv_nsec - ((ms * pow(10, 6)) + (us * pow(10, 3)));
+
+		printf(".%03d.%03d.%03d", ms, us, ns);
+	}
+
+	printf(" %s", SHOW_MIL_TIME ? "" : (tm.tm_hour < 12 ? "AM" : "PM"));
 
 	printf(", %02d/%02d/%d",tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900); 
 }
@@ -61,6 +75,7 @@ int main(int argc, char * argv[]) {
 		Help();
 	} else {
 		SHOW_MIL_TIME = DoesStringArrayContain(argv, argc, MILT_ARG);
+		SHOW_NANO_SECS = DoesStringArrayContain(argv, argc, NS_ARG);
 		bool lock = DoesStringArrayContain(argv, argc, LOCK_ARG);
 		do {
 			PrintTime();
