@@ -53,7 +53,7 @@ else
     endif
 endif
 
-all: setup getsize mytime fsinfo getcount netinfo getip passgen
+all: setup getsize mytime fsinfo getcount netinfo getip passgen getpath
 
 setup:
 	mkdir -p bin/
@@ -79,6 +79,9 @@ getip:
 
 passgen:
 	$(CC) -o bin/passgen src/passgen/main.c lib/bin/clib.o $(CCFLAGS)
+
+getpath:
+	$(CC) -o bin/getpath src/getpath/main.c lib/bin/clib.o $(CCFLAGS)
 
 clean:
 	rm -rfv bin
