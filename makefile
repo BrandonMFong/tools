@@ -60,28 +60,28 @@ setup:
 	mkdir -p build/
 
 getsize:
-	$(CC) -o bin/getsize src/getsize/main.c lib/bin/clib.o $(CCFLAGS)
+	$(CC) -o bin/getsize src/getsize/main.c lib/bin/clib.a $(CCFLAGS)
 
 mytime:
-	$(CC) -o bin/mytime src/mytime/main.c lib/bin/clib.o $(CCFLAGS)
+	$(CC) -o bin/mytime src/mytime/main.c lib/bin/clib.a $(CCFLAGS)
 
 fsinfo:
-	$(CC) -o bin/fsinfo src/fsinfo/main.c lib/bin/clib.o $(CCFLAGS)
+	$(CC) -o bin/fsinfo src/fsinfo/main.c lib/bin/clib.a $(CCFLAGS)
 
 getcount:
-	$(CC) -o bin/getcount src/getcount/main.c lib/bin/clib.o $(CCFLAGS)
+	$(CC) -o bin/getcount src/getcount/main.c lib/bin/clib.a $(CCFLAGS)
 
 netinfo:
-	$(CC) -o bin/netinfo src/netinfo/main.c lib/bin/clib.o $(CCFLAGS)
+	$(CC) -o bin/netinfo src/netinfo/main.c lib/bin/clib.a $(CCFLAGS)
 
 getip:
-	$(CC) -o bin/getip src/getip/main.c lib/bin/clib.o $(CCFLAGS)
+	$(CC) -o bin/getip src/getip/main.c lib/bin/clib.a $(CCFLAGS)
 
 passgen:
-	$(CC) -o bin/passgen src/passgen/main.c lib/bin/clib.o $(CCFLAGS)
+	$(CC) -o bin/passgen src/passgen/main.c lib/bin/clib.a $(CCFLAGS)
 
 getpath:
-	$(CC) -o bin/getpath src/getpath/main.c lib/bin/clib.o $(CCFLAGS)
+	$(CC) -o bin/getpath src/getpath/main.c lib/bin/clib.a $(CCFLAGS)
 
 clean:
 	rm -rfv bin
