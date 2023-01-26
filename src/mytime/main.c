@@ -64,7 +64,7 @@ void PrintTime() {
 
 	printf(" %s", SHOW_MIL_TIME ? "" : (tm.tm_hour < 12 ? "AM" : "PM"));
 
-	printf(", %02d/%02d/%d",tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900); 
+	printf(", %02d/%02d/%d", tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900); 
 }
 
 int main(int argc, char * argv[]) {
