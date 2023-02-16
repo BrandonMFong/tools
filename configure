@@ -1,0 +1,12 @@
+#!/usr/bin/bash
+
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+if [ $? -ne 0 ]; then
+	echo "Error: couldn't install rust";
+fi
+
+sudo apt install build-essential
+if [ $? -ne 0 ]; then 
+	echo "Error: couldn't install gcc";
+fi
+
