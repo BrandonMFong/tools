@@ -113,7 +113,12 @@ int MoveByMonth(const char * source, const char * destination) {
 	if (stat(source, &st) == -1) {
 		result = 7;
 	} else {
+#ifdef MACOS
+		struct tm * tm = localtime(&st.st_ctimespec.tv_sec);
+#else
 		struct tm * tm = localtime(&st.st_ctim.tv_sec);
+#endif
+
 		strcpy(bname, source);
 		char * tmp = basename(bname);
 		strcpy(bname, tmp);
