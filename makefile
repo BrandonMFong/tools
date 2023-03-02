@@ -5,9 +5,9 @@
 ## Includes
 include lib/makefiles/platforms.mk
 
-CTOOLS = getsize mytime fsinfo getcount netinfo getip passgen getpath createfile organize
+CTOOLS = getsize mytime fsinfo getcount netinfo getip passgen getpath organize
 BASHTOOLS = rsatool
-RUSTTOOLS = stopwatch
+RUSTTOOLS = stopwatch num2bin
 
 ## Compiler definitions
 CC = gcc
