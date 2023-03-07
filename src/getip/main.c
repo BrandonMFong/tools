@@ -3,10 +3,11 @@
  * date: 6/22/22
  */
 
-#include <clib/clib.h>
+#include <bflibc/bflibc.h>
 #include <stdio.h>
 #include <string.h>
 #include <libgen.h>
+#include <linux/limits.h>
 
 char TOOL_ARG[PATH_MAX];
 
@@ -32,13 +33,13 @@ int main(int argc, char * argv[]) {
 
 		if (domain == 0) {
 			result = 1;
-			Error("Null domain");
+			BFErrorPrint("Null domain");
 			Help();
 		} else if (strlen(domain) == 0) {
-			Error("Empty domain");
+			BFErrorPrint("Empty domain");
 			result = 1;
 		} else {
-			result = ResolveHostname(domain, ip);
+			result = BFNetGetIPForHostname(domain, ip);
 		}
 	}
 

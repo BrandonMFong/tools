@@ -7,13 +7,14 @@
 
 // INCLUDES 
 
-#include <clib/clib.h>
+#include <bflibc/bflibc.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 #include <sys/stat.h>
 #include <libgen.h>
+#include <linux/limits.h>
 
 // CONSTANTS
 
@@ -58,7 +59,7 @@ int main(int argc, char * argv[]) {
 
 	if (!strlen(SCRIPT_ARG)) {
 		result = 1;
-		Error("There was a problemt with the first argument");
+		BFErrorPrint("There was a problemt with the first argument");
 	}
 	
 	// Get the second argument
@@ -69,7 +70,7 @@ int main(int argc, char * argv[]) {
 			Help();
 			result = 1;
 		} else if (argc > 3) {
-			Error("Too many arguments\n");
+			BFErrorPrint("Too many arguments\n");
 			Help();
 			result = 1;
 		} else {
@@ -77,7 +78,7 @@ int main(int argc, char * argv[]) {
 
 			if (!strlen(path)) {
 				result = 1;
-				Error("Arg 1 is empty");
+				BFErrorPrint("Arg 1 is empty");
 				Help();
 			}
 		}
@@ -85,15 +86,15 @@ int main(int argc, char * argv[]) {
 	
 	// Make sure the path the user provided exists
 	if (!result) {
-		if (!PathExists(path)) {
-			Error("Path '%s' does not exist!", path);
+		if (!BFFileSystemPathExists(path)) {
+			BFErrorPrint("Path '%s' does not exist!", path);
 			result = 1;
 		}	
 	}
 
 	// See if user wants to show each path we find
 	if (!result) {
-		if (DoesStringArrayContain(argv, argc, "-v")) {
+		if (BFArrayStringContainsString(argv, argc, "-v")) {
 			options |= kCalculateSizeOptionsVerbose;
 		}
 	}
@@ -102,16 +103,16 @@ int main(int argc, char * argv[]) {
 	// and if depending of the type, we 
 	// will calculate the total size of it
 	if (!result) {
-		if (IsSymbolicLink(path)) {
+		if (BFFileSystemPathIsSymbolicLink(path)) {
 			result = 1;
-			Error("Path '%s' is a symbolic link.  We cannot calculate size for sym links", path);
-		} else if (IsFile(path)) {
-			size = CalculateSizeFile(path, options, &result);
-		} else if (IsDirectory(path)) {
-			size = CalculateSizeDirectory(path, options, &result);
+			BFErrorPrint("Path '%s' is a symbolic link.  We cannot calculate size for sym links", path);
+		} else if (BFFileSystemPathIsFile(path)) {
+			size = BFFileSystemFileGetSizeUsed(path, options, &result);
+		} else if (BFFileSystemPathIsDirectory(path)) {
+			size = BFFileSystemDirectoryGetSizeUsed(path, options, &result);
 		} else {
 			result = 1;
-			Error("Unknown file type for '%s'", path);
+			BFErrorPrint("Unknown file type for '%s'", path);
 		}
 	}
 
@@ -126,8 +127,8 @@ int main(int argc, char * argv[]) {
 int PrintSize(unsigned long long byteSize) {
 	char unit[10];
 	
-	if (GetByteStringRepresentation(byteSize, unit)) {
-		Error("Error with getting byte representation");
+	if (BFByteGetString(byteSize, unit)) {
+		BFErrorPrint("Error with getting byte representation");
 	} else {
 		printf("%s\n", unit);
 	}

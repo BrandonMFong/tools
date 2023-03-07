@@ -7,13 +7,14 @@
  */
 
 #include <stdio.h>
-#include <clib/clib.h>
+#include <bflibc/bflibc.h>
 #include <string.h>
 #include <stdlib.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <libgen.h>
+#include <linux/limits.h>
 
 #define kArgumentsSource "-s"
 #define kArgumentsDestination "-d"
@@ -59,7 +60,7 @@ int main(int argc, char ** argv) {
 
 	// Get destination path
 	if (error == 0) {
-		i = IndexOfStringInArray(argv, argc, kArgumentsDestination);
+		i = BFArrayStringGetIndexForString(argv, argc, kArgumentsDestination);
 
 		if (i == -1) {
 			error = 2;
@@ -74,12 +75,12 @@ int main(int argc, char ** argv) {
 		}
 
 		if (error)
-			Error("No destination path provided");
+			BFErrorPrint("No destination path provided");
 	}
 
 	if (error == 0) {
 		// Get source path
-		i = IndexOfStringInArray(argv, argc, kArgumentsSource);
+		i = BFArrayStringGetIndexForString(argv, argc, kArgumentsSource);
 		if (i == -1) {
 			error = 1;
 		} else if ((i + 1) < argc) {
@@ -93,7 +94,7 @@ int main(int argc, char ** argv) {
 		}
 
 		if (error)
-			Error("No source path provided");
+			BFErrorPrint("No source path provided");
 	}
 
 	if (error == 0) {
@@ -124,7 +125,7 @@ int MoveByMonth(const char * source, const char * destination) {
 		strcpy(bname, tmp);
 		sprintf(buf, "%s/%d-%02d", destination, tm->tm_year + 1900, tm->tm_mon + 1);
 
-		if (!IsDirectory(buf)) {
+		if (!BFFileSystemPathIsDirectory(buf)) {
 			if (mkdir(buf, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0) {
 				result = 10;
 			}
@@ -170,10 +171,10 @@ int OrganizeDirectory() {
 		if (strcmp(ent->d_name, ".") && strcmp(ent->d_name, "..")) {
 			sprintf(buf, "%s/%s", kSourcePath, ent->d_name);
 
-			if (IsFile(buf))
+			if (BFFileSystemPathIsFile(buf))
 				result = Move(buf, kDestinationPath);
 			else {
-				Error("'%s' is not a file", buf);
+				BFErrorPrint("'%s' is not a file", buf);
 			}
 		}
 	}
@@ -192,14 +193,14 @@ int Organize() {
 	printf("destination: %s\n", kDestinationPath);
 
 	// Make sure the paths exist
-	if (!PathExists(kDestinationPath)) {
+	if (!BFFileSystemPathExists(kDestinationPath)) {
 		result = 4;
-		Error("Path %s does not exist", kDestinationPath);
+		BFErrorPrint("Path %s does not exist", kDestinationPath);
 	}
 
-	if (IsFile(kSourcePath)) {
+	if (BFFileSystemPathIsFile(kSourcePath)) {
 		result = Move(kSourcePath, kDestinationPath);
-	} else if (IsDirectory(kSourcePath)) {
+	} else if (BFFileSystemPathIsDirectory(kSourcePath)) {
 		result = OrganizeDirectory();
 	} else {
 		result = 5;

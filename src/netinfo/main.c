@@ -3,7 +3,7 @@
  * date: 6/10/22
  */
 
-#include <clib/clib.h>
+#include <bflibc/bflibc.h>
 #include <stdio.h>
 #include <ifaddrs.h>
 #include <sys/types.h>
@@ -71,7 +71,7 @@ char * CopyMacAddress(struct sockaddr * sa, int * err) {
 #endif
 	if (s == 0) {
 		error = 1;
-		Error("Could not get raw data");
+		BFErrorPrint("Could not get raw data");
 	}
 
 	// format the string using its hexidecimal representation
@@ -81,7 +81,7 @@ char * CopyMacAddress(struct sockaddr * sa, int * err) {
 			l += sprintf(buf+l, "%02X%s", s[i], i < 5 ? ":" : "");
 		}
 
-		result = CopyString(buf, &error);
+		result = BFStringCopyString(buf, &error);
 	}
 
 	if (err != 0) {
@@ -98,7 +98,7 @@ int main() {
 	struct NetInterface * nifRoot = 0;
 
 	if (getifaddrs(&addrs) == -1) {
-		Error("Could not get interfaces");
+		BFErrorPrint("Could not get interfaces");
 		result = 1;
 	} else {
 		tmp = addrs;
@@ -139,7 +139,7 @@ int main() {
 					sa = (struct sockaddr_in *) tmp->ifa_addr;
 					
 					if (!sa) {
-						Error("Unknown error with sockaddr_in");
+						BFErrorPrint("Unknown error with sockaddr_in");
 						result = 1;
 					}
 				}
@@ -150,7 +150,7 @@ int main() {
 
 					if (!strlen(nif->_ipaddr)) {
 						result = 1;
-						Error("Received an empty ip address");
+						BFErrorPrint("Received an empty ip address");
 					}
 				}
 
@@ -176,7 +176,7 @@ int main() {
 	// Make sure we have a root
 	if (!result) {
 		if (nifRoot == 0) {
-			Error("Could not find any interfaces");
+			BFErrorPrint("Could not find any interfaces");
 			result = 1;
 		}
 	}

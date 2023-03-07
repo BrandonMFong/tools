@@ -3,7 +3,7 @@
  * date: 6/9/2022
  */
 
-#include <clib/clib.h>
+#include <bflibc/bflibc.h>
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
@@ -28,12 +28,12 @@ unsigned long long CountItemsInPath(const char * path, bool recursive, int * err
 	struct dirent * derec = 0;
 	char s1[PATH_MAX];
 
-	if (IsFile(path)) {
+	if (BFFileSystemPathIsFile(path)) {
 		result++;
-	} else if (IsDirectory(path)) {
+	} else if (BFFileSystemPathIsDirectory(path)) {
 		if (!(dir = opendir(path))) {
 			error = 1;
-			Error("Could not read directory: %s", path);
+			BFErrorPrint("Could not read directory: %s", path);
 		}
 
 		if (!error) {
@@ -51,11 +51,11 @@ unsigned long long CountItemsInPath(const char * path, bool recursive, int * err
 
 		if (dir) {
 			if (closedir(dir)) {
-				Error("Error finishing reading directory: %s", path);
+				BFErrorPrint("Error finishing reading directory: %s", path);
 			}
 		}
 	} else { 
-		Error("Unknown item '%s'", path);
+		BFErrorPrint("Unknown item '%s'", path);
 	}
 
 	if (err != 0) {
@@ -77,12 +77,12 @@ int main(int argc, char * argv[]) {
 		const char * path = argv[argc - 1];
 
 		if (!path) {
-			Error("The path argument is null!");
+			BFErrorPrint("The path argument is null!");
 			result = 1;
 		}
 
 		if (!result) {
-			recursive = DoesStringArrayContain(argv, argc, RECURS_ARG);
+			recursive = BFArrayStringContainsString(argv, argc, RECURS_ARG);
 
 			unsigned long long count = CountItemsInPath(path, recursive, &result);
 

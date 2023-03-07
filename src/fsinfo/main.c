@@ -5,13 +5,14 @@
  * Checklist:
  */
 
-#include <clib/clib.h>
+#include <bflibc/bflibc.h>
 #include <libgen.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <linux/limits.h>
 
 #define DATE_FORMAT "%02d:%02d:%02d%s %02d/%02d/%d"
 
@@ -36,9 +37,9 @@ int main(int argc, char * argv[]) {
 	} else {
 		strcpy(path, argv[1]);
 		
-		if (!PathExists(path)) {
+		if (!BFFileSystemPathExists(path)) {
 			result = 1;
-			Error("Path '%s' does not exist", path);
+			BFErrorPrint("Path '%s' does not exist", path);
 		}
 	}
 
@@ -84,20 +85,20 @@ int PrintInfo(const char * path) {
 	}
 
 	if (!result) {
-		if (IsDirectory(absPath)) {
-			size = CalculateSizeDirectory(absPath, 0, &result);
-		} else if (IsFile(absPath)) {
-			size = CalculateSizeFile(absPath, 0, &result);
+		if (BFFileSystemPathIsDirectory(absPath)) {
+			size = BFFileSystemDirectoryGetSizeUsed(absPath, 0, &result);
+		} else if (BFFileSystemPathIsFile(absPath)) {
+			size = BFFileSystemFileGetSizeUsed(absPath, 0, &result);
 		}
 	}
 
 	if (!result) {
-		result = GetByteStringRepresentation(size, unit);
+		result = BFByteGetString(size, unit);
 	}
 	
 	if (!result) {
-		if (IsDirectory(absPath)) {
-			available = CalculateSizeForAvailability(absPath, &result);
+		if (BFFileSystemPathIsDirectory(absPath)) {
+			available = BFFileSystemPathGetSizeAvailable(absPath, &result);
 		}
 	}
 	
@@ -105,7 +106,7 @@ int PrintInfo(const char * path) {
 		if (available == -1) {
 			strcpy(availableUnit, "N/A");
 		} else {
-			result = GetByteStringRepresentation(available, availableUnit);
+			result = BFByteGetString(available, availableUnit);
 		}
 	}
 

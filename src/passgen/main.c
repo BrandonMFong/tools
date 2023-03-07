@@ -3,12 +3,13 @@
  * date: 7/6/22
  */
 
-#include <clib/clib.h>
+#include <bflibc/bflibc.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
+#include <linux/limits.h>
 
 char TOOL_ARG[PATH_MAX];
 const char * HELP_ARG = "--help";
@@ -85,7 +86,7 @@ int main(int argc, char * argv[]) {
 
 	strcpy(TOOL_ARG, argv[0]);
 
-	if (DoesStringArrayContain(argv, argc, HELP_ARG)) {
+	if (BFArrayStringContainsString(argv, argc, HELP_ARG)) {
 		Help();
 	} else {
 		// If user specified options, then we must reset options to 0 so that we 
@@ -94,19 +95,19 @@ int main(int argc, char * argv[]) {
 			options = 0x0000;
 
 			// character options
-			if (DoesStringArrayContain(argv, argc, UPPERCASE_ARG)) {
+			if (BFArrayStringContainsString(argv, argc, UPPERCASE_ARG)) {
 				options |= kCreateRandomStringOptionUseUppercase;
 			}
 
-			if (DoesStringArrayContain(argv, argc, LOWERCASE_ARG)) {
+			if (BFArrayStringContainsString(argv, argc, LOWERCASE_ARG)) {
 				options |= kCreateRandomStringOptionUseLowercase;
 			}
 
-			if (DoesStringArrayContain(argv, argc, NUMERAL_ARG)) {
+			if (BFArrayStringContainsString(argv, argc, NUMERAL_ARG)) {
 				options |= kCreateRandomStringOptionUseNumber;
 			}
 
-			if (DoesStringArrayContain(argv, argc, SPECIAL_ARG)) {
+			if (BFArrayStringContainsString(argv, argc, SPECIAL_ARG)) {
 				options |= kCreateRandomStringOptionUseSpecialCharacters;
 			}
 
@@ -116,7 +117,7 @@ int main(int argc, char * argv[]) {
 			}
 
 			// Now get the length option
-			int index = IndexOfStringInArray(argv, argc, LENGTH_ARG);
+			int index = BFArrayStringGetIndexForString(argv, argc, LENGTH_ARG);
 
 			// If length was not specified, then we will use the default
 			// value of 16
@@ -131,13 +132,13 @@ int main(int argc, char * argv[]) {
 					length = (unsigned short) atoi(arg);
 				} else {
 					result = 1;
-					Error("Indexing error with arguments");
+					BFErrorPrint("Indexing error with arguments");
 				}
 
 				if (!result) {
 					if (length == 0) {
 						result = 1;
-						Error("User specified 0 length.  Please pass a nonzero number");
+						BFErrorPrint("User specified 0 length.  Please pass a nonzero number");
 					} else {
 						options |= length;
 					}
@@ -182,7 +183,7 @@ char * CreateRandomString(unsigned short options, int * err) {
 
 	if (!result) {
 		error = 1;
-		Error("Could not allocate memory");
+		BFErrorPrint("Could not allocate memory");
 	}
 
 	if (!error) {
@@ -200,7 +201,7 @@ char * CreateRandomString(unsigned short options, int * err) {
 
 		if (bufSize == 0) {
 			error = 1;
-			Error("Please provide at least one character option");
+			BFErrorPrint("Please provide at least one character option");
 		}
 	}
 

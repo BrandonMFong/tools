@@ -2,7 +2,10 @@
 // author: Brando
 // date: 3/2/23
 
+extern crate bflib;
+
 use std::env;
+use bflib::core::string::string_is_numeric;
 
 const ARGUMENT_HELP: &str = "-h";
 
@@ -19,15 +22,6 @@ fn help() {
     println!("            then it must start with '0x'.  At the moment, we only support 32");
     println!("            bit integers.  Anything higher will have truncated bits in output");
     println!();
-}
-
-fn string_is_numeric(str: String) -> bool {
-    for c in str.chars() {
-        if !c.is_numeric() {
-            return false;
-        }
-    }
-    return true;
 }
 
 fn main() {

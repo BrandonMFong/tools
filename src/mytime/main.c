@@ -3,7 +3,7 @@
  * date: 6/2/22
  */
 
-#include <clib/clib.h>
+#include <bflibc/bflibc.h>
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -11,6 +11,7 @@
 #include <libgen.h>
 #include <unistd.h>
 #include <math.h>
+#include <linux/limits.h>
 
 #define HELP_ARG "-h"
 #define MILT_ARG "-m"
@@ -71,12 +72,12 @@ int main(int argc, char * argv[]) {
 	char * buf = basename(argv[0]);
 	strcpy(SCRIPT_ARG, buf);
 
-	if (DoesStringArrayContain(argv, argc, HELP_ARG)) {
+	if (BFArrayStringContainsString(argv, argc, HELP_ARG)) {
 		Help();
 	} else {
-		SHOW_MIL_TIME = DoesStringArrayContain(argv, argc, MILT_ARG);
-		SHOW_NANO_SECS = DoesStringArrayContain(argv, argc, NS_ARG);
-		bool lock = DoesStringArrayContain(argv, argc, LOCK_ARG);
+		SHOW_MIL_TIME = BFArrayStringContainsString(argv, argc, MILT_ARG);
+		SHOW_NANO_SECS = BFArrayStringContainsString(argv, argc, NS_ARG);
+		bool lock = BFArrayStringContainsString(argv, argc, LOCK_ARG);
 		do {
 			PrintTime();
 

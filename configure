@@ -5,8 +5,19 @@ if [ $? -ne 0 ]; then
 	echo "Error: couldn't install rust";
 fi
 
-sudo apt install build-essential
-if [ $? -ne 0 ]; then 
-	echo "Error: couldn't install gcc";
+# get gcc
+# assuming macos users will already have it
+if [ "$(uname -s)" = "Linux" ]; then 
+	sudo apt install build-essential
+	if [ $? -ne 0 ]; then 
+		echo "Error: couldn't install gcc";
+	fi
 fi
+
+cd external;
+git clone https://github.com/BrandonMFong/libs;
+if [ $? -ne 0 ]; then 
+	echo "Error: couldn't clone libs";
+fi
+cd ..;
 
