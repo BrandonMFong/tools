@@ -41,3 +41,6 @@ clean:
 	rm -rfv bin
 	rm -rfv build
 
+lib:
+	cd external/libs && make
+
