@@ -14,7 +14,11 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 #include <libgen.h>
+#include <limits.h>
+
+#ifdef LINUX
 #include <linux/limits.h>
+#endif
 
 // CONSTANTS
 

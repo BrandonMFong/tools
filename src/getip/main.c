@@ -7,7 +7,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <libgen.h>
+#include <limits.h>
+
+#ifdef LINUX
 #include <linux/limits.h>
+#endif
 
 char TOOL_ARG[PATH_MAX];
 

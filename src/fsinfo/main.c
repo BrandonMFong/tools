@@ -12,7 +12,11 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <limits.h>
+
+#ifdef LINUX
 #include <linux/limits.h>
+#endif
 
 #define DATE_FORMAT "%02d:%02d:%02d%s %02d/%02d/%d"
 

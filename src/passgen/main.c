@@ -9,7 +9,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
+#include <limits.h>
+
+#ifdef LINUX
 #include <linux/limits.h>
+#endif
 
 char TOOL_ARG[PATH_MAX];
 const char * HELP_ARG = "--help";

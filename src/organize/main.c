@@ -14,7 +14,11 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <libgen.h>
+#include <limits.h>
+
+#ifdef LINUX
 #include <linux/limits.h>
+#endif
 
 #define kArgumentsSource "-s"
 #define kArgumentsDestination "-d"

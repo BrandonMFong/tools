@@ -11,7 +11,11 @@
 #include <libgen.h>
 #include <unistd.h>
 #include <math.h>
+#include <limits.h>
+
+#ifdef LINUX
 #include <linux/limits.h>
+#endif
 
 #define HELP_ARG "-h"
 #define MILT_ARG "-m"
