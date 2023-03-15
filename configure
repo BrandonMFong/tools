@@ -16,9 +16,21 @@ fi
 
 mkdir external;
 cd external;
-git clone https://github.com/BrandonMFong/libs;
-if [ $? -ne 0 ]; then 
-	echo "Error: couldn't clone libs";
+if [ ! -d libs ]; then
+	git clone https://github.com/BrandonMFong/libs;
+	if [ $? -ne 0 ]; then 
+		echo "Error: couldn't clone libs";
+	fi
 fi
 cd ..;
+
+if [ "$(uname -s)" = "Linux" ]; then
+	goname="go1.20.2.linux-amd64.tar.gz";
+	curl --location "https://go.dev/dl/$goname" --output "$goname";
+	sudo rm -rf /usr/local/go
+	sudo tar -C /usr/local -xzf "$goname";
+	rm -rf "$goname";
+elif [ "$(uname -s)" = "Darwin" ]; then
+	echo "todo";
+fi
 

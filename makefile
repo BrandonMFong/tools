@@ -6,41 +6,55 @@
 include external/libs/makefiles/platforms.mk
 include external/libs/makefiles/libpaths.mk
 
+DIRS = bin
 CTOOLS = getsize mytime fsinfo getcount netinfo getip passgen getpath organize
 BASHTOOLS = rsatool
 RUSTTOOLS = stopwatch num2bin num2hex
+GOTOOLS = numshift
+LIBCPATH = external/libs/$(BF_LIB_RPATH_RELEASE_C) 
+LIBRUSTPATH = external/libs/bin/release/rust/release/libbfrust.rlib
 
 ## Compiler definitions
 CC = gcc
 CPP = g++
 RUSTC = rustc
+GO = /usr/local/go/bin/go
 
 ## Compile Flags
 
 # Includes
-CFLAGS += -I. -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) external/libs/$(BF_LIB_RPATH_RELEASE_C)
-RUSTFLAGS += -C opt-level=3 --extern bflib=external/libs/bin/release/rust/release/libbfrust.rlib
+CFLAGS += -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) $(LIBCPATH)
+RUSTFLAGS += -C opt-level=3 --extern bflib=$(LIBRUSTPATH)
+GOFLAGS = 
 
-all: setup $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS)
+.PHONY: $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS)
+all: $(DIRS) $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS)
 
-setup:
-	mkdir -p bin/
-	mkdir -p build/
+$(DIRS):
+	mkdir -p $@/
 
-$(CTOOLS):
-	$(CC) -o bin/$@ src/$@/main.c $(CFLAGS)
+# TODO: how to make target build only when deps change
 
-$(RUSTTOOLS):
-	$(RUSTC) -o bin/$@ src/$@/main.rs $(RUSTFLAGS)
+$(CTOOLS): % : src/%/main.c
+	$(CC) -o bin/$@ $< $(CFLAGS)
 
-$(BASHTOOLS):
-	@cp -afv src/$@/script.sh bin/$@
+$(RUSTTOOLS): % : src/%/main.rs
+	$(RUSTC) -o bin/$@ $< $(RUSTFLAGS)
+
+$(GOTOOLS): % : src/%/main.go
+	$(GO) build -o bin/$@ $< $(GOFLAGS)
+
+$(BASHTOOLS): % : src/%/script.sh
+	@cp -afv $< bin/$@
 	@chmod 755 bin/$@
 
-clean:
-	rm -rfv bin
-	rm -rfv build
+setup: $(DIRS)
 
+clean:
+	rm -rfv $(DIRS)
+
+$(LIBCPATH) : lib
+$(LIBRUSTPATH): lib
 lib:
 	cd external/libs && make
 
