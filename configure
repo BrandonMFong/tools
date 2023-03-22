@@ -31,6 +31,9 @@ if [ "$(uname -s)" = "Linux" ]; then
 	sudo tar -C /usr/local -xzf "$goname";
 	rm -rf "$goname";
 elif [ "$(uname -s)" = "Darwin" ]; then
-	echo "todo";
+	pkgname="out.pkg";
+	curl --location "https://go.dev/dl/go1.20.2.darwin-amd64.pkg" --output "out.pkg"
+	sudo installer -pkg "$pkgname" -target / -verbose;
+	rm -rfv $pkgname;
 fi
 
