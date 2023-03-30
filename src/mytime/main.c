@@ -5,6 +5,7 @@
 
 #include <bflibc/bflibc.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <string.h>
 #include <stdbool.h>
@@ -21,6 +22,7 @@
 #define MILT_ARG "-m"
 #define LOCK_ARG "-l"
 #define NS_ARG "-ns"
+#define EPOCH_ARG "-e"
 
 /**
  * Holds the name of the script
@@ -36,12 +38,13 @@ void Help() {
 	printf("  %s : Prints military time\n", MILT_ARG);
 	printf("  %s : Keeps printing time until user cancels program\n", LOCK_ARG);
 	printf("  %s : Prints out time to the nanosecond\n", NS_ARG);
+	printf(	"  %s [ <epoch value> ] : Prints out current epoch\n"
+			"     time.  If value is passed, will print out the\n"
+			"     date time version of epoch time\n", EPOCH_ARG);
 }
 
-void PrintTime() {
-	struct timespec spec;
-	clock_gettime(CLOCK_REALTIME, &spec);
-	struct tm tm = *localtime(&spec.tv_sec);
+void PrintTime(const time_t sec, const long nsec) {
+	struct tm tm = *localtime(&sec);
 	int h, m, s;
 
 	if (SHOW_MIL_TIME) {
@@ -60,9 +63,9 @@ void PrintTime() {
 	);
 
 	if (SHOW_NANO_SECS) {
-		int ms = spec.tv_nsec * pow(10, -6);
-		int us = (spec.tv_nsec * pow(10, -3)) - (ms * pow(10, 3));
-		int ns = spec.tv_nsec - ((ms * pow(10, 6)) + (us * pow(10, 3)));
+		int ms = nsec * pow(10, -6);
+		int us = (nsec * pow(10, -3)) - (ms * pow(10, 3));
+		int ns = nsec - ((ms * pow(10, 6)) + (us * pow(10, 3)));
 
 		printf(".%03d.%03d.%03d", ms, us, ns);
 	}
@@ -73,29 +76,60 @@ void PrintTime() {
 }
 
 int main(int argc, char * argv[]) {
+	int error = 0;
 	char * buf = basename(argv[0]);
 	strcpy(SCRIPT_ARG, buf);
+	bool lock = false;
+	bool help = false;
+	time_t inputEpoch = 0;
+	bool epochFlag = false;
 
-	if (BFArrayStringContainsString(argv, argc, HELP_ARG)) {
-		Help();
-	} else {
-		SHOW_MIL_TIME = BFArrayStringContainsString(argv, argc, MILT_ARG);
-		SHOW_NANO_SECS = BFArrayStringContainsString(argv, argc, NS_ARG);
-		bool lock = BFArrayStringContainsString(argv, argc, LOCK_ARG);
-		do {
-			PrintTime();
-
-			if (lock) {
-				fflush(stdout);
-				sleep(1);
-				printf("\r");
-			} else {
-				printf("\n");
-				break;
+	for (int i = 0; i < argc; i++) {
+		if (!strcmp(argv[i], HELP_ARG)) {
+			help = true;
+		} else if (!strcmp(argv[i], MILT_ARG)) {
+			SHOW_MIL_TIME = true;
+		} else if (!strcmp(argv[i], EPOCH_ARG)) {
+			epochFlag = true;
+			if ((i + 1) < argc) {
+				inputEpoch = (time_t) atof(argv[i + 1]);
 			}
-		} while (1);
+		} else if (!strcmp(argv[i], NS_ARG)) {
+			SHOW_NANO_SECS = true;
+		} else if (!strcmp(argv[i], LOCK_ARG)) {
+			lock = true;
+		}
 	}
 
-	return 0;
+	if (help) {
+		Help();
+	} else if (error == 0) {
+		if (epochFlag) {
+			if (inputEpoch) {
+				PrintTime(inputEpoch, 0);
+				printf("\n");
+			} else {
+				printf("%ld\n", BFTimeGetCurrentTime());
+			}
+		} else { 
+			do {
+				struct timespec spec;
+				clock_gettime(CLOCK_REALTIME, &spec);
+
+				PrintTime(spec.tv_sec, spec.tv_nsec);
+
+				if (lock) {
+					fflush(stdout);
+					sleep(1);
+					printf("\r");
+				} else {
+					printf("\n");
+					break;
+				}
+			} while (1);
+		}
+	}
+
+	return error;
 }
 
