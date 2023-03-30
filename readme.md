@@ -1,4 +1,4 @@
-# Tools I used pretty often
+# Tools I use pretty often
 
 ## Setup
 - `./configure`
