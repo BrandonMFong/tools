@@ -112,14 +112,16 @@ int main(int argc, char ** argv) {
 int MoveByMonth(const char * source, const char * destination) {
 	int result = 0;
 	char buf[PATH_MAX];
-	struct stat st;
 	char bname[PATH_MAX];
+	struct stat st;
 
 	if (stat(source, &st) == -1) {
 		result = 7;
-	} else {
+	}
+
+	if (result == 0) {
 #ifdef MACOS
-		struct tm * tm = localtime(&st.st_ctimespec.tv_sec);
+		struct tm * tm = localtime(&st.st_birthtimespec.tv_sec);
 #else
 		struct tm * tm = localtime(&st.st_ctim.tv_sec);
 #endif
