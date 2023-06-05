@@ -21,7 +21,7 @@
 #define HELP_ARG "-h"
 #define MILT_ARG "-m"
 #define LOCK_ARG "-l"
-#define NS_ARG "-ns"
+#define US_ARG "-u"
 #define EPOCH_ARG "-e"
 
 /**
@@ -29,7 +29,7 @@
  */
 char SCRIPT_ARG[PATH_MAX];
 bool SHOW_MIL_TIME = false;
-bool SHOW_NANO_SECS = true;
+bool SHOW_MICRO_SECS = false;
 
 void Help() {
 	printf("usage: %s <args> [ %s ]\n", SCRIPT_ARG, HELP_ARG);
@@ -37,7 +37,7 @@ void Help() {
 	printf("arguments:\n");
 	printf("  %s : Prints military time\n", MILT_ARG);
 	printf("  %s : Keeps printing time until user cancels program\n", LOCK_ARG);
-	printf("  %s : Prints out time to the nanosecond\n", NS_ARG);
+	printf("  %s : Prints out time to the microsecond\n", US_ARG);
 	printf(	"  %s [ <epoch value> ] : Prints out current epoch\n"
 			"     time.  If value is passed, will print out the\n"
 			"     date time version of epoch time\n", EPOCH_ARG);
@@ -62,12 +62,11 @@ void PrintTime(const time_t sec, const long nsec) {
 		s
 	);
 
-	if (SHOW_NANO_SECS) {
+	if (SHOW_MICRO_SECS) {
 		int ms = nsec * pow(10, -6);
 		int us = (nsec * pow(10, -3)) - (ms * pow(10, 3));
-		int ns = nsec - ((ms * pow(10, 6)) + (us * pow(10, 3)));
 
-		printf(".%03d.%03d.%03d", ms, us, ns);
+		printf(".%03d%03d", ms, us);
 	}
 
 	printf(" %s", SHOW_MIL_TIME ? "" : (tm.tm_hour < 12 ? "AM" : "PM"));
@@ -94,8 +93,8 @@ int main(int argc, char * argv[]) {
 			if ((i + 1) < argc) {
 				inputEpoch = (time_t) atof(argv[i + 1]);
 			}
-		} else if (!strcmp(argv[i], NS_ARG)) {
-			SHOW_NANO_SECS = true;
+		} else if (!strcmp(argv[i], US_ARG)) {
+			SHOW_MICRO_SECS = true;
 		} else if (!strcmp(argv[i], LOCK_ARG)) {
 			lock = true;
 		}
