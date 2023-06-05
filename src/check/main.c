@@ -24,6 +24,8 @@
 #define kArgumentsSHA256 "sha256"
 #define kArgumentsSHA512 "sha512"
 
+#define kArgumentsExpected "-e"
+
 // Types
 typedef struct {
 	int fd; // file descriptor
@@ -43,7 +45,7 @@ const int kThreadCount = 2;
 size_t kBufferSizeRead = 4096 * 4096;
 
 void help(int argc, char ** argv) {
-	printf("usage: %s <checksum type> <file path>\n", basename(argv[0]));
+	printf("usage: %s <checksum type> [ %s <expected hash> ] <file path>\n", basename(argv[0]), kArgumentsExpected);
 
 	printf("\n");
 	printf("Checksum types:\n");
@@ -60,7 +62,7 @@ int main(int argc, char ** argv) {
 	pthread_mutex_t mutexRead, mutexHash;
 	BFChecksumType checksumType = kBFChecksumTypeUnknown;
 
-	if (argc != 3) {
+	if (argc < 3) {
 		help(argc, argv);
 		error = 1;
 	} else {
@@ -78,8 +80,20 @@ int main(int argc, char ** argv) {
 		}
 	}
 
+	// Read other arguments
+	const char * expected = NULL;
 	if (error == 0) {
-		strcpy(filePath, argv[2]);
+		for (int i = 2; i < (argc - 1); i++) {
+			// user provied expected checksum
+			if (!strcmp(argv[i], kArgumentsExpected)) {
+				i++;
+				expected = argv[i];
+			}
+		}
+	}
+
+	if (error == 0) {
+		strcpy(filePath, argv[argc - 1]);
 		if (!BFFileSystemPathIsFile(filePath)) {
 			error = 2;
 		}
@@ -157,7 +171,19 @@ int main(int argc, char ** argv) {
 
 	// Print
 	if (error == 0) {
-		printf("%s\n", hashStr);
+		printf("%s", hashStr);
+
+		if (expected) {
+			printf(" [ ");
+			if (strcmp(hashStr, expected)) {
+				printf("\x1B[31m" "fail" "\033[0m");
+			} else {
+				printf("\x1B[32m" "pass" "\033[0m");
+			}
+			printf(" ]");
+		}
+
+		printf("\n");
 	}
 
 	BFChecksumDestroy(&ctools);
