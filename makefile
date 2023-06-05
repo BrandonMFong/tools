@@ -19,12 +19,12 @@ LIBRUSTPATH = external/libs/bin/release/rust/release/libbfrust.rlib
 CC = gcc
 CPP = g++
 RUSTC = rustc
-GO = /usr/local/go/bin/go
+GO = go
 
 ## Compile Flags
 
 # Includes
-CFLAGS += -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) $(LIBCPATH)
+CFLAGS += -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) $(LIBCPATH) $(LDFLAGS)
 RUSTFLAGS += -C opt-level=3 --extern bflib=$(LIBRUSTPATH)
 GOFLAGS = 
 
