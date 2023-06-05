@@ -5,6 +5,7 @@
 ## Includes
 include external/libs/makefiles/platforms.mk
 include external/libs/makefiles/libpaths.mk
+include external/libs/bflibc/makefiles/checksum.mk
 
 DIRS = bin
 CTOOLS = getsize mytime fsinfo getcount netinfo getip passgen getpath organize
@@ -27,8 +28,8 @@ CFLAGS += -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) $(LIBCPATH)
 RUSTFLAGS += -C opt-level=3 --extern bflib=$(LIBRUSTPATH)
 GOFLAGS = 
 
-.PHONY: $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS)
-all: $(DIRS) $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS)
+.PHONY: $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) lib
+all: $(DIRS) $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) check
 
 $(DIRS):
 	mkdir -p $@/
@@ -37,6 +38,9 @@ $(DIRS):
 
 $(CTOOLS): % : src/%/main.c
 	$(CC) -o bin/$@ $< $(CFLAGS)
+
+check: % : src/%/main.c
+	$(CC) -o bin/$@ $< -lpthread $(CFLAGS) $(BF_LIB_C_CHECKSUM_FLAGS) 
 
 $(RUSTTOOLS): % : src/%/main.rs
 	$(RUSTC) -o bin/$@ $< $(RUSTFLAGS)
