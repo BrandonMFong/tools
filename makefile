@@ -8,7 +8,7 @@ include external/libs/makefiles/libpaths.mk
 include external/libs/bflibc/makefiles/checksum.mk
 
 DIRS = bin
-CTOOLS = getsize mytime fsinfo getcount netinfo ip4domain passgen getpath organize
+CTOOLS = getsize mytime fsinfo getcount netinfo ip4domain passgen getpath organize listtools
 BASHTOOLS = rsatool
 RUSTTOOLS = stopwatch num2bin num2hex
 GOTOOLS = numshift
