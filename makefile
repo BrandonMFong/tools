@@ -24,7 +24,7 @@ GO = go
 ## Compile Flags
 
 # Includes
-CFLAGS += -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) $(LIBCPATH) $(LDFLAGS)
+CFLAGS += -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) $(LIBCPATH) $(LDFLAGS) -luuid
 RUSTFLAGS += -C opt-level=3 --extern bflib=$(LIBRUSTPATH)
 GOFLAGS = 
 
