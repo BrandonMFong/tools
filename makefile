@@ -6,6 +6,7 @@
 include external/libs/makefiles/platforms.mk
 include external/libs/makefiles/libpaths.mk
 include external/libs/bflibc/makefiles/checksum.mk
+include external/libs/bflibc/makefiles/uuid.mk
 
 DIRS = bin
 CTOOLS = getsize mytime fsinfo getcount netinfo ip4domain passgen getpath organize listtools
@@ -24,7 +25,7 @@ GO = go
 ## Compile Flags
 
 # Includes
-CFLAGS += -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) $(LIBCPATH) $(LDFLAGS) -luuid
+CFLAGS += -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) $(LIBCPATH) $(LDFLAGS) $(BF_LIB_C_UUID_FLAGS)
 RUSTFLAGS += -C opt-level=3 --extern bflib=$(LIBRUSTPATH)
 GOFLAGS = 
 
