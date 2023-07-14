@@ -132,10 +132,9 @@ impl FileFlow {
         }
     }
 
-    /// sets newDestination
-    pub fn setup(&mut self) -> i32 {
-        let mut dest_path = PathBuf::from(&self.destination);
-
+    fn source_rel_leaf(&self) -> String {
+        let mut result = PathBuf::new();
+ 
         // if source == base then we can assume:
         //
         // 1: source input is a file, we just need to append file name to destination path
@@ -143,11 +142,11 @@ impl FileFlow {
         if self.source == self.base {
             let source_path = Path::new(&self.source);
             if let Some(leaf) = source_path.file_name() {
-                dest_path.push(leaf);
-            } else {
-                return -1;
+                result.push(leaf);
             }
         } else {
+            result.push(Path::new(&self.base).file_name().unwrap());
+            
             // strip base from source path
             let mut leaf_rel_path = self.source.replace(&self.base, "");
 
@@ -155,16 +154,24 @@ impl FileFlow {
             // rather a relative path
             leaf_rel_path = Path::new(&leaf_rel_path).strip_prefix("/").unwrap().display().to_string();
 
-            // Create new destination path, keeping the structure of the
-            // base path
-            //
             // We use the leaf component of base to add to the destination path
             // because we want to make sure if the input source to this
             // program is a directory, we make sure we copy from the root of 
             // the source
-            dest_path.push(Path::new(&self.base).file_name().unwrap());
-            dest_path.push(leaf_rel_path);
+            result.push(leaf_rel_path);
         }
+
+        return result.into_os_string().into_string().unwrap();
+    }
+
+    /// sets newDestination
+    pub fn setup(&mut self) -> i32 {
+        let mut dest_path = PathBuf::from(&self.destination);
+        
+        // Create new destination path, keeping the structure of the
+        // base path
+
+        dest_path.push(self.source_rel_leaf());
 
         self.new_destination = dest_path.clone().into_os_string().into_string().unwrap();
 
