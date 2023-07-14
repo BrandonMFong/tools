@@ -24,7 +24,6 @@ fn main() {
 }
 
 fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
-    let files_source: Vec<String>;
     let mut flows: Vec<FileFlow> = Vec::new();
     let full_dest_path = canonicalize(d).unwrap().into_os_string().into_string().unwrap();
 
@@ -37,6 +36,10 @@ fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
                 flows.push(FileFlow::new(&file, &full_dest_path));
             }
         }
+    }
+
+    for flow in flows {
+        println!("{} => {}", flow.source, flow.destination);
     }
 
     return 0;
@@ -67,8 +70,8 @@ fn find_leaf_files(path: &str) -> Result<Vec<String>, std::io::Error> {
 }
 
 struct FileFlow {
-    source: String,
-    destination: String
+    pub source: String,
+    pub destination: String
 }
 
 impl FileFlow {
