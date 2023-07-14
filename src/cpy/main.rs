@@ -12,6 +12,7 @@ use std::path::PathBuf;
 use std::fs::canonicalize;
 use std::io::{self, Read, Write};
 use std::path::Path;
+use std::convert::TryInto;
 
 const BUFFER_SIZE: usize = 8192; // Chunk size for copying
 
@@ -135,6 +136,10 @@ impl FileFlow {
     pub fn setup(&mut self) -> i32 {
         let mut dest_path = PathBuf::from(&self.destination);
 
+        // if source == base then we can assume:
+        //
+        // 1: source input is a file, we just need to append file name to destination path
+        // 2: source input is an empty directory. This case is not handled yet
         if self.source == self.base {
             let source_path = Path::new(&self.source);
             if let Some(leaf) = source_path.file_name() {
@@ -152,6 +157,11 @@ impl FileFlow {
 
             // Create new destination path, keeping the structure of the
             // base path
+            //
+            // We use the leaf component of base to add to the destination path
+            // because we want to make sure if the input source to this
+            // program is a directory, we make sure we copy from the root of 
+            // the source
             dest_path.push(Path::new(&self.base).file_name().unwrap());
             dest_path.push(leaf_rel_path);
         }
@@ -173,12 +183,13 @@ impl FileFlow {
 
     /// Copies source to newDestination
     pub fn copy(&self) -> io::Result<()> {
-        println!("{} => {}", self.source, self.new_destination);
         let mut source_file = fs::File::open(&self.source)?;
+        let source_size: usize = source_file.metadata().unwrap().len().try_into().unwrap();
         let mut destination_file = fs::File::create(&self.new_destination)?;
         let mut buffer = [0; BUFFER_SIZE];
         let mut total_bytes_copied = 0;
 
+        print!("{} - {}", self.source, total_bytes_copied / source_size);
         loop {
             let bytes_read = source_file.read(&mut buffer)?;
             if bytes_read == 0 {
@@ -188,12 +199,11 @@ impl FileFlow {
             destination_file.write_all(&buffer[..bytes_read])?;
 
             total_bytes_copied += bytes_read;
-            println!("Bytes copied: {}", total_bytes_copied);
-            // Update progress as needed (e.g., calculate percentage)
 
-            // Add additional logic for progress reporting (e.g., update a progress bar)
-
+            print!("\r");
+            print!("{} - {}", self.source, total_bytes_copied / source_size);
         }
+        println!("\r{} - {}", self.source, total_bytes_copied / source_size);
 
         Ok(())
     }
