@@ -15,6 +15,12 @@ use std::path::Path;
 use std::convert::TryInto;
 
 const BUFFER_SIZE: usize = 8192; // Chunk size for copying
+const ARG_HELP: &str = "h";
+
+fn help() {
+    let args: Vec<String> = env::args().collect();
+    //println!("usage: {} [ -{} ]");
+}
 
 fn main() {
     let mut error = 0;
@@ -26,6 +32,11 @@ fn main() {
         let source = &args[args.len() - 2];
         let dest = &args[args.len() - 1];
         error = copy_from_source_to_destination(source, dest);
+    } else if args.len() > 1 {
+        let flags = &args[1];
+        if flags.contains(ARG_HELP) {
+
+        }
     }
 
     std::process::exit(error);
