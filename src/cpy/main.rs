@@ -133,15 +133,27 @@ impl FileFlow {
 
     /// sets newDestination
     pub fn setup(&mut self) -> i32 {
+        // strip base from source path
         let mut leaf_rel_path = self.source.replace(&self.base, "");
+
+        // remove the "/" so it is not treated as an absolute path but
+        // rather a relative path
         leaf_rel_path = Path::new(&leaf_rel_path).strip_prefix("/").unwrap().display().to_string();
-        println!("{}", leaf_rel_path);
+
+        // Create new destination path, keeping the structure of the
+        // base path
         let mut dest_path = PathBuf::from(&self.destination);
-        println!("{}", dest_path.display());
         dest_path.push(leaf_rel_path);
-        //let new_dest = dest_path.join(leaf_rel_path);
-        println!("dest_path: {}", dest_path.display());
-        self.new_destination = dest_path.into_os_string().into_string().unwrap();
+        self.new_destination = dest_path.clone().into_os_string().into_string().unwrap();
+
+        // Make sure sub directories are created
+        let dest_parent_path = dest_path.parent().unwrap();
+        match fs::create_dir(dest_parent_path) {
+            Ok(_) => {}
+            Err(e) => {
+                eprintln!("could not create directory {}: {}", dest_parent_path.display(), e);
+            }
+        }
 
         return 0;
     }
