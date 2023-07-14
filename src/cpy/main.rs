@@ -11,12 +11,16 @@ use std::fs;
 use std::path::PathBuf;
 use std::fs::canonicalize;
 use std::io::{self, Read, Write};
+use std::path::Path;
 
 const BUFFER_SIZE: usize = 8192; // Chunk size for copying
 
 fn main() {
     let mut error = 0;
     let args: Vec<String> = env::args().collect();
+
+    // The last two args should be the source and destination path
+    // respectively
     if args.len() > 2 {
         let source = &args[args.len() - 2];
         let dest = &args[args.len() - 1];
@@ -26,22 +30,41 @@ fn main() {
     std::process::exit(error);
 }
 
+/**
+ * Copies all items in s to d
+ */
 fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
+    // vector of source/destination pairs
     let mut flows: Vec<FileFlow> = Vec::new();
+
+    // Get full paths for params
+    let full_source_path = canonicalize(s).unwrap().into_os_string().into_string().unwrap();
     let full_dest_path = canonicalize(d).unwrap().into_os_string().into_string().unwrap();
 
+    // Find all items in source directory
+    println!(" - Unfolding sources for all leaf items");
     match find_leaf_files(s) {
         Err(e) => {
             eprintln!("Experienced an error in: {} - {}", type_name::<fn()>(), e.kind()); 
             return -1;
         } Ok(files) => {
             for file in files {
-                flows.push(FileFlow::new(&file, &full_dest_path));
+                flows.push(FileFlow::new(&full_source_path, &file, &full_dest_path));
             }
         }
     }
 
-    for flow in flows {
+    // Do copy
+    // 
+    // This will only copy one by one
+    println!(" - Initiating copy...");
+    for mut flow in flows {
+        // make sure we know where we are copying to
+        if flow.setup() != 0 {
+            return -1;
+        }
+
+        // Execute copy
         match flow.copy() {
             Ok(_) => {}
             Err(e) => {
@@ -54,6 +77,9 @@ fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
     return 0;
 }
 
+/**
+ * Finds all file paths within path
+ */
 fn find_leaf_files(path: &str) -> Result<Vec<String>, std::io::Error> {
     let mut result = Vec::new();
     let entries = fs::read_dir(path)?; // Read directory entries
@@ -61,7 +87,8 @@ fn find_leaf_files(path: &str) -> Result<Vec<String>, std::io::Error> {
     for entry in entries {
         let entry = entry?;
         let file_type = entry.file_type()?;
-        
+       
+        // if file, save path. otherwise recursively call function
         if file_type.is_file() {
             if let Some(file_name) = entry.file_name().to_str() {
                 let base_path = PathBuf::from(path);
@@ -79,21 +106,51 @@ fn find_leaf_files(path: &str) -> Result<Vec<String>, std::io::Error> {
 }
 
 struct FileFlow {
+    /// Source file
     pub source: String,
-    pub destination: String
+
+    /// destination path
+    pub destination: String,
+
+    /// Base path where source is from
+    base: String,
+
+    /// Where source file will go respecting
+    /// the file structure in base path
+    new_destination: String
 }
 
 impl FileFlow {
-    fn new(s: &String, d: &String) -> Self {
+
+    fn new(b: &String, s: &String, d: &String) -> Self {
         FileFlow {
-            source: s.to_string(), destination: d.to_string()
+            base: b.to_string(),
+            source: s.to_string(),
+            destination: d.to_string(),
+            new_destination: String::new()
         }
     }
 
+    /// sets newDestination
+    pub fn setup(&mut self) -> i32 {
+        let mut leaf_rel_path = self.source.replace(&self.base, "");
+        leaf_rel_path = Path::new(&leaf_rel_path).strip_prefix("/").unwrap().display().to_string();
+        println!("{}", leaf_rel_path);
+        let mut dest_path = PathBuf::from(&self.destination);
+        println!("{}", dest_path.display());
+        dest_path.push(leaf_rel_path);
+        //let new_dest = dest_path.join(leaf_rel_path);
+        println!("dest_path: {}", dest_path.display());
+        self.new_destination = dest_path.into_os_string().into_string().unwrap();
+
+        return 0;
+    }
+
+    /// Copies source to newDestination
     pub fn copy(&self) -> io::Result<()> {
-        println!("{} => {}", self.source, self.destination);
+        println!("{} => {}", self.source, self.new_destination);
         let mut source_file = fs::File::open(&self.source)?;
-        let mut destination_file = fs::File::create(&self.destination)?;
+        let mut destination_file = fs::File::create(&self.new_destination)?;
         let mut buffer = [0; BUFFER_SIZE];
         let mut total_bytes_copied = 0;
 
