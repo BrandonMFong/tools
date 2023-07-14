@@ -132,6 +132,11 @@ impl FileFlow {
         }
     }
 
+    /**
+     * Returns the relative leaf path from base
+     *
+     * if base == source, then file_name() of source is returned
+     */
     fn source_rel_leaf(&self) -> String {
         let mut result = PathBuf::new();
  
@@ -170,7 +175,6 @@ impl FileFlow {
         
         // Create new destination path, keeping the structure of the
         // base path
-
         dest_path.push(self.source_rel_leaf());
 
         self.new_destination = dest_path.clone().into_os_string().into_string().unwrap();
