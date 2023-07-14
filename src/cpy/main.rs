@@ -8,6 +8,8 @@
 use std::env;
 use std::any::type_name;
 use std::fs;
+use std::path::PathBuf;
+use std::fs::canonicalize;
 
 fn main() {
     let mut error = 0;
@@ -23,18 +25,18 @@ fn main() {
 
 fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
     let files_source: Vec<String>;
-    
+    let mut flows: Vec<FileFlow> = Vec::new();
+    let full_dest_path = canonicalize(d).unwrap().into_os_string().into_string().unwrap();
+
     match find_leaf_files(s) {
-        Ok(files) => {
-            files_source = files;
-        } Err(e) => {
+        Err(e) => {
             eprintln!("Experienced an error in: {} - {}", type_name::<fn()>(), e.kind()); 
             return -1;
+        } Ok(files) => {
+            for file in files {
+                flows.push(FileFlow::new(&file, &full_dest_path));
+            }
         }
-    }
-
-    for file_s in files_source {
-        println!("{}", file_s);
     }
 
     return 0;
@@ -50,7 +52,10 @@ fn find_leaf_files(path: &str) -> Result<Vec<String>, std::io::Error> {
         
         if file_type.is_file() {
             if let Some(file_name) = entry.file_name().to_str() {
-                result.push(file_name.to_owned());
+                let base_path = PathBuf::from(path);
+                let rel_path = base_path.join(file_name);
+                let expanded_path = canonicalize(rel_path).unwrap().into_os_string().into_string().unwrap();
+                result.push(expanded_path.to_owned());
             }
         } else if file_type.is_dir() {
             let subdir_files = find_leaf_files(entry.path().to_str().unwrap())?;
@@ -60,3 +65,17 @@ fn find_leaf_files(path: &str) -> Result<Vec<String>, std::io::Error> {
     
     Ok(result)
 }
+
+struct FileFlow {
+    source: String,
+    destination: String
+}
+
+impl FileFlow {
+    fn new(s: &String, d: &String) -> Self {
+        FileFlow {
+            source: s.to_string(), destination: d.to_string()
+        }
+    }
+}
+
