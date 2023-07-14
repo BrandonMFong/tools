@@ -21,6 +21,8 @@ fn help() {
     let args: Vec<String> = env::args().collect();
     println!("usage: {} [ -{} ] <source path> <destination path>", &args[0], ARG_HELP);
     println!();
+    println!("  Copies all items in source to destination");
+    println!();
     println!("  values:");
     println!("    <source path> : relative or absolute");
     println!("    <destination path> : relative or absolute");
@@ -43,6 +45,8 @@ fn main() {
                 help();
             }
         }
+    } else {
+        help();
     }
 
     std::process::exit(error);
