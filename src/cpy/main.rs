@@ -10,6 +10,9 @@ use std::any::type_name;
 use std::fs;
 use std::path::PathBuf;
 use std::fs::canonicalize;
+use std::io::{self, Read, Write};
+
+const BUFFER_SIZE: usize = 8192; // Chunk size for copying
 
 fn main() {
     let mut error = 0;
@@ -39,7 +42,13 @@ fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
     }
 
     for flow in flows {
-        println!("{} => {}", flow.source, flow.destination);
+        match flow.copy() {
+            Ok(_) => {}
+            Err(e) => {
+                eprintln!("Error copying file {}: {}", flow.source, e);
+                return -1;
+            }
+        }
     }
 
     return 0;
@@ -79,6 +88,32 @@ impl FileFlow {
         FileFlow {
             source: s.to_string(), destination: d.to_string()
         }
+    }
+
+    pub fn copy(&self) -> io::Result<()> {
+        println!("{} => {}", self.source, self.destination);
+        let mut source_file = fs::File::open(&self.source)?;
+        let mut destination_file = fs::File::create(&self.destination)?;
+        let mut buffer = [0; BUFFER_SIZE];
+        let mut total_bytes_copied = 0;
+
+        loop {
+            let bytes_read = source_file.read(&mut buffer)?;
+            if bytes_read == 0 {
+                break; // End of file
+            }
+
+            destination_file.write_all(&buffer[..bytes_read])?;
+
+            total_bytes_copied += bytes_read;
+            println!("Bytes copied: {}", total_bytes_copied);
+            // Update progress as needed (e.g., calculate percentage)
+
+            // Add additional logic for progress reporting (e.g., update a progress bar)
+
+        }
+
+        Ok(())
     }
 }
 
