@@ -200,7 +200,7 @@ impl FileFlow {
         let mut buffer = [0; BUFFER_SIZE];
         let mut total_bytes_copied = 0;
 
-        print!(" - {} - {:.2}%", self.source, (total_bytes_copied as f64 / source_size as f64) * 100.0);
+        print!(" - {} - {:.2}%", self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
         loop {
             let bytes_read = source_file.read(&mut buffer)?;
             if bytes_read == 0 {
@@ -212,9 +212,9 @@ impl FileFlow {
             total_bytes_copied += bytes_read;
 
             print!("\r");
-            print!(" - {} - {:.2}%", self.source, (total_bytes_copied as f64 / source_size as f64) * 100.0);
+            print!(" - {} - {:.2}%", self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
         }
-        println!("\r - {} - {:.2}%", self.source, (total_bytes_copied as f64 / source_size as f64) * 100.0);
+        println!("\r - {} - {:.2}%", self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
 
         Ok(())
     }
