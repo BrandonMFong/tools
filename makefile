@@ -11,7 +11,7 @@ include external/libs/bflibc/makefiles/uuid.mk
 DIRS = bin
 CTOOLS = getsize mytime fsinfo getcount netinfo ip4domain passgen getpath organize listtools
 BASHTOOLS = rsatool
-RUSTTOOLS = stopwatch num2bin num2hex
+RUSTTOOLS = stopwatch num2bin num2hex cpy
 GOTOOLS = numshift
 LIBCPATH = external/libs/$(BF_LIB_RPATH_RELEASE_C) 
 LIBRUSTPATH = external/libs/bin/release/rust/release/libbfrust.rlib
