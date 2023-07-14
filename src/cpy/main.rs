@@ -133,25 +133,38 @@ impl FileFlow {
 
     /// sets newDestination
     pub fn setup(&mut self) -> i32 {
-        // strip base from source path
-        let mut leaf_rel_path = self.source.replace(&self.base, "");
-
-        // remove the "/" so it is not treated as an absolute path but
-        // rather a relative path
-        leaf_rel_path = Path::new(&leaf_rel_path).strip_prefix("/").unwrap().display().to_string();
-
-        // Create new destination path, keeping the structure of the
-        // base path
         let mut dest_path = PathBuf::from(&self.destination);
-        dest_path.push(leaf_rel_path);
+
+        if self.source == self.base {
+            let source_path = Path::new(&self.source);
+            if let Some(leaf) = source_path.file_name() {
+                dest_path.push(leaf);
+            } else {
+                return -1;
+            }
+        } else {
+            // strip base from source path
+            let mut leaf_rel_path = self.source.replace(&self.base, "");
+
+            // remove the "/" so it is not treated as an absolute path but
+            // rather a relative path
+            leaf_rel_path = Path::new(&leaf_rel_path).strip_prefix("/").unwrap().display().to_string();
+
+            // Create new destination path, keeping the structure of the
+            // base path
+            dest_path.push(Path::new(&self.base).file_name().unwrap());
+            dest_path.push(leaf_rel_path);
+        }
+
         self.new_destination = dest_path.clone().into_os_string().into_string().unwrap();
 
         // Make sure sub directories are created
         let dest_parent_path = dest_path.parent().unwrap();
-        match fs::create_dir(dest_parent_path) {
+        match fs::create_dir_all(dest_parent_path) {
             Ok(_) => {}
             Err(e) => {
                 eprintln!("could not create directory {}: {}", dest_parent_path.display(), e);
+                return -1;
             }
         }
 
