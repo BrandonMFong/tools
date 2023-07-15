@@ -67,7 +67,7 @@ fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
     println!(" - Unfolding sources for all leaf items");
     match find_leaf_files(s) {
         Err(e) => {
-            eprintln!("Experienced an error in: {} - {}", type_name::<fn()>(), e.kind()); 
+            eprintln!(" ! Experienced an error in: {} - {}", type_name::<fn()>(), e.kind()); 
             return -1;
         } Ok(files) => {
             for file in files {
@@ -90,7 +90,7 @@ fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
         match flow.copy() {
             Ok(_) => {}
             Err(e) => {
-                eprintln!("Error copying file {}: {}", flow.source, e);
+                eprintln!(" ! Error copying file {}: {}", flow.source, e);
                 return -1;
             }
         }
@@ -104,23 +104,29 @@ fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
  */
 fn find_leaf_files(path: &str) -> Result<Vec<String>, std::io::Error> {
     let mut result = Vec::new();
-    let entries = fs::read_dir(path)?; // Read directory entries
-    
-    for entry in entries {
-        let entry = entry?;
-        let file_type = entry.file_type()?;
-       
-        // if file, save path. otherwise recursively call function
-        if file_type.is_file() {
-            if let Some(file_name) = entry.file_name().to_str() {
-                let base_path = PathBuf::from(path);
-                let rel_path = base_path.join(file_name);
-                let expanded_path = canonicalize(rel_path).unwrap().into_os_string().into_string().unwrap();
-                result.push(expanded_path.to_owned());
+
+    if Path::new(path).is_file() {
+        let expanded_path = canonicalize(path).unwrap().into_os_string().into_string().unwrap();
+        result.push(expanded_path.to_owned());
+    } else {
+        let entries = fs::read_dir(path)?; // Read directory entries
+        
+        for entry in entries {
+            let entry = entry?;
+            let file_type = entry.file_type()?;
+           
+            // if file, save path. otherwise recursively call function
+            if file_type.is_file() {
+                if let Some(file_name) = entry.file_name().to_str() {
+                    let base_path = PathBuf::from(path);
+                    let rel_path = base_path.join(file_name);
+                    let expanded_path = canonicalize(rel_path).unwrap().into_os_string().into_string().unwrap();
+                    result.push(expanded_path.to_owned());
+                }
+            } else if file_type.is_dir() {
+                let subdir_files = find_leaf_files(entry.path().to_str().unwrap())?;
+                result.extend(subdir_files);
             }
-        } else if file_type.is_dir() {
-            let subdir_files = find_leaf_files(entry.path().to_str().unwrap())?;
-            result.extend(subdir_files);
         }
     }
     
@@ -205,7 +211,7 @@ impl FileFlow {
         match fs::create_dir_all(dest_parent_path) {
             Ok(_) => {}
             Err(e) => {
-                eprintln!("could not create directory {}: {}", dest_parent_path.display(), e);
+                eprintln!(" ! could not create directory {}: {}", dest_parent_path.display(), e);
                 return -1;
             }
         }
