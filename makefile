@@ -30,7 +30,8 @@ RUSTFLAGS += -C opt-level=3 --extern bflib=$(LIBRUSTPATH)
 GOFLAGS = 
 
 .PHONY: $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) lib
-all: $(DIRS) $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) check
+
+build: $(DIRS) $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) check
 
 $(DIRS):
 	mkdir -p $@/
