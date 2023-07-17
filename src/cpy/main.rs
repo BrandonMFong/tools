@@ -80,14 +80,15 @@ fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
     // 
     // This will only copy one by one
     println!(" - Initiating copy...");
-    for mut flow in flows {
+    let size = flows.len();
+    for (i, flow) in flows.iter_mut().enumerate() {
         // make sure we know where we are copying to
         if flow.setup() != 0 {
             return -1;
         }
 
         // Execute copy
-        match flow.copy() {
+        match flow.copy(i + 1, size) {
             Ok(_) => {}
             Err(e) => {
                 eprintln!(" ! Error copying file {}: {}", flow.source, e);
@@ -220,14 +221,14 @@ impl FileFlow {
     }
 
     /// Copies source to newDestination
-    pub fn copy(&self) -> io::Result<()> {
+    pub fn copy(&self, curr_index: usize, total_files: usize) -> io::Result<()> {
         let mut source_file = fs::File::open(&self.source)?;
         let source_size: usize = source_file.metadata().unwrap().len().try_into().unwrap();
         let mut destination_file = fs::File::create(&self.new_destination)?;
         let mut buffer = [0; BUFFER_SIZE];
         let mut total_bytes_copied = 0;
 
-        print!(" - {} - {:.2}%", self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
+        print!(" - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
         loop {
             let bytes_read = source_file.read(&mut buffer)?;
             if bytes_read == 0 {
@@ -239,9 +240,9 @@ impl FileFlow {
             total_bytes_copied += bytes_read;
 
             print!("\r");
-            print!(" - {} - {:.2}%", self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
+            print!(" - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
         }
-        println!("\r - {} - {:.2}%", self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
+        println!("\r - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
 
         Ok(())
     }
