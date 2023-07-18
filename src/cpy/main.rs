@@ -144,31 +144,27 @@ fn find_leaf_files(path: &str, found_item_count: &mut i32) -> Result<Vec<String>
     Ok(result)
 }
 
-struct FileFlow {
+trait FileFlow {
+    fn new(b: &String, s: &String, d: &String) -> Self;
+
     /// Source file
-    pub source: String,
+    pub fn source(&self) -> String;
 
     /// destination path
-    pub destination: String,
+    pub fn destination(&self) -> String;
 
     /// Base path where source is from
-    base: String,
+    pub fn base(&self) -> String;
 
     /// Where source file will go respecting
     /// the file structure in base path
-    new_destination: String
+    pub fn new_destination(&self) -> String,;
+
+    /// Copies source to newDestination
+    pub fn copy(&self, curr_index: usize, total_files: usize) -> io::Result<()>;
 }
 
 impl FileFlow {
-
-    fn new(b: &String, s: &String, d: &String) -> Self {
-        FileFlow {
-            base: b.to_string(),
-            source: s.to_string(),
-            destination: d.to_string(),
-            new_destination: String::new()
-        }
-    }
 
     /**
      * Returns the relative leaf path from base
@@ -228,6 +224,21 @@ impl FileFlow {
         }
 
         return 0;
+    }
+}
+
+struct FileFlowFile {
+
+}
+
+impl FileFlow for FileFlowFile {
+    fn new(b: &String, s: &String, d: &String) -> Self {
+        FileFlow {
+            base: b.to_string(),
+            source: s.to_string(),
+            destination: d.to_string(),
+            new_destination: String::new()
+        }
     }
 
     /// Copies source to newDestination
