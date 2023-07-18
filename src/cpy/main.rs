@@ -13,8 +13,9 @@ use std::fs::canonicalize;
 use std::io::{self, Read, Write};
 use std::path::Path;
 use std::convert::TryInto;
+use std::os::unix::fs::symlink;
 
-const BUFFER_SIZE: usize = 2 << 24; // Chunk size for copying
+const BUFFER_SIZE: usize = 2 << 13; // Chunk size for copying
 const ARG_HELP: &str = "h";
 
 fn help() {
@@ -57,7 +58,7 @@ fn main() {
  */
 fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
     // vector of source/destination pairs
-    let mut flows: Vec<&dyn FileFlow> = Vec::new();
+    let mut flows: Vec<FileFlow> = Vec::new();
 
     // Get full paths for params
     let full_source_path = canonicalize(s).unwrap().into_os_string().into_string().unwrap();
@@ -144,25 +145,30 @@ fn find_leaf_files(path: &str, found_item_count: &mut i32) -> Result<Vec<String>
     Ok(result)
 }
 
-trait FileFlow {
-    fn new(b: &String, s: &String, d: &String) -> Self;
-
+struct FileFlow {
     /// Source file
-    fn source(&self) -> String;
+    pub source: String,
 
     /// destination path
-    fn destination(&self) -> String;
+    pub destination: String,
 
     /// Base path where source is from
-    fn base(&self) -> String;
+    base: String,
 
     /// Where source file will go respecting
     /// the file structure in base path
-    fn get_new_destination(&self) -> String;
-    fn set_new_destination(&self, new_destination: &String);
+    new_destination: String
+}
+impl FileFlow {
 
-    /// Copies source to newDestination
-    fn copy(&self, curr_index: usize, total_files: usize) -> io::Result<()>;
+    fn new(b: &String, s: &String, d: &String) -> Self {
+        FileFlow {
+            base: b.to_string(),
+            source: s.to_string(),
+            destination: d.to_string(),
+            new_destination: String::new()
+        }
+    }
 
     /**
      * Returns the relative leaf path from base
@@ -176,16 +182,16 @@ trait FileFlow {
         //
         // 1: source input is a file, we just need to append file name to destination path
         // 2: source input is an empty directory. This case is not handled yet
-        if self.source() == self.base() {
-            let source_path = Path::new(&self.source());
+        if self.source == self.base {
+            let source_path = Path::new(&self.source);
             if let Some(leaf) = source_path.file_name() {
                 result.push(leaf);
             }
         } else {
-            result.push(Path::new(&self.base()).file_name().unwrap());
+            result.push(Path::new(&self.base).file_name().unwrap());
             
             // strip base from source path
-            let mut leaf_rel_path = self.source().replace(&self.base(), "");
+            let mut leaf_rel_path = self.source.replace(&self.base, "");
 
             // remove the "/" so it is not treated as an absolute path but
             // rather a relative path
@@ -202,14 +208,14 @@ trait FileFlow {
     }
 
     /// sets newDestination
-    fn setup(&mut self) -> i32 {
-        let mut dest_path = PathBuf::from(&self.destination());
+    pub fn setup(&mut self) -> i32 {
+        let mut dest_path = PathBuf::from(&self.destination);
         
         // Create new destination path, keeping the structure of the
         // base path
         dest_path.push(self.source_rel_leaf());
 
-        self.set_new_destination(&dest_path.clone().into_os_string().into_string().unwrap());
+        self.new_destination = dest_path.clone().into_os_string().into_string().unwrap();
 
         // Make sure sub directories are created
         let dest_parent_path = dest_path.parent().unwrap();
@@ -223,82 +229,39 @@ trait FileFlow {
 
         return 0;
     }
-}
-
-struct FileFlowFile {
-    /// Source file
-    pub source: String,
-
-    /// destination path
-    pub destination: String,
-
-    /// Base path where source is from
-    base: String,
-
-    /// Where source file will go respecting
-    /// the file structure in base path
-    new_destination: String
-}
-
-impl FileFlow for FileFlowFile {
-    /// Source file
-    fn source(&self) -> String {
-        return self.source;
-    }
-
-    /// destination path
-    fn destination(&self) -> String {
-        return self.destination;
-    }
-
-    /// Base path where source is from
-    fn base(&self) -> String {
-        return self.base;
-    }
-
-    /// Where source file will go respecting
-    /// the file structure in base path
-    fn get_new_destination(&self) -> String {
-        return self.new_destination;
-    }
-
-    fn set_new_destination(&self, new_destination: &String) {
-        self.new_destination = String::from(new_destination);
-    }
-
-    fn new(b: &String, s: &String, d: &String) -> Self {
-        FileFlowFile {
-            base: b.to_string(),
-            source: s.to_string(),
-            destination: d.to_string(),
-            new_destination: String::new()
-        }
-    }
 
     /// Copies source to newDestination
-    fn copy(&self, curr_index: usize, total_files: usize) -> io::Result<()> {
+    pub fn copy(&self, curr_index: usize, total_files: usize) -> io::Result<()> {
         let mut source_file = fs::File::open(&self.source)?;
-        let source_size: usize = source_file.metadata().unwrap().len().try_into().unwrap();
-        let mut destination_file = fs::File::create(&self.new_destination)?;
-        let mut buffer = [0; BUFFER_SIZE];
-        let mut total_bytes_copied = 0;
 
-        print!(" - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
-        loop {
-            let bytes_read = source_file.read(&mut buffer)?;
-            if bytes_read == 0 {
-                break; // End of file
+        if source_file.metadata().unwrap().file_type().is_symlink() {
+            match symlink(&self.source, &self.new_destination) {
+                Err(e) => {
+                    eprintln!(" ! Could not copy symlink {}: {}", self.source, e);
+                } Ok(_) => {}
             }
+        } else {
+            let source_size: usize = source_file.metadata().unwrap().len().try_into().unwrap();
+            let mut destination_file = fs::File::create(&self.new_destination)?;
+            let mut buffer = [0; BUFFER_SIZE];
+            let mut total_bytes_copied = 0;
 
-            destination_file.write_all(&buffer[..bytes_read])?;
-
-            total_bytes_copied += bytes_read;
-
-            print!("\r");
             print!(" - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
-        }
-        println!("\r - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
+            loop {
+                let bytes_read = source_file.read(&mut buffer)?;
+                if bytes_read == 0 {
+                    break; // End of file
+                }
 
+                destination_file.write_all(&buffer[..bytes_read])?;
+
+                total_bytes_copied += bytes_read;
+
+                print!("\r");
+                print!(" - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
+            }
+            println!("\r - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
+        }
         Ok(())
     }
 }
