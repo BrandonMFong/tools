@@ -57,7 +57,7 @@ fn main() {
  */
 fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
     // vector of source/destination pairs
-    let mut flows: Vec<FileFlow> = Vec::new();
+    let mut flows: Vec<dyn FileFlow> = Vec::new();
 
     // Get full paths for params
     let full_source_path = canonicalize(s).unwrap().into_os_string().into_string().unwrap();
@@ -148,23 +148,21 @@ trait FileFlow {
     fn new(b: &String, s: &String, d: &String) -> Self;
 
     /// Source file
-    pub fn source(&self) -> String;
+    fn source(&self) -> String;
 
     /// destination path
-    pub fn destination(&self) -> String;
+    fn destination(&self) -> String;
 
     /// Base path where source is from
-    pub fn base(&self) -> String;
+    fn base(&self) -> String;
 
     /// Where source file will go respecting
     /// the file structure in base path
-    pub fn new_destination(&self) -> String,;
+    fn get_new_destination(&self) -> String;
+    fn set_new_destination(&self, new_destination: &String);
 
     /// Copies source to newDestination
-    pub fn copy(&self, curr_index: usize, total_files: usize) -> io::Result<()>;
-}
-
-impl FileFlow {
+    fn copy(&self, curr_index: usize, total_files: usize) -> io::Result<()>;
 
     /**
      * Returns the relative leaf path from base
@@ -178,16 +176,16 @@ impl FileFlow {
         //
         // 1: source input is a file, we just need to append file name to destination path
         // 2: source input is an empty directory. This case is not handled yet
-        if self.source == self.base {
-            let source_path = Path::new(&self.source);
+        if self.source() == self.base() {
+            let source_path = Path::new(&self.source());
             if let Some(leaf) = source_path.file_name() {
                 result.push(leaf);
             }
         } else {
-            result.push(Path::new(&self.base).file_name().unwrap());
+            result.push(Path::new(&self.base()).file_name().unwrap());
             
             // strip base from source path
-            let mut leaf_rel_path = self.source.replace(&self.base, "");
+            let mut leaf_rel_path = self.source().replace(&self.base(), "");
 
             // remove the "/" so it is not treated as an absolute path but
             // rather a relative path
@@ -204,14 +202,14 @@ impl FileFlow {
     }
 
     /// sets newDestination
-    pub fn setup(&mut self) -> i32 {
-        let mut dest_path = PathBuf::from(&self.destination);
+    fn setup(&mut self) -> i32 {
+        let mut dest_path = PathBuf::from(&self.destination());
         
         // Create new destination path, keeping the structure of the
         // base path
         dest_path.push(self.source_rel_leaf());
 
-        self.new_destination = dest_path.clone().into_os_string().into_string().unwrap();
+        self.set_new_destination(&dest_path.clone().into_os_string().into_string().unwrap());
 
         // Make sure sub directories are created
         let dest_parent_path = dest_path.parent().unwrap();
@@ -228,12 +226,48 @@ impl FileFlow {
 }
 
 struct FileFlowFile {
+    /// Source file
+    pub source: String,
 
+    /// destination path
+    pub destination: String,
+
+    /// Base path where source is from
+    base: String,
+
+    /// Where source file will go respecting
+    /// the file structure in base path
+    new_destination: String
 }
 
 impl FileFlow for FileFlowFile {
+    /// Source file
+    fn source(&self) -> String {
+        return self.source;
+    }
+
+    /// destination path
+    fn destination(&self) -> String {
+        return self.destination;
+    }
+
+    /// Base path where source is from
+    fn base(&self) -> String {
+        return self.base;
+    }
+
+    /// Where source file will go respecting
+    /// the file structure in base path
+    fn get_new_destination(&self) -> String {
+        return self.new_destination;
+    }
+
+    fn set_new_destination(&self, new_destination: &String) {
+        self.new_destination = String::from(new_destination);
+    }
+
     fn new(b: &String, s: &String, d: &String) -> Self {
-        FileFlow {
+        FileFlowFile {
             base: b.to_string(),
             source: s.to_string(),
             destination: d.to_string(),
@@ -242,7 +276,7 @@ impl FileFlow for FileFlowFile {
     }
 
     /// Copies source to newDestination
-    pub fn copy(&self, curr_index: usize, total_files: usize) -> io::Result<()> {
+    fn copy(&self, curr_index: usize, total_files: usize) -> io::Result<()> {
         let mut source_file = fs::File::open(&self.source)?;
         let source_size: usize = source_file.metadata().unwrap().len().try_into().unwrap();
         let mut destination_file = fs::File::create(&self.new_destination)?;
