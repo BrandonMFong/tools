@@ -9,9 +9,10 @@ use std::env;
 use std::any::type_name;
 use std::fs;
 use std::path::PathBuf;
+use std::path::Path;
+use std::path::Component;
 use std::fs::canonicalize;
 use std::io::{self, Read, Write};
-use std::path::Path;
 use std::convert::TryInto;
 use std::os::unix::fs::symlink;
 
@@ -105,6 +106,28 @@ fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
     return 0;
 }
 
+trait LexicalAbsolute {
+    fn to_lexical_absolute(&self) -> io::Result<PathBuf>;
+}
+
+impl LexicalAbsolute for Path {
+    fn to_lexical_absolute(&self) -> std::io::Result<PathBuf> {
+        let mut absolute = if self.is_absolute() {
+            PathBuf::new()
+        } else {
+            std::env::current_dir()?
+        };
+        for component in self.components() {
+            match component {
+                Component::CurDir => {},
+                Component::ParentDir => { absolute.pop(); },
+                component @ _ => absolute.push(component.as_os_str()),
+            }
+        }
+        Ok(absolute)
+    }
+}
+
 /**
  * Finds all file paths within path
  */
@@ -117,28 +140,20 @@ fn find_leaf_files(path: &str, found_item_count: &mut i32) -> Result<Vec<String>
 
         let expanded_path = canonicalize(path).unwrap().into_os_string().into_string().unwrap();
         result.push(expanded_path.to_owned());
-    } else {
+    } else if Path::new(path).is_symlink() {
+        *found_item_count += 1;
+        print!("\r - Items found: {}", *found_item_count + 1);
+        let p = Path::new(path);
+        let abs_path = p.to_lexical_absolute().unwrap().to_str().unwrap().to_string();
+        println!(" -> {}", abs_path);
+        result.push(abs_path);
+    } else { // else directory
         let entries = fs::read_dir(path)?; // Read directory entries
         
         for entry in entries {
             let entry = entry?;
-            let file_type = entry.file_type()?;
-           
-            // if file, save path. otherwise recursively call function
-            if file_type.is_file() || file_type.is_symlink() {
-                if let Some(file_name) = entry.file_name().to_str() {
-                    *found_item_count += 1;
-                    print!("\r - Items found: {}", *found_item_count + 1);
-
-                    let base_path = PathBuf::from(path);
-                    let rel_path = base_path.join(file_name);
-                    let expanded_path = canonicalize(rel_path).unwrap().into_os_string().into_string().unwrap();
-                    result.push(expanded_path.to_owned());
-                }
-            } else if file_type.is_dir() {
-                let subdir_files = find_leaf_files(entry.path().to_str().unwrap(), found_item_count)?;
-                result.extend(subdir_files);
-            }
+            let subdir_files = find_leaf_files(entry.path().to_str().unwrap(), found_item_count)?;
+            result.extend(subdir_files);
         }
     }
     
@@ -232,15 +247,14 @@ impl FileFlow {
 
     /// Copies source to newDestination
     pub fn copy(&self, curr_index: usize, total_files: usize) -> io::Result<()> {
-        let mut source_file = fs::File::open(&self.source)?;
-
-        if source_file.metadata().unwrap().file_type().is_symlink() {
+        if Path::new(&self.source).is_symlink() {
             match symlink(&self.source, &self.new_destination) {
                 Err(e) => {
                     eprintln!(" ! Could not copy symlink {}: {}", self.source, e);
                 } Ok(_) => {}
             }
         } else {
+            let mut source_file = fs::File::open(&self.source)?;
             let source_size: usize = source_file.metadata().unwrap().len().try_into().unwrap();
             let mut destination_file = fs::File::create(&self.new_destination)?;
             let mut buffer = [0; BUFFER_SIZE];
