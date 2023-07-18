@@ -57,7 +57,7 @@ fn main() {
  */
 fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
     // vector of source/destination pairs
-    let mut flows: Vec<dyn FileFlow> = Vec::new();
+    let mut flows: Vec<&dyn FileFlow> = Vec::new();
 
     // Get full paths for params
     let full_source_path = canonicalize(s).unwrap().into_os_string().into_string().unwrap();
