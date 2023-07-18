@@ -14,7 +14,7 @@ use std::io::{self, Read, Write};
 use std::path::Path;
 use std::convert::TryInto;
 
-const BUFFER_SIZE: usize = 8192; // Chunk size for copying
+const BUFFER_SIZE: usize = 2 << 24; // Chunk size for copying
 const ARG_HELP: &str = "h";
 
 fn help() {
@@ -65,7 +65,9 @@ fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
 
     // Find all items in source directory
     println!(" - Unfolding sources for all leaf items");
-    match find_leaf_files(s) {
+    print!(" - Items found: 0");
+    let mut counter = 0;
+    match find_leaf_files(s, &mut counter) {
         Err(e) => {
             eprintln!(" ! Experienced an error in: {} - {}", type_name::<fn()>(), e.kind()); 
             return -1;
@@ -75,6 +77,8 @@ fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
             }
         }
     }
+
+    println!();
 
     // Do copy
     // 
@@ -103,10 +107,13 @@ fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
 /**
  * Finds all file paths within path
  */
-fn find_leaf_files(path: &str) -> Result<Vec<String>, std::io::Error> {
+fn find_leaf_files(path: &str, found_item_count: &mut i32) -> Result<Vec<String>, std::io::Error> {
     let mut result = Vec::new();
 
     if Path::new(path).is_file() {
+        *found_item_count += 1;
+        print!("\r - Items found: {}", *found_item_count + 1);
+
         let expanded_path = canonicalize(path).unwrap().into_os_string().into_string().unwrap();
         result.push(expanded_path.to_owned());
     } else {
@@ -117,15 +124,18 @@ fn find_leaf_files(path: &str) -> Result<Vec<String>, std::io::Error> {
             let file_type = entry.file_type()?;
            
             // if file, save path. otherwise recursively call function
-            if file_type.is_file() {
+            if file_type.is_file() || file_type.is_symlink() {
                 if let Some(file_name) = entry.file_name().to_str() {
+                    *found_item_count += 1;
+                    print!("\r - Items found: {}", *found_item_count + 1);
+
                     let base_path = PathBuf::from(path);
                     let rel_path = base_path.join(file_name);
                     let expanded_path = canonicalize(rel_path).unwrap().into_os_string().into_string().unwrap();
                     result.push(expanded_path.to_owned());
                 }
             } else if file_type.is_dir() {
-                let subdir_files = find_leaf_files(entry.path().to_str().unwrap())?;
+                let subdir_files = find_leaf_files(entry.path().to_str().unwrap(), found_item_count)?;
                 result.extend(subdir_files);
             }
         }
