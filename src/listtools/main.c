@@ -4,11 +4,13 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 int main() {
-	printf("Tools:\n");
-	printf("\tcheck: hash calculator & comparitor\n");
-	printf("\tfsinfo: quick info of a path\n");
+	printf("Tools:");
+	printf("\n\tcheck:");
+	system("check --brief-description");
+	printf("\n\tfsinfo: quick info of a path\n");
 	printf("\tgetcount: counts items in a path\n");
 	printf("\tgetpath: prints full path a path (useful with relative path)\n");
 	printf("\tgetsize: gets size of path recursively\n");
