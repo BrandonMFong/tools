@@ -26,8 +26,13 @@ GO = go
 
 # Includes
 CFLAGS += -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) $(LIBCPATH) $(LDFLAGS) $(BF_LIB_C_UUID_FLAGS)
-RUSTFLAGS += -C opt-level=3 --extern bflib=$(LIBRUSTPATH)
+RUSTFLAGS += --extern bflib=$(LIBRUSTPATH)
 GOFLAGS = 
+
+debug: CFLAGS += -g
+debug: RUSTFLAGS += -g --extern bflib=$(LIBRUSTPATH)
+debug:
+	@echo "Debug builds...";
 
 .PHONY: $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) lib
 
