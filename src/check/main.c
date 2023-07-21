@@ -19,11 +19,11 @@
 #endif
 
 // Arguments
+#define kArgumentFlagVerbose "v"
 #define kArgumentsMD5 "md5"
 #define kArgumentsSHA1 "sha1"
 #define kArgumentsSHA256 "sha256"
 #define kArgumentsSHA512 "sha512"
-
 #define kArgumentsExpected "-e"
 
 // Types
@@ -39,13 +39,17 @@ typedef struct {
 // Global variables
 char filePath[PATH_MAX];
 unsigned long long fileSize = 0;
+bool verbose = false;
 
 // Constants
 const int kThreadCount = 2;
 size_t kBufferSizeRead = 4096 * 4096;
 
 void help(int argc, char ** argv) {
-	printf("usage: %s <checksum type> [ %s <expected hash> ] <file path>\n", basename(argv[0]), kArgumentsExpected);
+	printf("usage: %s [ -%s ] <checksum type> [ %s <expected hash> ] <file path>\n", 
+			basename(argv[0]), 
+			kArgumentFlagVerbose, 
+			kArgumentsExpected);
 
 	printf("\n");
 	printf("Checksum types:\n");
@@ -61,29 +65,37 @@ int main(int argc, char ** argv) {
 	BFChecksumTools ctools = {0};
 	pthread_mutex_t mutexRead, mutexHash;
 	BFChecksumType checksumType = kBFChecksumTypeUnknown;
+	int argIndex = 1;
 
 	if (argc < 3) {
 		help(argc, argv);
 		error = 1;
 	} else {
-		if (!strcmp(argv[1], kArgumentsMD5)) {
+		if (argv[argIndex][0] == '-' ) {
+			
+			argIndex++;
+		}
+
+		if (!strcmp(argv[argIndex], kArgumentsMD5)) {
 			checksumType = kBFChecksumTypeMD5;
-		} else if (!strcmp(argv[1], kArgumentsSHA1)) {
+		} else if (!strcmp(argv[argIndex], kArgumentsSHA1)) {
 			checksumType = kBFChecksumTypeSHA1;
-		} else if (!strcmp(argv[1], kArgumentsSHA256)) {
+		} else if (!strcmp(argv[argIndex], kArgumentsSHA256)) {
 			checksumType = kBFChecksumTypeSHA256;
-		} else if (!strcmp(argv[1], kArgumentsSHA512)) {
+		} else if (!strcmp(argv[argIndex], kArgumentsSHA512)) {
 			checksumType = kBFChecksumTypeSHA512;
 		} else {
 			error = 8;
 			BFErrorPrint("Please provide a checksum type");
 		}
+
+		argIndex++;
 	}
 
 	// Read other arguments
 	const char * expected = NULL;
 	if (error == 0) {
-		for (int i = 2; i < (argc - 1); i++) {
+		for (int i = argIndex; i < (argc - 1); i++) {
 			// user provied expected checksum
 			if (!strcmp(argv[i], kArgumentsExpected)) {
 				i++;
