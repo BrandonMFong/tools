@@ -9,12 +9,14 @@ use std::env;
 use std::any::type_name;
 use std::fs;
 use std::path::PathBuf;
+use std::path::Path;
+use std::path::Component;
 use std::fs::canonicalize;
 use std::io::{self, Read, Write};
-use std::path::Path;
 use std::convert::TryInto;
+use std::os::unix::fs::symlink;
 
-const BUFFER_SIZE: usize = 8192; // Chunk size for copying
+const BUFFER_SIZE: usize = 2 << 13; // Chunk size for copying
 const ARG_HELP: &str = "h";
 
 fn help() {
@@ -65,7 +67,9 @@ fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
 
     // Find all items in source directory
     println!(" - Unfolding sources for all leaf items");
-    match find_leaf_files(s) {
+    print!(" - Items found: 0");
+    let mut counter = 0;
+    match find_leaf_files(s, &mut counter) {
         Err(e) => {
             eprintln!(" ! Experienced an error in: {} - {}", type_name::<fn()>(), e.kind()); 
             return -1;
@@ -75,6 +79,8 @@ fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
             }
         }
     }
+
+    println!();
 
     // Do copy
     // 
@@ -100,34 +106,54 @@ fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
     return 0;
 }
 
+trait LexicalAbsolute {
+    fn to_lexical_absolute(&self) -> io::Result<PathBuf>;
+}
+
+impl LexicalAbsolute for Path {
+    fn to_lexical_absolute(&self) -> std::io::Result<PathBuf> {
+        let mut absolute = if self.is_absolute() {
+            PathBuf::new()
+        } else {
+            std::env::current_dir()?
+        };
+        for component in self.components() {
+            match component {
+                Component::CurDir => {},
+                Component::ParentDir => { absolute.pop(); },
+                component @ _ => absolute.push(component.as_os_str()),
+            }
+        }
+        Ok(absolute)
+    }
+}
+
 /**
  * Finds all file paths within path
  */
-fn find_leaf_files(path: &str) -> Result<Vec<String>, std::io::Error> {
+fn find_leaf_files(path: &str, found_item_count: &mut i32) -> Result<Vec<String>, std::io::Error> {
     let mut result = Vec::new();
 
     if Path::new(path).is_file() {
+        *found_item_count += 1;
+        print!("\r - Items found: {}", *found_item_count + 1);
+
         let expanded_path = canonicalize(path).unwrap().into_os_string().into_string().unwrap();
         result.push(expanded_path.to_owned());
-    } else {
+    } else if Path::new(path).is_symlink() {
+        *found_item_count += 1;
+        print!("\r - Items found: {}", *found_item_count + 1);
+        let p = Path::new(path);
+        let abs_path = p.to_lexical_absolute().unwrap().to_str().unwrap().to_string();
+        println!(" -> {}", abs_path);
+        result.push(abs_path);
+    } else { // else directory
         let entries = fs::read_dir(path)?; // Read directory entries
         
         for entry in entries {
             let entry = entry?;
-            let file_type = entry.file_type()?;
-           
-            // if file, save path. otherwise recursively call function
-            if file_type.is_file() {
-                if let Some(file_name) = entry.file_name().to_str() {
-                    let base_path = PathBuf::from(path);
-                    let rel_path = base_path.join(file_name);
-                    let expanded_path = canonicalize(rel_path).unwrap().into_os_string().into_string().unwrap();
-                    result.push(expanded_path.to_owned());
-                }
-            } else if file_type.is_dir() {
-                let subdir_files = find_leaf_files(entry.path().to_str().unwrap())?;
-                result.extend(subdir_files);
-            }
+            let subdir_files = find_leaf_files(entry.path().to_str().unwrap(), found_item_count)?;
+            result.extend(subdir_files);
         }
     }
     
@@ -148,7 +174,6 @@ struct FileFlow {
     /// the file structure in base path
     new_destination: String
 }
-
 impl FileFlow {
 
     fn new(b: &String, s: &String, d: &String) -> Self {
@@ -222,28 +247,35 @@ impl FileFlow {
 
     /// Copies source to newDestination
     pub fn copy(&self, curr_index: usize, total_files: usize) -> io::Result<()> {
-        let mut source_file = fs::File::open(&self.source)?;
-        let source_size: usize = source_file.metadata().unwrap().len().try_into().unwrap();
-        let mut destination_file = fs::File::create(&self.new_destination)?;
-        let mut buffer = [0; BUFFER_SIZE];
-        let mut total_bytes_copied = 0;
-
-        print!(" - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
-        loop {
-            let bytes_read = source_file.read(&mut buffer)?;
-            if bytes_read == 0 {
-                break; // End of file
+        if Path::new(&self.source).is_symlink() {
+            match symlink(&self.source, &self.new_destination) {
+                Err(e) => {
+                    eprintln!(" ! Could not copy symlink {}: {}", self.source, e);
+                } Ok(_) => {}
             }
+        } else {
+            let mut source_file = fs::File::open(&self.source)?;
+            let source_size: usize = source_file.metadata().unwrap().len().try_into().unwrap();
+            let mut destination_file = fs::File::create(&self.new_destination)?;
+            let mut buffer = [0; BUFFER_SIZE];
+            let mut total_bytes_copied = 0;
 
-            destination_file.write_all(&buffer[..bytes_read])?;
-
-            total_bytes_copied += bytes_read;
-
-            print!("\r");
             print!(" - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
-        }
-        println!("\r - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
+            loop {
+                let bytes_read = source_file.read(&mut buffer)?;
+                if bytes_read == 0 {
+                    break; // End of file
+                }
 
+                destination_file.write_all(&buffer[..bytes_read])?;
+
+                total_bytes_copied += bytes_read;
+
+                print!("\r");
+                print!(" - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
+            }
+            println!("\r - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
+        }
         Ok(())
     }
 }
