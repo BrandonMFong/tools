@@ -29,11 +29,6 @@ CFLAGS += -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) $(LIBCPATH) $(LDFLAGS) $(BF_LI
 RUSTFLAGS += --extern bflib=$(LIBRUSTPATH)
 GOFLAGS = 
 
-debug: CFLAGS += -g
-debug: RUSTFLAGS += -g --extern bflib=$(LIBRUSTPATH)
-debug:
-	@echo "Debug builds...";
-
 .PHONY: $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) lib
 
 build: $(DIRS) $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) check
@@ -68,4 +63,9 @@ $(LIBCPATH) : lib
 $(LIBRUSTPATH): lib
 lib:
 	cd external/libs && make
+
+debug: CFLAGS += -g
+debug: RUSTFLAGS += -g --extern bflib=$(LIBRUSTPATH)
+debug:
+	@echo "Debug builds...";
 
