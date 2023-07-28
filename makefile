@@ -33,6 +33,9 @@ GOFLAGS =
 
 build: $(DIRS) $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) check
 
+update-dependencies:
+	cd ./external/libs && git pull && make
+
 $(DIRS):
 	mkdir -p $@/
 
