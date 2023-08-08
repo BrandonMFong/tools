@@ -248,10 +248,19 @@ impl FileFlow {
     /// Copies source to newDestination
     pub fn copy(&self, curr_index: usize, total_files: usize) -> io::Result<()> {
         if Path::new(&self.source).is_symlink() {
-            match symlink(&self.source, &self.new_destination) {
-                Err(e) => {
-                    eprintln!(" ! Could not copy symlink {}: {}", self.source, e);
-                } Ok(_) => {}
+            let target = fs::read_link(&self.source)?;
+            // Get the relative target path
+            let relative_target = if target.is_absolute() {
+                let dst_parent = Path::new(&self.new_destination).parent().unwrap(); // Assuming parent directory always exists
+                dst_parent.join(target.strip_prefix("/").unwrap())
+            } else {
+                target
+            };
+
+            // Create a new symbolic link at the destination with the relative target
+            match symlink(&relative_target, &self.new_destination) {
+                Err(e) => eprintln!("couldn't make a symbolic link for {}: {}", relative_target.display(), e),
+                Ok(_) => {}
             }
         } else {
             let mut source_file = fs::File::open(&self.source)?;
