@@ -298,7 +298,10 @@ impl FileFlow {
                      (total_bytes_copied as f64 / source_size as f64) * 100.0);
         }
 
-        fs::set_permissions(Path::new(&self.new_destination), permissions)?;
+        if let Err(e) = fs::set_permissions(Path::new(&self.new_destination), permissions) {
+            eprintln!("could not set permissions: {}", e);
+            return Err(e);
+        }
 
         Ok(())
     }
