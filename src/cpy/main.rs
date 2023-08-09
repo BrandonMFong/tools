@@ -263,8 +263,10 @@ impl FileFlow {
 
             // Create a new symbolic link at the destination with the relative target
             match symlink(&relative_target, &self.new_destination) {
-                Err(e) => eprintln!("couldn't make a symbolic link for {}: {}", relative_target.display(), e),
-                Ok(_) => {}
+                Err(e) => eprintln!(" ! couldn't make a symbolic link for {}: {}", relative_target.display(), e),
+                Ok(_) => {
+                    println!(" - symbolic link created: {}", self.new_destination);
+                }
             }
         } else {
             let source_size: usize = source_file.metadata().unwrap().len().try_into().unwrap();
@@ -296,11 +298,11 @@ impl FileFlow {
                      curr_index, total_files,
                      self.source_rel_leaf(),
                      (total_bytes_copied as f64 / source_size as f64) * 100.0);
-        }
-
-        if let Err(e) = fs::set_permissions(Path::new(&self.new_destination), permissions) {
-            eprintln!("could not set permissions: {}", e);
-            return Err(e);
+            
+            if let Err(e) = fs::set_permissions(Path::new(&self.new_destination), permissions) {
+                eprintln!(" ! could not set permissions on '{}': {}", self.new_destination, e);
+                return Err(e);
+            }
         }
 
         Ok(())
