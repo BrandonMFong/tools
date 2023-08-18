@@ -134,19 +134,18 @@ impl LexicalAbsolute for Path {
 fn find_leaf_files(path: &str, found_item_count: &mut i32) -> Result<Vec<String>, std::io::Error> {
     let mut result = Vec::new();
 
-    if Path::new(path).is_file() {
+    if Path::new(path).is_symlink() {
+        *found_item_count += 1;
+        print!("\r - Items found: {}", *found_item_count);
+        let p = Path::new(path);
+        let abs_path = p.to_lexical_absolute().unwrap().to_str().unwrap().to_string();
+        result.push(abs_path);
+    } else if Path::new(path).is_file() {
         *found_item_count += 1;
         print!("\r - Items found: {}", *found_item_count);
 
         let expanded_path = canonicalize(path).unwrap().into_os_string().into_string().unwrap();
         result.push(expanded_path.to_owned());
-    } else if Path::new(path).is_symlink() {
-        *found_item_count += 1;
-        print!("\r - Items found: {}", *found_item_count);
-        let p = Path::new(path);
-        let abs_path = p.to_lexical_absolute().unwrap().to_str().unwrap().to_string();
-        println!(" -> {}", abs_path);
-        result.push(abs_path);
     } else { // else directory
         let entries = fs::read_dir(path)?; // Read directory entries
         
@@ -174,6 +173,7 @@ struct FileFlow {
     /// the file structure in base path
     new_destination: String
 }
+
 impl FileFlow {
 
     fn new(b: &String, s: &String, d: &String) -> Self {
@@ -247,20 +247,36 @@ impl FileFlow {
 
     /// Copies source to newDestination
     pub fn copy(&self, curr_index: usize, total_files: usize) -> io::Result<()> {
+        let mut source_file = fs::File::open(&self.source)?;
+        let permissions = source_file.metadata()?.permissions();
+
         if Path::new(&self.source).is_symlink() {
-            match symlink(&self.source, &self.new_destination) {
-                Err(e) => {
-                    eprintln!(" ! Could not copy symlink {}: {}", self.source, e);
-                } Ok(_) => {}
+            let target = fs::read_link(&self.source)?;
+            // Get the relative target path
+            let relative_target = if target.is_absolute() {
+                let dst_parent = Path::new(&self.new_destination).parent().unwrap(); // Assuming parent directory always exists
+                dst_parent.join(target.strip_prefix("/").unwrap())
+            } else {
+                target
+            };
+
+            // Create a new symbolic link at the destination with the relative target
+            match symlink(&relative_target, &self.new_destination) {
+                Err(e) => eprintln!(" ! couldn't make a symbolic link for {}: {}", relative_target.display(), e),
+                Ok(_) => {
+                    println!(" - symbolic link created: {}", self.new_destination);
+                }
             }
         } else {
-            let mut source_file = fs::File::open(&self.source)?;
             let source_size: usize = source_file.metadata().unwrap().len().try_into().unwrap();
             let mut destination_file = fs::File::create(&self.new_destination)?;
             let mut buffer = [0; BUFFER_SIZE];
             let mut total_bytes_copied = 0;
 
-            print!(" - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
+            print!(" - ({} / {}) {} - {:.2}%",
+                   curr_index, total_files,
+                   self.source_rel_leaf(),
+                   (total_bytes_copied as f64 / source_size as f64) * 100.0);
             loop {
                 let bytes_read = source_file.read(&mut buffer)?;
                 if bytes_read == 0 {
@@ -272,10 +288,22 @@ impl FileFlow {
                 total_bytes_copied += bytes_read;
 
                 print!("\r");
-                print!(" - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
+                print!(" - ({} / {}) {} - {:.2}%",
+                       curr_index, total_files,
+                       self.source_rel_leaf(),
+                       (total_bytes_copied as f64 / source_size as f64) * 100.0);
             }
-            println!("\r - ({} / {}) {} - {:.2}%", curr_index, total_files, self.source_rel_leaf(), (total_bytes_copied as f64 / source_size as f64) * 100.0);
+            println!("\r - ({} / {}) {} - {:.2}%", 
+                     curr_index, total_files,
+                     self.source_rel_leaf(),
+                     (total_bytes_copied as f64 / source_size as f64) * 100.0);
+            
+            if let Err(e) = fs::set_permissions(Path::new(&self.new_destination), permissions) {
+                eprintln!(" ! could not set permissions on '{}': {}", self.new_destination, e);
+                return Err(e);
+            }
         }
+
         Ok(())
     }
 }
