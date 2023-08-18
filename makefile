@@ -9,8 +9,8 @@ include external/libs/bflibc/makefiles/checksum.mk
 include external/libs/bflibc/makefiles/uuid.mk
 
 DIRS = bin
-CTOOLS = getsize mytime fsinfo getcount netinfo ip4domain passgen getpath organize listtools
-BASHTOOLS = rsatool
+CTOOLS = getsize mytime fsinfo getcount netinfo ip4domain passgen getpath organize
+BASHTOOLS = rsatool listtools
 RUSTTOOLS = stopwatch num2bin num2hex cpy
 GOTOOLS = numshift
 LIBCPATH = external/libs/$(BF_LIB_RPATH_RELEASE_C) 
