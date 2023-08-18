@@ -134,19 +134,18 @@ impl LexicalAbsolute for Path {
 fn find_leaf_files(path: &str, found_item_count: &mut i32) -> Result<Vec<String>, std::io::Error> {
     let mut result = Vec::new();
 
-    if Path::new(path).is_file() {
+    if Path::new(path).is_symlink() {
+        *found_item_count += 1;
+        print!("\r - Items found: {}", *found_item_count);
+        let p = Path::new(path);
+        let abs_path = p.to_lexical_absolute().unwrap().to_str().unwrap().to_string();
+        result.push(abs_path);
+    } else if Path::new(path).is_file() {
         *found_item_count += 1;
         print!("\r - Items found: {}", *found_item_count);
 
         let expanded_path = canonicalize(path).unwrap().into_os_string().into_string().unwrap();
         result.push(expanded_path.to_owned());
-    } else if Path::new(path).is_symlink() {
-        *found_item_count += 1;
-        print!("\r - Items found: {}", *found_item_count);
-        let p = Path::new(path);
-        let abs_path = p.to_lexical_absolute().unwrap().to_str().unwrap().to_string();
-        println!(" -> {}", abs_path);
-        result.push(abs_path);
     } else { // else directory
         let entries = fs::read_dir(path)?; // Read directory entries
         
