@@ -1,6 +1,6 @@
 #!/bin/bash
 
-tools=("check" "cpy");
+tools=("check" "cpy" "getcount");
 for tool in "${tools[@]}"
 do
 	printf "$tool: ";
