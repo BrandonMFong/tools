@@ -1,4 +1,10 @@
 #!/bin/bash
 
-printf "check: "; check --brief-description;
-printf "cpy: "; cpy --brief-description;
+tools=("check" "cpy");
+for tool in "${tools[@]}"
+do
+	printf "$tool: ";
+	cmd="$tool --brief-description";
+	eval $cmd;
+done
+
