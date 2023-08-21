@@ -36,12 +36,12 @@ typedef struct {
 	pthread_mutex_t * mutexRead;
 	pthread_mutex_t * mutexHash;
 	int error;
+	bool verbose;
+	unsigned long long fileSize;
 } ChecksumTools;
 
 // Global variables
 char filePath[PATH_MAX];
-unsigned long long fileSize = 0;
-bool verbose = false;
 
 // Constants
 const int kThreadCount = 2;
@@ -66,7 +66,7 @@ void BriefDescription() {
 }
 
 void * PThreadReadAndHash(void * _tools);
-int CalculateChecksumForPath(const char * filePath, BFChecksumType checksumType, const char * expected);
+int CalculateChecksumForPath(const char * filePath, BFChecksumType checksumType, const char * expected, bool verbose);
 
 int main(int argc, char ** argv) {
 	int error = 0;
@@ -138,17 +138,18 @@ int main(int argc, char ** argv) {
 		}
 
 		if (error == 0) {
-			error = CalculateChecksumForPath(filePath, checksumType, expected);
+			error = CalculateChecksumForPath(filePath, checksumType, expected, verbose);
 		}
 	}
 
 	return error;
 }
 
-int CalculateChecksumForPath(const char * filePath, BFChecksumType checksumType, const char * expected) {
+int CalculateChecksumForPath(const char * filePath, BFChecksumType checksumType, const char * expected, bool verbose) {
 	int error = 0;
 	BFChecksumTools ctools = {0};
 	pthread_mutex_t mutexRead, mutexHash;
+	unsigned long long fileSize = 0;
 
 	// Init checksum tools
 	error = BFChecksumCreate(&ctools, checksumType);
@@ -180,6 +181,8 @@ int CalculateChecksumForPath(const char * filePath, BFChecksumType checksumType,
 			checksumTools[i].mutexRead = &mutexRead;
 			checksumTools[i].mutexHash = &mutexHash;
 			checksumTools[i].checksum = &ctools;
+			checksumTools[i].verbose = verbose;
+			checksumTools[i].fileSize = fileSize;
 		}
 
 		if ((error == 0) && pthread_create(&threads[i], 0, PThreadReadAndHash, &checksumTools[i])) {
@@ -252,7 +255,7 @@ void * PThreadReadAndHash(void * _tools) {
 	
 		// READ
 
-		size_t upcoming = fileSize - *tools->currSeek;
+		size_t upcoming = tools->fileSize - *tools->currSeek;
 		if (upcoming == 0) { // no more bytes to read
 			finished = true;
 		} else if (upcoming < bufferSize) {
@@ -279,8 +282,15 @@ void * PThreadReadAndHash(void * _tools) {
 
 		// HASH
 		
-		if (!finished && (tools->error == 0)) {
-			tools->error = BFChecksumUpdate(tools->checksum, buf, bufferSize);
+		if (!finished) {
+			if (tools->error == 0) {
+				tools->error = BFChecksumUpdate(tools->checksum, buf, bufferSize);
+			}
+
+			// Run verbose option
+			if (tools->error == 0 && tools->verbose) {
+				printf("\rProgress: %.2f", (*tools->currSeek - tools->fileSize) * 100);
+			}
 		}
 		
 		pthread_mutex_unlock(tools->mutexHash);
