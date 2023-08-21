@@ -12,7 +12,7 @@ DIRS = bin
 CTOOLS = getsize mytime getcount ip4domain passgen getpath organize
 BASHTOOLS = rsatool listtools
 RUSTTOOLS = stopwatch num2bin num2hex cpy
-GOTOOLS = numshift
+GOTOOLS = 
 LIBCPATH = external/libs/$(BF_LIB_RPATH_RELEASE_C) 
 LIBRUSTPATH = external/libs/bin/release/rust/release/libbfrust.rlib
 
