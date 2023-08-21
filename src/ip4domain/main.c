@@ -14,9 +14,14 @@
 #endif
 
 char TOOL_ARG[PATH_MAX];
+const char * BRIEF_DESCRIPTION_ARG = "--brief-description";
 
 void Help() {
 	printf("usage: %s <domain>\n", TOOL_ARG);
+}
+
+void BriefDescription() {
+	printf("returns ip address for domain\n");
 }
 
 int main(int argc, char * argv[]) {
@@ -33,17 +38,22 @@ int main(int argc, char * argv[]) {
 		Help();
 		result = 1;
 	} else {
-		domain = argv[argc - 1];
-
-		if (domain == 0) {
+		if (!strcmp(argv[1], BRIEF_DESCRIPTION_ARG)) {
 			result = 1;
-			BFErrorPrint("Null domain");
-			Help();
-		} else if (strlen(domain) == 0) {
-			BFErrorPrint("Empty domain");
-			result = 1;
+			BriefDescription();
 		} else {
-			result = BFNetGetIPForHostname(domain, ip);
+			domain = argv[argc - 1];
+
+			if (domain == 0) {
+				result = 1;
+				BFErrorPrint("Null domain");
+				Help();
+			} else if (strlen(domain) == 0) {
+				BFErrorPrint("Empty domain");
+				result = 1;
+			} else {
+				result = BFNetGetIPForHostname(domain, ip);
+			}
 		}
 	}
 

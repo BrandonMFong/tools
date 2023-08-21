@@ -1,6 +1,6 @@
 #!/bin/bash
 
-tools=(check cpy getcount getpath getsize);
+tools=(check cpy getcount getpath getsize ip4domain);
 for tool in "${tools[@]}"
 do
 	printf "$tool: ";
