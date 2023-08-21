@@ -8,6 +8,7 @@ use std::env;
 use bflib::core::string::string_is_numeric;
 
 const ARGUMENT_HELP: &str = "-h";
+const ARGUMENT_BRIEF_DESCRIPTION: &str = "--brief-description";
 
 fn help() {
     println!("usage: {} <value> {}", env::args().nth(0).unwrap(), ARGUMENT_HELP);
@@ -24,16 +25,23 @@ fn help() {
     println!();
 }
 
+fn brief_description() {
+    println!("converts number to binary format");
+}
+
 fn main() {
     let mut error: i32 = 0;
     let mut get_help: bool = false;
     let mut input_value: i32 = 0;
     let mut i: i8 = 0;
+    let mut briefly_describe: bool = false;
 
     for argument in env::args() {
         if i > 0 {
-            if argument == ARGUMENT_HELP {
-                get_help = true
+            if argument == ARGUMENT_BRIEF_DESCRIPTION {
+                briefly_describe = true;
+            } else if argument == ARGUMENT_HELP {
+                get_help = true;
             } else {
                 if argument.starts_with("0x") {
                     let wo_pref = argument.trim_start_matches("0x");
@@ -57,6 +65,8 @@ fn main() {
     if error == 0 {
         if get_help || env::args().count() == 1 {
             help();
+        } else if briefly_describe {
+            brief_description();
         } else {
             let e: u32 = input_value.ilog2();
             if e <= 4 {
