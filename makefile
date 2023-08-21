@@ -54,6 +54,7 @@ $(GOTOOLS): % : src/%/main.go
 	$(GO) build -o bin/$@ $< $(GOFLAGS)
 
 $(BASHTOOLS): % : src/%/script.sh
+	@bash -n $<
 	@cp -afv $< bin/$@
 	@chmod 755 bin/$@
 
