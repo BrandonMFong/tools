@@ -18,6 +18,7 @@ use std::os::unix::fs::symlink;
 
 const BUFFER_SIZE: usize = 2 << 13; // Chunk size for copying
 const ARG_HELP: &str = "h";
+const ARG_BRIEF_DESCRIPTION: &str = "--brief-description";
 
 fn help() {
     let args: Vec<String> = env::args().collect();
@@ -28,6 +29,10 @@ fn help() {
     println!("  values:");
     println!("    <source path> : relative or absolute");
     println!("    <destination path> : relative or absolute");
+}
+
+fn brief_description() {
+    println!("copy tool");
 }
 
 fn main() {
@@ -41,9 +46,11 @@ fn main() {
         let dest = &args[args.len() - 1];
         error = copy_from_source_to_destination(source, dest);
     } else if args.len() > 1 {
-        let flags = &args[1];
-        if flags.starts_with("-") {
-            if flags.contains(ARG_HELP) {
+        let arg = &args[1];
+        if arg == ARG_BRIEF_DESCRIPTION {
+            brief_description();
+        } else if arg.starts_with("-") {
+            if arg.contains(ARG_HELP) {
                 help();
             }
         }

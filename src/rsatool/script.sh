@@ -9,6 +9,7 @@ ENCRYPT_ARG="encrypt";
 DECRYPT_ARG="decrypt";
 GENKEYS_ARG="genkeys";
 PUB2PEM_ARG="pub2pem";
+BRIEF_DESCRIPTION_ARG="--brief-description";
 
 function Help() {
 	printf "usage: $SCRIPT_NAME <cmd>\n";
@@ -18,6 +19,10 @@ function Help() {
 	printf "\t$DECRYPT_ARG <private key> <input file>\n";
 	printf "\t$GENKEYS_ARG - Generates rsa keys\n";
 	printf "\t$PUB2PEM_ARG <public key> - Converts public key created by 'ssh-keygen' to 'openssl' format (which is what we need)\n";
+}
+
+function BriefDescription() {
+	echo "encryption and description tool for small messages";
 }
 
 function Encrypt() {
@@ -67,7 +72,7 @@ function ConvertPub2Pem() {
 	fi 
 }
 
-function main() {
+function Main() {
 	which openssl >/dev/null 2>&1;
 
 	if [ $? -ne 0 ]; then 
@@ -85,12 +90,14 @@ function main() {
 			GenerateKeys;
 		elif [[ $COMMAND == "$PUB2PEM_ARG" ]]; then 
 			ConvertPub2Pem;
+		elif [[ $COMMAND == "$BRIEF_DESCRIPTION_ARG" ]]; then 
+			BriefDescription;
 		else 
 			Help;
 		fi
 	fi 
 }
 
-main;
+Main;
 
 exit $result;
