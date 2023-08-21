@@ -26,7 +26,7 @@
 #define kArgumentsSHA512 "sha512"
 #define kArgumentsBrieflyDescribeTool "--brief-description"
 
-#define kArgumentsExpected "-e"
+#define kArgumentsExpected "-expect"
 
 // Types
 typedef struct {
@@ -73,6 +73,7 @@ int main(int argc, char ** argv) {
 	BFChecksumType checksumType = kBFChecksumTypeUnknown;
 	int argIndex = 1;
 	bool okayToContinue = true;
+	bool verbose = false;
 
 	if (argc < 3) {
 		if (!strcmp(argv[1], kArgumentsBrieflyDescribeTool)) {
@@ -83,7 +84,18 @@ int main(int argc, char ** argv) {
 			okayToContinue = false;
 		}
 	} else {
-		if (argv[argIndex][0] == '-' ) {
+		if (argv[argIndex][0] == '-' && argv[argIndex][1] != '-') {
+			char flags[2 << 4];
+			strcpy(flags, argv[argIndex]);
+			for (int i = 1; i < strlen(flags); i++) {
+				switch (flags[i]) {
+					case 'v':
+						verbose = true;
+						break;
+					default:
+						break;
+				}
+			}
 			
 			argIndex++;
 		}
