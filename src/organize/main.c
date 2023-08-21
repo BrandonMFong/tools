@@ -20,6 +20,7 @@
 #include <linux/limits.h>
 #endif
 
+#define kArgumentsBriefDescription "--brief-description"
 #define kArgumentsSource "-s"
 #define kArgumentsDestination "-d"
 
@@ -48,6 +49,10 @@ void help() {
 	printf("\n");
 }
 
+void briefDescription() {
+	printf("organizes input files into an output directory\n");
+}
+
 int main(int argc, char ** argv) {
 	int error = 0;
 	int i = 0;
@@ -58,6 +63,9 @@ int main(int argc, char ** argv) {
 	if (argc < 2) {
 		error = 3;
 		help();
+	} else if (BFArrayStringContainsString(argv, argc, kArgumentsBriefDescription)) {
+		error = 3;
+		briefDescription();
 	} else {
 		strcpy(kOrganizeTypename, argv[1]);
 	}

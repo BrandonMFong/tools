@@ -32,6 +32,11 @@ char SCRIPT_ARG[PATH_MAX];
  */
 const char * VERBOSE_ARG = "-v";
 
+/**
+ * prints out brief description of what we do
+ */
+const char * BRIEF_DESCRIPTION = "--brief-description";
+
 // PROTOTYPES
 
 /**
@@ -48,6 +53,10 @@ void Help() {
 	printf("\nArguments:\n");
 	printf("\t%s : Verbose mode\n", VERBOSE_ARG);
 	printf("\t<path> : Can be absolute or relative.  Cannot be a symbolic link\n");
+}
+
+void BriefDescription() {
+	printf("returns size of file\n");
 }
 
 int main(int argc, char * argv[]) {
@@ -88,19 +97,24 @@ int main(int argc, char * argv[]) {
 		}
 	}
 	
+	if (!result) {
+		// See if user wants to show each path we find
+		if (BFArrayStringContainsString(argv, argc, VERBOSE_ARG)) {
+			options |= kCalculateSizeOptionsVerbose;
+
+		// see if the user wants a brief description
+		} else if (BFArrayStringContainsString(argv, argc, BRIEF_DESCRIPTION)) {
+			result = 1;
+			BriefDescription();
+		}
+	}
+
 	// Make sure the path the user provided exists
 	if (!result) {
 		if (!BFFileSystemPathExists(path)) {
 			BFErrorPrint("Path '%s' does not exist!", path);
 			result = 1;
 		}	
-	}
-
-	// See if user wants to show each path we find
-	if (!result) {
-		if (BFArrayStringContainsString(argv, argc, "-v")) {
-			options |= kCalculateSizeOptionsVerbose;
-		}
 	}
 
 	// Check what type of path this is

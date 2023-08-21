@@ -24,6 +24,8 @@
 #define kArgumentsSHA1 "sha1"
 #define kArgumentsSHA256 "sha256"
 #define kArgumentsSHA512 "sha512"
+#define kArgumentsBrieflyDescribeTool "--brief-description"
+
 #define kArgumentsExpected "-e"
 
 // Types
@@ -59,17 +61,27 @@ void help(int argc, char ** argv) {
 	printf("  %s\n", kArgumentsSHA512);
 }
 
+void BriefDescription() {
+	printf("hash calculator & comparitor\n");
+}
+
 void * PThreadReadAndHash(void * _tools);
+int CalculateChecksumForPath(const char * filePath, BFChecksumType checksumType, const char * expected);
+
 int main(int argc, char ** argv) {
 	int error = 0;
-	BFChecksumTools ctools = {0};
-	pthread_mutex_t mutexRead, mutexHash;
 	BFChecksumType checksumType = kBFChecksumTypeUnknown;
 	int argIndex = 1;
+	bool okayToContinue = true;
 
 	if (argc < 3) {
-		help(argc, argv);
-		error = 1;
+		if (!strcmp(argv[1], kArgumentsBrieflyDescribeTool)) {
+			BriefDescription();
+			okayToContinue = false;
+		} else {
+			help(argc, argv);
+			okayToContinue = false;
+		}
 	} else {
 		if (argv[argIndex][0] == '-' ) {
 			
@@ -92,29 +104,42 @@ int main(int argc, char ** argv) {
 		argIndex++;
 	}
 
-	// Read other arguments
-	const char * expected = NULL;
-	if (error == 0) {
-		for (int i = argIndex; i < (argc - 1); i++) {
-			// user provied expected checksum
-			if (!strcmp(argv[i], kArgumentsExpected)) {
-				i++;
-				expected = argv[i];
+	if (okayToContinue) {
+		// Read other arguments
+		const char * expected = NULL;
+		if (error == 0) {
+			for (int i = 2; i < (argc - 1); i++) {
+				// user provied expected checksum
+				if (!strcmp(argv[i], kArgumentsExpected)) {
+					i++;
+					expected = argv[i];
+				}
 			}
 		}
-	}
 
-	if (error == 0) {
-		strcpy(filePath, argv[argc - 1]);
-		if (!BFFileSystemPathIsFile(filePath)) {
-			error = 2;
+		// Last one will always be path
+		if (error == 0) {
+			strcpy(filePath, argv[argc - 1]);
+			if (!BFFileSystemPathIsFile(filePath)) {
+				error = 2;
+			}
+		}
+
+		if (error == 0) {
+			error = CalculateChecksumForPath(filePath, checksumType, expected);
 		}
 	}
 
+	return error;
+}
+
+int CalculateChecksumForPath(const char * filePath, BFChecksumType checksumType, const char * expected) {
+	int error = 0;
+	BFChecksumTools ctools = {0};
+	pthread_mutex_t mutexRead, mutexHash;
+
 	// Init checksum tools
-	if (error == 0) {
-		error = BFChecksumCreate(&ctools, checksumType);
-	}
+	error = BFChecksumCreate(&ctools, checksumType);
 
 	if (error == 0) {
 		if (pthread_mutex_init(&mutexRead, 0)) {

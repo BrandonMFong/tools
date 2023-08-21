@@ -23,6 +23,7 @@
 #define LOCK_ARG "-l"
 #define US_ARG "-u"
 #define EPOCH_ARG "-e"
+#define BRIEF_DESCRIPTION_ARG "--brief-description"
 
 /**
  * Holds the name of the script
@@ -41,6 +42,10 @@ void Help() {
 	printf(	"  %s [ <epoch value> ] : Prints out current epoch\n"
 			"     time.  If value is passed, will print out the\n"
 			"     date time version of epoch time\n", EPOCH_ARG);
+}
+
+void BriefDescription() {
+	printf("time tool. Can print time and handle epoch time conversions\n");
 }
 
 void PrintTime(const time_t sec, const long nsec) {
@@ -82,10 +87,13 @@ int main(int argc, char * argv[]) {
 	bool help = false;
 	time_t inputEpoch = 0;
 	bool epochFlag = false;
+	bool brieflyDescribe = false;
 
 	for (int i = 0; i < argc; i++) {
 		if (!strcmp(argv[i], HELP_ARG)) {
 			help = true;
+		} else if (!strcmp(argv[1], BRIEF_DESCRIPTION_ARG)) {
+			brieflyDescribe = true;
 		} else if (!strcmp(argv[i], MILT_ARG)) {
 			SHOW_MIL_TIME = true;
 		} else if (!strcmp(argv[i], EPOCH_ARG)) {
@@ -100,7 +108,9 @@ int main(int argc, char * argv[]) {
 		}
 	}
 
-	if (help) {
+	if (brieflyDescribe) {
+		BriefDescription();
+	} else if (help) {
 		Help();
 	} else if (error == 0) {
 		if (epochFlag) {

@@ -15,12 +15,17 @@
 
 char TOOL_ARG[PATH_MAX];
 const char * RECURS_ARG = "-r";
+const char * BRIEF_DESCRIPTION_ARG = "--brief-description";
 
 void Help() {
 	printf("usage: %s [ %s ] <path>\n", TOOL_ARG, RECURS_ARG);
 
 	printf("\nArguments:\n");
 	printf("\t%s : Recursively runs through path (if possible) to count items\n", RECURS_ARG);
+}
+
+void BriefDescription() {
+	printf("counts items in path (recursive option available)\n");
 }
 
 /**
@@ -76,10 +81,12 @@ int main(int argc, char * argv[]) {
 
 	strcpy(TOOL_ARG, argv[0]);
 
-	if ((argc != 3) && (argc != 2)) {
+	if (argc < 2) {
 		Help();
+	} else if (BFArrayStringContainsString(argv, argc, BRIEF_DESCRIPTION_ARG)) {
+		BriefDescription();
 	} else {
-		const char * path = argv[argc - 1];
+		const char * path = argv[argc - 1]; // path is always last
 
 		if (!path) {
 			BFErrorPrint("The path argument is null!");
@@ -99,3 +106,4 @@ int main(int argc, char * argv[]) {
 
 	return result;
 }
+
