@@ -22,6 +22,7 @@ const char * UPPERCASE_ARG = "--upper";
 const char * LOWERCASE_ARG = "--lower";
 const char * SPECIAL_ARG = "--special";
 const char * LENGTH_ARG = "-length";
+const char * BRIEF_DESCRIPTION_ARG = "--brief-description";
 
 /// Characters
 const char * UPPERCASE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -68,6 +69,10 @@ void Help() {
 	printf("\tAll characters are used by default\n");
 }
 
+void BriefDescription() {
+	printf("generates random password\n");
+}
+
 /**
  * Creates a string copy of the password specified by options
  *
@@ -92,6 +97,8 @@ int main(int argc, char * argv[]) {
 
 	if (BFArrayStringContainsString(argv, argc, HELP_ARG)) {
 		Help();
+	} else if (BFArrayStringContainsString(argv, argc, BRIEF_DESCRIPTION_ARG)) {
+		BriefDescription();
 	} else {
 		// If user specified options, then we must reset options to 0 so that we 
 		// start with a fresh state
