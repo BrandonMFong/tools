@@ -19,7 +19,6 @@
 #endif
 
 // Arguments
-#define kArgumentFlagVerbose "v"
 #define kArgumentsMD5 "md5"
 #define kArgumentsSHA1 "sha1"
 #define kArgumentsSHA256 "sha256"
@@ -27,6 +26,15 @@
 #define kArgumentsBrieflyDescribeTool "--brief-description"
 
 #define kArgumentsExpected "-expect"
+
+/**
+ * Notes
+ *
+ * This allows the pthreads to print to stdout. The should 
+ * be revisited if there are print operations in other threads
+ *
+ */
+#define kArgumentFlagVerbose "v"
 
 // Types
 typedef struct {
