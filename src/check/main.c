@@ -75,11 +75,15 @@ int main(int argc, char ** argv) {
 	bool okayToContinue = true;
 	bool verbose = false;
 
-	if (argc < 3) {
+	if (argc < 2) {
+		help(argc, argv);
+		okayToContinue = false;
+	} else if (argc < 3) {
 		if (!strcmp(argv[1], kArgumentsBrieflyDescribeTool)) {
 			BriefDescription();
 			okayToContinue = false;
 		} else {
+			BFErrorPrint("Unknown arg: %s", argv[1]);
 			help(argc, argv);
 			okayToContinue = false;
 		}
