@@ -48,10 +48,12 @@ const int kThreadCount = 2;
 size_t kBufferSizeRead = 4096 * 4096;
 
 void help(int argc, char ** argv) {
-	printf("usage: %s [ -%s ] <checksum type> [ %s <expected hash> ] <file path>\n", 
+	printf("usage: %s [ -<flags> ] <checksum type> [ %s <expected hash> ] <file path>\n", 
 			basename(argv[0]), 
-			kArgumentFlagVerbose, 
 			kArgumentsExpected);
+
+	printf("\nFlags:\n");
+	printf("  [ %s ] : verbose. Prints out calculation process\n", kArgumentFlagVerbose);
 
 	printf("\n");
 	printf("Checksum types:\n");
