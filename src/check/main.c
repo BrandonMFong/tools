@@ -31,7 +31,7 @@
 // Types
 typedef struct {
 	int fd; // file descriptor
-	off_t * currSeek;
+	unsigned long long * currSeek;
 	BFChecksumTools * checksum;
 	pthread_mutex_t * mutexRead;
 	pthread_mutex_t * mutexHash;
@@ -168,7 +168,7 @@ int CalculateChecksumForPath(const char * filePath, BFChecksumType checksumType,
 		fileSize = BFFileSystemFileGetSizeUsed(filePath, 0, &error);
 	}
 
-	off_t currSeek = 0;
+	unsigned long long currSeek = 0;
 	int i = 0;
 	pthread_t threads[kThreadCount];
 	ChecksumTools checksumTools[kThreadCount];
@@ -289,8 +289,12 @@ void * PThreadReadAndHash(void * _tools) {
 
 			// Run verbose option
 			if (tools->error == 0 && tools->verbose) {
-				printf("\rProgress: %.2f", (*tools->currSeek - tools->fileSize) * 100);
+				printf("\rProgress: %.2f%%",
+						((float) *tools->currSeek / (float) tools->fileSize) * 100);
 			}
+		} else {
+			// Delete line when we are finished
+			if (tools->error == 0 && tools->verbose) printf("\r");
 		}
 		
 		pthread_mutex_unlock(tools->mutexHash);
