@@ -92,7 +92,7 @@ int main(int argc, char * argv[]) {
 	for (int i = 0; i < argc; i++) {
 		if (!strcmp(argv[i], HELP_ARG)) {
 			help = true;
-		} else if (!strcmp(argv[1], BRIEF_DESCRIPTION_ARG)) {
+		} else if (!strcmp(argv[i], BRIEF_DESCRIPTION_ARG)) {
 			brieflyDescribe = true;
 		} else if (!strcmp(argv[i], MILT_ARG)) {
 			SHOW_MIL_TIME = true;
