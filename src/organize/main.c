@@ -86,8 +86,7 @@ int main(int argc, char ** argv) {
 			error = 2;
 		}
 
-		if (error)
-			BFErrorPrint("No destination path provided");
+		if (error) BFErrorPrint("No destination path provided");
 	}
 
 	if (error == 0) {
@@ -117,6 +116,45 @@ int main(int argc, char ** argv) {
 	return error;
 }
 
+int SetUniqueFilePath(char * filepath) {
+	int result = 0;
+	char bname[PATH_MAX];
+	char dname[PATH_MAX];
+	char ext[PATH_MAX];
+	char temppath[PATH_MAX];
+
+	strcpy(temppath, filepath); // copy full filepath
+
+	char * tmp = dirname(temppath); // get path to file
+	strcpy(dname, tmp);
+
+	strcpy(temppath, filepath); // make sure we have a fresh copy
+
+	// get name w/o ext
+	result = BFFileSystemPathGetName(temppath, bname);
+
+	// get ext
+	if (result == 0) {
+		result = BFFileSystemPathGetExtension(temppath, ext);
+	}
+
+	// see if file path already exists, if so let's add a number
+	// to the basename
+	if (result == 0) {
+		int i = 1;
+		char newpath[PATH_MAX];
+		strcpy(newpath, filepath);
+		while (BFFileSystemPathIsFile(newpath)) {
+			sprintf(newpath, "%s/%s_%d.%s", dname, bname, i, ext);
+			i++;
+		}
+
+		strcpy(filepath, newpath);
+	}
+
+	return result;
+}
+
 int MoveByMonth(const char * source, const char * destination) {
 	int result = 0;
 	char buf[PATH_MAX];
@@ -144,11 +182,15 @@ int MoveByMonth(const char * source, const char * destination) {
 				result = 10;
 			}
 		}
-	
+	}
+
+	// Check if path exists
+	if (result == 0) {
+		sprintf(buf, "%s/%s", buf, bname);
+		result = SetUniqueFilePath(buf);
 	}
 	
 	if (result == 0) {
-		sprintf(buf, "%s/%s", buf, bname);
 		printf("%s -> %s\n", source, buf);
 		if (rename(source, buf) != 0) {
 			result = 12;
