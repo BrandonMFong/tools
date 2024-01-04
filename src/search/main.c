@@ -15,7 +15,7 @@
 #include <linux/limits.h>
 #endif 
 
-#define ARG_FILENAME "-filename"
+#define ARG_FILENAME "-fullname"
 
 typedef struct {
 	char filename[PATH_MAX];
