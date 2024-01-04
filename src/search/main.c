@@ -15,7 +15,12 @@
 #include <linux/limits.h>
 #endif 
 
-int Search(const char * path);
+typedef struct {
+	char filename[PATH_MAX];
+} SearchOptions;
+
+int Search(const char * inpath, const SearchOptions * opts);
+void ParseSearchOptions(int argc, char ** argv, SearchOptions * opts);
 
 void help(const char * toolname) {
 	printf("usage: %s <path>\n", toolname);
@@ -26,9 +31,15 @@ int main(int argc, char ** argv) {
 	int error = 0;
 	char path[PATH_MAX];
 	bool okayToContinue = true;
+	SearchOptions options;
+
+	memset(&options, 0, sizeof(SearchOptions));
+
 	if (argc < 2) {
 		okayToContinue = false;
 	} else {
+		ParseSearchOptions(argc, argv, &options);
+		// get path
 		if (realpath(argv[argc - 1], path) == 0) { // get abs path
 			error = -1;
 		}
@@ -39,13 +50,20 @@ int main(int argc, char ** argv) {
 			error = 1;
 			help(argv[0]);
 		} else {
-			error = Search(path);
+			error = Search(path, &options);
 		}
 	}
+
 	return 0;
 }
 
-int Search(const char * inpath) {
+void ParseSearchOptions(int argc, char ** argv, SearchOptions * opts) {
+	for (int i = 1; i < (argc - 1); i++) {
+		printf("arg: %s\n", argv[i]);
+	}
+}
+
+int Search(const char * inpath, const SearchOptions * opts) {
 	if (!inpath) return -2;
 	else if (BFFileSystemPathIsFile(inpath)) {
 		printf("file: %s\n", inpath);
@@ -61,7 +79,7 @@ int Search(const char * inpath) {
 				if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
 					char path[PATH_MAX];
 					snprintf(path, PATH_MAX, "%s/%s", inpath, entry->d_name);
-					error = Search(path);
+					error = Search(path, opts);
 					if (error) break;
 				}
 			}
