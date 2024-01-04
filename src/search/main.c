@@ -15,6 +15,8 @@
 #include <linux/limits.h>
 #endif 
 
+#define ARG_FILENAME "-filename"
+
 typedef struct {
 	char filename[PATH_MAX];
 } SearchOptions;
@@ -23,7 +25,11 @@ int Search(const char * inpath, const SearchOptions * opts);
 void ParseSearchOptions(int argc, char ** argv, SearchOptions * opts);
 
 void help(const char * toolname) {
-	printf("usage: %s <path>\n", toolname);
+	printf("usage: %s <options> <path>\n", toolname);
+
+	printf("\noptions:\n");
+	printf("  [ %s ] : searches for files with filename (basename + extension)\n", ARG_FILENAME);
+
 	printf("\nCopyright © 2024 Brando. All rights reserved.\n"); // make this global
 }
 
@@ -58,8 +64,15 @@ int main(int argc, char ** argv) {
 }
 
 void ParseSearchOptions(int argc, char ** argv, SearchOptions * opts) {
-	for (int i = 1; i < (argc - 1); i++) {
-		printf("arg: %s\n", argv[i]);
+	if (opts) {
+		for (int i = 1; i < (argc - 1); i++) {
+			printf("arg: %s\n", argv[i]);
+			if (!strcmp(argv[i], ARG_FILENAME)) {
+				i++;
+				printf("value: %s\n", argv[i]);
+				strcpy(opts->filename, argv[i]);
+			}
+		}
 	}
 }
 
