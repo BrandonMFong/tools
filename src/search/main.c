@@ -9,6 +9,7 @@
 #include <limits.h>
 #include <dirent.h>
 #include <string.h>
+#include <bflibc/filesystem.h>
 
 #ifdef LINUX
 #include <linux/limits.h>
@@ -46,8 +47,11 @@ int main(int argc, char ** argv) {
 
 int Search(const char * inpath) {
 	if (!inpath) return -2;
-	else {
-		printf("path: %s\n", inpath);
+	else if (BFFileSystemPathIsFile(inpath)) {
+		printf("file: %s\n", inpath);
+	} else {
+		printf("dir: %s\n", inpath);
+		int error = 0;
 		DIR * dir = opendir(inpath);
 
 		if (!dir) return -2;
@@ -57,11 +61,13 @@ int Search(const char * inpath) {
 				if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
 					char path[PATH_MAX];
 					snprintf(path, PATH_MAX, "%s/%s", inpath, entry->d_name);
-					printf("path: %s\n", path);
+					error = Search(path);
+					if (error) break;
 				}
 			}
 		}
 		closedir(dir);
+		if (error) return error;
 	}
 
 	return 0;
