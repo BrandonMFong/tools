@@ -66,22 +66,35 @@ int main(int argc, char ** argv) {
 void ParseSearchOptions(int argc, char ** argv, SearchOptions * opts) {
 	if (opts) {
 		for (int i = 1; i < (argc - 1); i++) {
-			printf("arg: %s\n", argv[i]);
 			if (!strcmp(argv[i], ARG_FILENAME)) {
 				i++;
-				printf("value: %s\n", argv[i]);
 				strcpy(opts->filename, argv[i]);
 			}
 		}
 	}
 }
 
+bool SearchOptionsMatchFilename(const char * inpath, const SearchOptions * opts) {
+	if (opts && strlen(opts->filename)) {
+		char fullname[PATH_MAX];
+		int error = BFFileSystemPathGetFullname(inpath, fullname);
+		if (error) {
+			printf("BFFileSystemPathGetFullname - %d\n", error);
+		} else {
+			return !strcmp(opts->filename, fullname);
+		}
+	}
+
+	return false;
+}
+
 int Search(const char * inpath, const SearchOptions * opts) {
 	if (!inpath) return -2;
 	else if (BFFileSystemPathIsFile(inpath)) {
-		printf("file: %s\n", inpath);
+		if (SearchOptionsMatchFilename(inpath, opts)) {
+			printf("%s\n", inpath);
+		}
 	} else {
-		printf("dir: %s\n", inpath);
 		int error = 0;
 		DIR * dir = opendir(inpath);
 
