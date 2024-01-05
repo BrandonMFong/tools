@@ -29,7 +29,7 @@ typedef struct {
 } SearchOptions;
 
 int Search(const char * inpath, const SearchOptions * opts);
-void ParseSearchOptions(int argc, char ** argv, SearchOptions * opts);
+int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath);
 
 void help(const char * toolname) {
 	printf("usage: %s <options> <path>\n", toolname);
@@ -54,13 +54,7 @@ int main(int argc, char ** argv) {
 	if (argc < 2) {
 		error = 1;
 	} else {
-		// see what the user wants to see
-		ParseSearchOptions(argc, argv, &options);
-
-		// get path
-		if (realpath(argv[argc - 1], path) == 0) { // get abs path
-			error = -1;
-		}
+		error = ParseArguments(argc, argv, &options, path);
 	}
 
 	if (!error) {
@@ -77,8 +71,12 @@ int main(int argc, char ** argv) {
 /**
  * loads SearchOptions with what we find from cmd args
  */
-void ParseSearchOptions(int argc, char ** argv, SearchOptions * opts) {
-	if (opts) {
+int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath) {
+	int error = 0;
+	if (!opts || !argv || !outpath) {
+		error = -3;
+	} else {
+		// get search options
 		for (int i = 1; i < (argc - 1); i++) {
 			if (!strcmp(argv[i], ARG_SEARCH_OPTION_FULLNAME)) {
 				i++; strcpy(opts->fullname, argv[i]);
@@ -90,11 +88,18 @@ void ParseSearchOptions(int argc, char ** argv, SearchOptions * opts) {
 				i++; strcpy(opts->dir, argv[i]);
 			}
 		}
+
+		// get path
+		if (realpath(argv[argc - 1], outpath) == 0) { // get abs path
+			error = -1;
+		}
 	}
+
+	return error;
 }
 
 /**
- * true no options were found by ParseSearchOptions
+ * true no options were given
  */
 bool SearchOptionsNone(const SearchOptions * opts) {
 	if (!opts) return false;
