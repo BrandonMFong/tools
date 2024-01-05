@@ -117,9 +117,11 @@ bool SearchOptionsMatchExtension(const char * inpath, const SearchOptions * opts
 int Search(const char * inpath, const SearchOptions * opts) {
 	if (!inpath) return -2;
 	else if (BFFileSystemPathIsFile(inpath)) {
-		if (SearchOptionsNone(opts)) {
+		if (SearchOptionsNone(opts)) { // if no opts, show
 			printf("%s\n", inpath);
-		} else if (SearchOptionsMatchFilename(inpath, opts)) {
+		} else if (
+				SearchOptionsMatchFilename(inpath, opts) ||
+				SearchOptionsMatchExtension(inpath, opts)) {
 			printf("%s\n", inpath);
 		}
 	} else {
