@@ -50,6 +50,7 @@ int main(int argc, char ** argv) {
 	SearchOptions options;
 
 	memset(&options, 0, sizeof(SearchOptions));
+	memset(&path[0], 0, sizeof(PATH_MAX));
 
 	if (argc < 2) {
 		error = 1;
@@ -86,12 +87,16 @@ int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath)
 				i++; strcpy(opts->name, argv[i]);
 			} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_DIR)) {
 				i++; strcpy(opts->dir, argv[i]);
+			} else {
+				printf("unknown option: %s\n", argv[i]);
+				error = -3;
+				break;
 			}
 		}
 
 		// get path
 		if (realpath(argv[argc - 1], outpath) == 0) { // get abs path
-			error = -1;
+			error = -3;
 		}
 	}
 
