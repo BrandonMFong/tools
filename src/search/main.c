@@ -16,9 +16,11 @@
 #endif 
 
 #define ARG_FILENAME "-fullname"
+#define ARG_EXTENSION "-ext"
 
 typedef struct {
 	char filename[PATH_MAX];
+	char ext[PATH_MAX];
 } SearchOptions;
 
 int Search(const char * inpath, const SearchOptions * opts);
@@ -67,11 +69,20 @@ void ParseSearchOptions(int argc, char ** argv, SearchOptions * opts) {
 	if (opts) {
 		for (int i = 1; i < (argc - 1); i++) {
 			if (!strcmp(argv[i], ARG_FILENAME)) {
-				i++;
-				strcpy(opts->filename, argv[i]);
+				i++; strcpy(opts->filename, argv[i]);
+			} else if (!strcmp(argv[i], ARG_EXTENSION)) {
+				i++; strcpy(opts->ext, argv[i]);
 			}
 		}
 	}
+}
+
+/**
+ * true no options were found by ParseSearchOptions
+ */
+bool SearchOptionsNone(const SearchOptions * opts) {
+	if (!opts) return false;
+	return !strlen(opts->filename) && !strlen(opts->ext);
 }
 
 bool SearchOptionsMatchFilename(const char * inpath, const SearchOptions * opts) {
@@ -88,14 +99,36 @@ bool SearchOptionsMatchFilename(const char * inpath, const SearchOptions * opts)
 	return false;
 }
 
+bool SearchOptionsMatchExtension(const char * inpath, const SearchOptions * opts) {
+	if (opts && strlen(opts->ext)) {
+		char ext[PATH_MAX];
+		int error = BFFileSystemPathGetExtension(inpath, ext);
+		if (error) {
+			printf("BFFileSystemPathGetExt - %d\n", error);
+		} else {
+			return !strcmp(opts->ext, ext);
+		}
+	}
+
+	return false;
+}
+
+
 int Search(const char * inpath, const SearchOptions * opts) {
 	if (!inpath) return -2;
 	else if (BFFileSystemPathIsFile(inpath)) {
-		if (SearchOptionsMatchFilename(inpath, opts)) {
+		if (SearchOptionsNone(opts)) {
+			printf("%s\n", inpath);
+		} else if (SearchOptionsMatchFilename(inpath, opts)) {
 			printf("%s\n", inpath);
 		}
 	} else {
 		int error = 0;
+
+		if (SearchOptionsNone(opts)) {
+			printf("%s\n", inpath);
+		}
+
 		DIR * dir = opendir(inpath);
 
 		if (!dir) return -2;
@@ -105,6 +138,7 @@ int Search(const char * inpath, const SearchOptions * opts) {
 				if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
 					char path[PATH_MAX];
 					snprintf(path, PATH_MAX, "%s/%s", inpath, entry->d_name);
+			
 					error = Search(path, opts);
 					if (error) break;
 				}
