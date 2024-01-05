@@ -189,6 +189,7 @@ int ExamineDirectory(const char * inpath, const SearchOptions * opts) {
 	}
 
 	closedir(dir);
+
 	return error;
 }
 
