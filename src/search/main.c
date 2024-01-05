@@ -21,6 +21,14 @@
 #define ARG_SEARCH_OPTION_DIR "-dir"
 #define ARG_SEARCH_OPTION_WORD "-word"
 
+#define ARG_IS_FLAG(arg) ( \
+		strcmp(arg, ARG_SEARCH_OPTION_FULLNAME) && \
+		strcmp(arg, ARG_SEARCH_OPTION_EXTENSION) && \
+		strcmp(arg, ARG_SEARCH_OPTION_NAME) && \
+		strcmp(arg, ARG_SEARCH_OPTION_DIR) && \
+		strcmp(arg, ARG_SEARCH_OPTION_WORD) \
+		)
+
 typedef struct {
 	char fullname[PATH_MAX];
 	char ext[PATH_MAX];
@@ -77,8 +85,13 @@ int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath)
 	if (!opts || !argv || !outpath) {
 		error = -3;
 	} else {
+		int i = 1;
+		if (ARG_IS_FLAG(argv[i])) {
+			i++;
+		}
+
 		// get search options
-		for (int i = 1; i < (argc - 1); i++) {
+		for (; i < (argc - 1); i++) {
 			if (!strcmp(argv[i], ARG_SEARCH_OPTION_FULLNAME)) {
 				i++; strcpy(opts->fullname, argv[i]);
 			} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_EXTENSION)) {
@@ -93,8 +106,10 @@ int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath)
 				break;
 			}
 		}
+	}
 
-		// get path
+	// get path
+	if (!error) {
 		if (realpath(argv[argc - 1], outpath) == 0) { // get abs path
 			error = -3;
 		}
