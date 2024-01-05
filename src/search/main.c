@@ -15,13 +15,14 @@
 #include <linux/limits.h>
 #endif 
 
-#define ARG_FILENAME "-fullname"
+#define ARG_FULLNAME "-fullname"
 #define ARG_EXTENSION "-ext"
 #define ARG_NAME "-name"
 #define ARG_DIR "-dir"
+#define ARG_WORD "-word"
 
 typedef struct {
-	char filename[PATH_MAX];
+	char fullname[PATH_MAX];
 	char ext[PATH_MAX];
 	char name[PATH_MAX];
 	char dir[PATH_MAX];
@@ -34,10 +35,11 @@ void help(const char * toolname) {
 	printf("usage: %s <options> <path>\n", toolname);
 
 	printf("\noptions:\n");
-	printf("  [ %s <string> ] : searches for files with filename (basename + extension)\n", ARG_FILENAME);
+	printf("  [ %s <string> ] : searches for files with fullname (basename + extension)\n", ARG_FULLNAME);
 	printf("  [ %s <string> ] : searches for files with extension\n", ARG_EXTENSION);
 	printf("  [ %s <string> ] : searches for files with basename\n", ARG_NAME);
 	printf("  [ %s <string> ] : searches for directory with the same name\n", ARG_DIR);
+	printf("  [ %s <string> ] : searches files that contain exact word\n", ARG_WORD);
 
 	printf("\nCopyright © 2024 Brando. All rights reserved.\n"); // make this global
 }
@@ -72,11 +74,14 @@ int main(int argc, char ** argv) {
 	return error;
 }
 
+/**
+ * loads SearchOptions with what we find from cmd args
+ */
 void ParseSearchOptions(int argc, char ** argv, SearchOptions * opts) {
 	if (opts) {
 		for (int i = 1; i < (argc - 1); i++) {
-			if (!strcmp(argv[i], ARG_FILENAME)) {
-				i++; strcpy(opts->filename, argv[i]);
+			if (!strcmp(argv[i], ARG_FULLNAME)) {
+				i++; strcpy(opts->fullname, argv[i]);
 			} else if (!strcmp(argv[i], ARG_EXTENSION)) {
 				i++; strcpy(opts->ext, argv[i]);
 			} else if (!strcmp(argv[i], ARG_NAME)) {
@@ -93,63 +98,53 @@ void ParseSearchOptions(int argc, char ** argv, SearchOptions * opts) {
  */
 bool SearchOptionsNone(const SearchOptions * opts) {
 	if (!opts) return false;
-	return !strlen(opts->filename) && !strlen(opts->ext) && !strlen(opts->name) && !strlen(opts->name) && !strlen(opts->dir);
+	return !strlen(opts->fullname) &&
+		!strlen(opts->ext) &&
+		!strlen(opts->name) && 
+		!strlen(opts->name) && 
+		!strlen(opts->dir);
+}
+
+/**
+ * common logic that is used when matching base with the result from callback
+ *
+ * param callback: BFFileSystemPath Getter. This is following a standard spec that should persist in the bflib 
+ */
+bool _SearchOptionsMatchCommon(
+		const char * inpath, 
+		const char * base, 
+		int (* callback) (const char *, char *)) {
+	if (strlen(base)) {
+		char t[PATH_MAX];
+		int error = callback(inpath, t);
+		if (error) {
+			printf("error - %d\n", error);
+		} else {
+			return !strcmp(base, t);
+		}
+	}
+
+	return false;
 }
 
 bool SearchOptionsMatchFullname(const char * inpath, const SearchOptions * opts) {
-	if (opts && strlen(opts->filename)) {
-		char fullname[PATH_MAX];
-		int error = BFFileSystemPathGetFullname(inpath, fullname);
-		if (error) {
-			printf("BFFileSystemPathGetFullname - %d\n", error);
-		} else {
-			return !strcmp(opts->filename, fullname);
-		}
-	}
-
-	return false;
+	if (!opts) return false;
+	return _SearchOptionsMatchCommon(inpath, opts->fullname, BFFileSystemPathGetFullname);
 }
 
 bool SearchOptionsMatchExtension(const char * inpath, const SearchOptions * opts) {
-	if (opts && strlen(opts->ext)) {
-		char ext[PATH_MAX];
-		int error = BFFileSystemPathGetExtension(inpath, ext);
-		if (error) {
-			printf("BFFileSystemPathGetExt - %d\n", error);
-		} else {
-			return !strcmp(opts->ext, ext);
-		}
-	}
-
-	return false;
+	if (!opts) return false;
+	return _SearchOptionsMatchCommon(inpath, opts->ext, BFFileSystemPathGetExtension);
 }
 
 bool SearchOptionsMatchDir(const char * inpath, const SearchOptions * opts) {
-	if (opts && strlen(opts->dir)) {
-		char dir[PATH_MAX];
-		int error = BFFileSystemPathGetName(inpath, dir);
-		if (error) {
-			printf("BFFileSystemPathGetName - %d\n", error);
-		} else {
-			return !strcmp(opts->dir, dir);
-		}
-	}
-
-	return false;
+	if (!opts) return false;
+	return _SearchOptionsMatchCommon(inpath, opts->dir, BFFileSystemPathGetName);
 }
 
 bool SearchOptionsMatchName(const char * inpath, const SearchOptions * opts) {
-	if (opts && strlen(opts->name)) {
-		char name[PATH_MAX];
-		int error = BFFileSystemPathGetName(inpath, name);
-		if (error) {
-			printf("BFFileSystemPathGetName - %d\n", error);
-		} else {
-			return !strcmp(opts->name, name);
-		}
-	}
-
-	return false;
+	if (!opts) return false;
+	return _SearchOptionsMatchCommon(inpath, opts->name, BFFileSystemPathGetName);
 }
 
 int Search(const char * inpath, const SearchOptions * opts) {
