@@ -21,13 +21,17 @@
 #define ARG_SEARCH_OPTION_DIR "-dir"
 #define ARG_SEARCH_OPTION_WORD "-word"
 
-#define ARG_IS_FLAG(arg) ( \
+#define ARG_UNKNOWN(arg) ( \
 		strcmp(arg, ARG_SEARCH_OPTION_FULLNAME) && \
 		strcmp(arg, ARG_SEARCH_OPTION_EXTENSION) && \
 		strcmp(arg, ARG_SEARCH_OPTION_NAME) && \
 		strcmp(arg, ARG_SEARCH_OPTION_DIR) && \
 		strcmp(arg, ARG_SEARCH_OPTION_WORD) \
 		)
+
+#define ARG_FLAG_VERBOSE (0x01 << 0)
+
+typedef char SearchFlags;
 
 typedef struct {
 	char fullname[PATH_MAX];
@@ -36,8 +40,8 @@ typedef struct {
 	char dir[PATH_MAX];
 } SearchOptions;
 
-int Search(const char * inpath, const SearchOptions * opts);
-int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath);
+int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags);
+int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath, SearchFlags * flags);
 
 void help(const char * toolname) {
 	printf("usage: %s <options> <path>\n", toolname);
@@ -56,6 +60,7 @@ int main(int argc, char ** argv) {
 	int error = 0;
 	char path[PATH_MAX];
 	SearchOptions options;
+	SearchFlags flags = 0;
 
 	memset(&options, 0, sizeof(SearchOptions));
 	memset(&path[0], 0, sizeof(PATH_MAX));
@@ -63,11 +68,11 @@ int main(int argc, char ** argv) {
 	if (argc < 2) {
 		error = 1;
 	} else {
-		error = ParseArguments(argc, argv, &options, path);
+		error = ParseArguments(argc, argv, &options, path, &flags);
 	}
 
 	if (!error) {
-		error = Search(path, &options);
+		error = Search(path, &options, flags);
 	}
 	
 	if (error) {
@@ -77,35 +82,44 @@ int main(int argc, char ** argv) {
 	return error;
 }
 
+int SearchOptionsLoadFromArguments(int argc, char ** argv, int startindex, SearchOptions * opts) {
+	for (int i = startindex; i < (argc - 1); i++) {
+		if (!strcmp(argv[i], ARG_SEARCH_OPTION_FULLNAME)) {
+			i++; strcpy(opts->fullname, argv[i]);
+		} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_EXTENSION)) {
+			i++; strcpy(opts->ext, argv[i]);
+		} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_NAME)) {
+			i++; strcpy(opts->name, argv[i]);
+		} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_DIR)) {
+			i++; strcpy(opts->dir, argv[i]);
+		} else {
+			printf("unknown option: %s\n", argv[i]);
+			return -4;
+		}
+	}
+
+	return 0;
+}
+
 /**
  * loads SearchOptions with what we find from cmd args
  */
-int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath) {
+int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath, SearchFlags * flags) {
 	int error = 0;
 	if (!opts || !argv || !outpath) {
 		error = -3;
 	} else {
 		int i = 1;
-		if (ARG_IS_FLAG(argv[i])) {
+
+		// if unknown, see if these are flags
+		if (ARG_UNKNOWN(argv[i])) {
+			char buf[512];
+
 			i++;
 		}
 
 		// get search options
-		for (; i < (argc - 1); i++) {
-			if (!strcmp(argv[i], ARG_SEARCH_OPTION_FULLNAME)) {
-				i++; strcpy(opts->fullname, argv[i]);
-			} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_EXTENSION)) {
-				i++; strcpy(opts->ext, argv[i]);
-			} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_NAME)) {
-				i++; strcpy(opts->name, argv[i]);
-			} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_DIR)) {
-				i++; strcpy(opts->dir, argv[i]);
-			} else {
-				printf("unknown option: %s\n", argv[i]);
-				error = -3;
-				break;
-			}
-		}
+		error = SearchOptionsLoadFromArguments(argc, argv, i, opts);
 	}
 
 	// get path
@@ -201,7 +215,7 @@ void ExamineDirectory(const char * inpath, const SearchOptions * opts) {
 	}
 }
 
-int Search(const char * inpath, const SearchOptions * opts) {
+int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags) {
 	int error = 0;
 	if (!inpath) error = -2; // null inpath
 	else if (BFFileSystemPathIsFile(inpath)) { // if file
@@ -221,7 +235,7 @@ int Search(const char * inpath, const SearchOptions * opts) {
 					char path[PATH_MAX];
 					snprintf(path, PATH_MAX, "%s/%s", inpath, entry->d_name);
 			
-					error = Search(path, opts);
+					error = Search(path, opts, flags);
 					if (error) break;
 				}
 			}
