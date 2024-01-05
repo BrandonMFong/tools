@@ -31,6 +31,8 @@ void help(const char * toolname) {
 
 	printf("\noptions:\n");
 	printf("  [ %s ] : searches for files with filename (basename + extension)\n", ARG_FILENAME);
+	printf("  [ %s ] : searches for files with extension\n", ARG_EXTENSION);
+
 
 	printf("\nCopyright © 2024 Brando. All rights reserved.\n"); // make this global
 }
