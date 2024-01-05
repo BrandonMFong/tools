@@ -17,10 +17,12 @@
 
 #define ARG_FILENAME "-fullname"
 #define ARG_EXTENSION "-ext"
+#define ARG_NAME "-name"
 
 typedef struct {
 	char filename[PATH_MAX];
 	char ext[PATH_MAX];
+	char name[PATH_MAX];
 } SearchOptions;
 
 int Search(const char * inpath, const SearchOptions * opts);
@@ -30,9 +32,9 @@ void help(const char * toolname) {
 	printf("usage: %s <options> <path>\n", toolname);
 
 	printf("\noptions:\n");
-	printf("  [ %s ] : searches for files with filename (basename + extension)\n", ARG_FILENAME);
-	printf("  [ %s ] : searches for files with extension\n", ARG_EXTENSION);
-
+	printf("  [ %s <string> ] : searches for files with filename (basename + extension)\n", ARG_FILENAME);
+	printf("  [ %s <string> ] : searches for files with extension\n", ARG_EXTENSION);
+	printf("  [ %s <string> ] : searches for files with basename\n", ARG_NAME);
 
 	printf("\nCopyright © 2024 Brando. All rights reserved.\n"); // make this global
 }
@@ -74,6 +76,8 @@ void ParseSearchOptions(int argc, char ** argv, SearchOptions * opts) {
 				i++; strcpy(opts->filename, argv[i]);
 			} else if (!strcmp(argv[i], ARG_EXTENSION)) {
 				i++; strcpy(opts->ext, argv[i]);
+			} else if (!strcmp(argv[i], ARG_NAME)) {
+				i++; strcpy(opts->name, argv[i]);
 			}
 		}
 	}
@@ -84,10 +88,10 @@ void ParseSearchOptions(int argc, char ** argv, SearchOptions * opts) {
  */
 bool SearchOptionsNone(const SearchOptions * opts) {
 	if (!opts) return false;
-	return !strlen(opts->filename) && !strlen(opts->ext);
+	return !strlen(opts->filename) && !strlen(opts->ext) && !strlen(opts->name);
 }
 
-bool SearchOptionsMatchFilename(const char * inpath, const SearchOptions * opts) {
+bool SearchOptionsMatchFullname(const char * inpath, const SearchOptions * opts) {
 	if (opts && strlen(opts->filename)) {
 		char fullname[PATH_MAX];
 		int error = BFFileSystemPathGetFullname(inpath, fullname);
@@ -115,21 +119,35 @@ bool SearchOptionsMatchExtension(const char * inpath, const SearchOptions * opts
 	return false;
 }
 
+bool SearchOptionsMatchName(const char * inpath, const SearchOptions * opts) {
+	if (opts && strlen(opts->name)) {
+		char name[PATH_MAX];
+		int error = BFFileSystemPathGetName(inpath, name);
+		if (error) {
+			printf("BFFileSystemPathGetName - %d\n", error);
+		} else {
+			return !strcmp(opts->name, name);
+		}
+	}
+
+	return false;
+}
 
 int Search(const char * inpath, const SearchOptions * opts) {
-	if (!inpath) return -2;
-	else if (BFFileSystemPathIsFile(inpath)) {
+	if (!inpath) return -2; // null inpath
+	else if (BFFileSystemPathIsFile(inpath)) { // if file
 		if (SearchOptionsNone(opts)) { // if no opts, show
 			printf("%s\n", inpath);
 		} else if (
-				SearchOptionsMatchFilename(inpath, opts) ||
-				SearchOptionsMatchExtension(inpath, opts)) {
+				SearchOptionsMatchFullname(inpath, opts) ||
+				SearchOptionsMatchExtension(inpath, opts) ||
+				SearchOptionsMatchName(inpath, opts)) {
 			printf("%s\n", inpath);
 		}
-	} else {
+	} else { // if dir
 		int error = 0;
 
-		if (SearchOptionsNone(opts)) {
+		if (SearchOptionsNone(opts)) { // if no opts, show
 			printf("%s\n", inpath);
 		}
 
