@@ -29,7 +29,8 @@
 		strcmp(arg, ARG_SEARCH_OPTION_WORD) \
 		)
 
-#define ARG_FLAG_VERBOSE (0x01 << 0)
+#define ARG_FLAG_VERBOSE 'v'
+#define FLAG_BIT_VERBOSE (0x01 << 0)
 
 typedef char SearchFlags;
 
@@ -102,23 +103,51 @@ int SearchOptionsLoadFromArguments(int argc, char ** argv, int startindex, Searc
 }
 
 /**
+ * param arg: we can safely assume that this is not one of the search options. so this could be an unknown argument
+ */
+int SearchFlagsLoadFromArgument(const char * arg, SearchFlags * flags) {
+	if (!arg || !flags) return -5;
+	
+	char buf[512];
+	strcpy(buf, arg);
+	const size_t len = strlen(buf);
+	
+	// valid flag syntax
+	if ((buf[0] == '-') && (buf[1] != '-')) {
+		for (int i = 1; i < len; i++) {
+			if (buf[i] == ARG_FLAG_VERBOSE) {
+				*flags |= (FLAG_BIT_VERBOSE);
+			}
+		}
+	}
+
+	return 0;
+}
+
+/**
  * loads SearchOptions with what we find from cmd args
  */
-int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath, SearchFlags * flags) {
+int ParseArguments(
+		int argc, 
+		char ** argv, 
+		SearchOptions * opts, 
+		char * outpath, 
+		SearchFlags * flags
+) {
 	int error = 0;
+	int i = 1;
+
 	if (!opts || !argv || !outpath) {
 		error = -3;
-	} else {
-		int i = 1;
+	
+	// if unknown, see if these are flags
+	} else if (ARG_UNKNOWN(argv[i])) {
+		error = SearchFlagsLoadFromArgument(argv[i], flags);
+		i++;
+	}
 
-		// if unknown, see if these are flags
-		if (ARG_UNKNOWN(argv[i])) {
-			char buf[512];
-
-			i++;
-		}
-
-		// get search options
+	// get search options
+	if (!error) {
 		error = SearchOptionsLoadFromArguments(argc, argv, i, opts);
 	}
 
@@ -152,7 +181,8 @@ bool SearchOptionsNone(const SearchOptions * opts) {
 bool _SearchOptionsMatchCommon(
 		const char * inpath, 
 		const char * base, 
-		int (* callback) (const char *, char *)) {
+		int (* callback) (const char *, char *)
+) {
 	if (strlen(base)) {
 		char t[PATH_MAX];
 		int error = callback(inpath, t);
@@ -193,21 +223,30 @@ bool SearchOptionsMatchName(const char * inpath, const SearchOptions * opts) {
 /**
  * For files, we look at the inpath based on options provider
  */
-void ExamineFile(const char * inpath, const SearchOptions * opts) {
+void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFlags flags) {
+	bool print = false;
 	if (SearchOptionsNone(opts)) { // if no opts, show
-		printf("%s\n", inpath);
+		print = true;
 	} else if (
 			SearchOptionsMatchFullname(inpath, opts) ||
 			SearchOptionsMatchExtension(inpath, opts) ||
 			SearchOptionsMatchName(inpath, opts)) {
-		printf("%s\n", inpath);
+		print = true;
+	}
+
+	if (print) {
+		if (flags & (FLAG_BIT_VERBOSE)) {
+			printf("file: %s\n", inpath);
+		} else {
+			printf("%s\n", inpath);
+		}
 	}
 }
 
 /**
  * For directory, we look at the inpath based on options provider
  */
-void ExamineDirectory(const char * inpath, const SearchOptions * opts) {
+void ExamineDirectory(const char * inpath, const SearchOptions * opts, const SearchFlags flags) {
 	if (SearchOptionsNone(opts)) { // if no opts, show
 		printf("%s\n", inpath);
 	} else if (SearchOptionsMatchDir(inpath, opts)) {
@@ -219,9 +258,9 @@ int Search(const char * inpath, const SearchOptions * opts, const SearchFlags fl
 	int error = 0;
 	if (!inpath) error = -2; // null inpath
 	else if (BFFileSystemPathIsFile(inpath)) { // if file
-		ExamineFile(inpath, opts);
+		ExamineFile(inpath, opts, flags);
 	} else { // if dir
-		ExamineDirectory(inpath, opts);
+		ExamineDirectory(inpath, opts, flags);
 
 		// recursively call Search
 		
