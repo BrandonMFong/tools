@@ -15,11 +15,11 @@
 #include <linux/limits.h>
 #endif 
 
-#define ARG_FULLNAME "-fullname"
-#define ARG_EXTENSION "-ext"
-#define ARG_NAME "-name"
-#define ARG_DIR "-dir"
-#define ARG_WORD "-word"
+#define ARG_SEARCH_OPTION_FULLNAME "-fullname"
+#define ARG_SEARCH_OPTION_EXTENSION "-ext"
+#define ARG_SEARCH_OPTION_NAME "-name"
+#define ARG_SEARCH_OPTION_DIR "-dir"
+#define ARG_SEARCH_OPTION_WORD "-word"
 
 typedef struct {
 	char fullname[PATH_MAX];
@@ -35,11 +35,11 @@ void help(const char * toolname) {
 	printf("usage: %s <options> <path>\n", toolname);
 
 	printf("\noptions:\n");
-	printf("  [ %s <string> ] : searches for files with fullname (basename + extension)\n", ARG_FULLNAME);
-	printf("  [ %s <string> ] : searches for files with extension\n", ARG_EXTENSION);
-	printf("  [ %s <string> ] : searches for files with basename\n", ARG_NAME);
-	printf("  [ %s <string> ] : searches for directory with the same name\n", ARG_DIR);
-	printf("  [ %s <string> ] : searches files that contain exact word\n", ARG_WORD);
+	printf("  [ %s <string> ] : searches for files with fullname (basename + extension)\n", ARG_SEARCH_OPTION_FULLNAME);
+	printf("  [ %s <string> ] : searches for files with extension\n", ARG_SEARCH_OPTION_EXTENSION);
+	printf("  [ %s <string> ] : searches for files with basename\n", ARG_SEARCH_OPTION_NAME);
+	printf("  [ %s <string> ] : searches for directory with the same name\n", ARG_SEARCH_OPTION_DIR);
+	printf("  [ %s <string> ] : searches files that contain exact word\n", ARG_SEARCH_OPTION_WORD);
 
 	printf("\nCopyright © 2024 Brando. All rights reserved.\n"); // make this global
 }
@@ -54,7 +54,9 @@ int main(int argc, char ** argv) {
 	if (argc < 2) {
 		error = 1;
 	} else {
+		// see what the user wants to see
 		ParseSearchOptions(argc, argv, &options);
+
 		// get path
 		if (realpath(argv[argc - 1], path) == 0) { // get abs path
 			error = -1;
@@ -78,13 +80,13 @@ int main(int argc, char ** argv) {
 void ParseSearchOptions(int argc, char ** argv, SearchOptions * opts) {
 	if (opts) {
 		for (int i = 1; i < (argc - 1); i++) {
-			if (!strcmp(argv[i], ARG_FULLNAME)) {
+			if (!strcmp(argv[i], ARG_SEARCH_OPTION_FULLNAME)) {
 				i++; strcpy(opts->fullname, argv[i]);
-			} else if (!strcmp(argv[i], ARG_EXTENSION)) {
+			} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_EXTENSION)) {
 				i++; strcpy(opts->ext, argv[i]);
-			} else if (!strcmp(argv[i], ARG_NAME)) {
+			} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_NAME)) {
 				i++; strcpy(opts->name, argv[i]);
-			} else if (!strcmp(argv[i], ARG_DIR)) {
+			} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_DIR)) {
 				i++; strcpy(opts->dir, argv[i]);
 			}
 		}
