@@ -47,13 +47,12 @@ void help(const char * toolname) {
 int main(int argc, char ** argv) {
 	int error = 0;
 	char path[PATH_MAX];
-	bool okayToContinue = true;
 	SearchOptions options;
 
 	memset(&options, 0, sizeof(SearchOptions));
 
 	if (argc < 2) {
-		okayToContinue = false;
+		error = 1;
 	} else {
 		ParseSearchOptions(argc, argv, &options);
 		// get path
@@ -63,12 +62,11 @@ int main(int argc, char ** argv) {
 	}
 
 	if (!error) {
-		if (!okayToContinue) {
-			error = 1;
-			help(argv[0]);
-		} else {
-			error = Search(path, &options);
-		}
+		error = Search(path, &options);
+	}
+	
+	if (error) {
+		help(argv[0]);
 	}
 
 	return error;
@@ -151,7 +149,10 @@ bool SearchOptionsMatchName(const char * inpath, const SearchOptions * opts) {
 	return _SearchOptionsMatchCommon(inpath, opts->name, BFFileSystemPathGetName);
 }
 
-int ExamineFile(const char * inpath, const SearchOptions * opts) {
+/**
+ * For files, we look at the inpath based on options provider
+ */
+void ExamineFile(const char * inpath, const SearchOptions * opts) {
 	if (SearchOptionsNone(opts)) { // if no opts, show
 		printf("%s\n", inpath);
 	} else if (
@@ -160,45 +161,48 @@ int ExamineFile(const char * inpath, const SearchOptions * opts) {
 			SearchOptionsMatchName(inpath, opts)) {
 		printf("%s\n", inpath);
 	}
-
-	return 0;
 }
 
-int ExamineDirectory(const char * inpath, const SearchOptions * opts) {
+/**
+ * For directory, we look at the inpath based on options provider
+ */
+void ExamineDirectory(const char * inpath, const SearchOptions * opts) {
 	if (SearchOptionsNone(opts)) { // if no opts, show
 		printf("%s\n", inpath);
 	} else if (SearchOptionsMatchDir(inpath, opts)) {
 		printf("%s\n", inpath);
 	}
-
-	DIR * dir = opendir(inpath);
-
-	int error = 0;
-	if (!dir) error = -2;
-	else {
-		struct dirent * entry = 0;
-		while ((entry = readdir(dir)) != NULL) {
-			if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
-				char path[PATH_MAX];
-				snprintf(path, PATH_MAX, "%s/%s", inpath, entry->d_name);
-		
-				error = Search(path, opts);
-				if (error) break;
-			}
-		}
-	}
-
-	closedir(dir);
-
-	return error;
 }
 
 int Search(const char * inpath, const SearchOptions * opts) {
-	if (!inpath) return -2; // null inpath
+	int error = 0;
+	if (!inpath) error = -2; // null inpath
 	else if (BFFileSystemPathIsFile(inpath)) { // if file
-		return ExamineFile(inpath, opts);
+		ExamineFile(inpath, opts);
 	} else { // if dir
-		return ExamineDirectory(inpath, opts);
+		ExamineDirectory(inpath, opts);
+
+		// recursively call Search
+		
+		DIR * dir = opendir(inpath);
+
+		if (!dir) error = -2;
+		else {
+			struct dirent * entry = 0;
+			while ((entry = readdir(dir)) != NULL) {
+				if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
+					char path[PATH_MAX];
+					snprintf(path, PATH_MAX, "%s/%s", inpath, entry->d_name);
+			
+					error = Search(path, opts);
+					if (error) break;
+				}
+			}
+		}
+
+		closedir(dir);
 	}
+
+	return error;
 }
 
