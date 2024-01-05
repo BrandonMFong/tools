@@ -127,65 +127,77 @@ bool _SearchOptionsMatchCommon(
 	return false;
 }
 
+/// fullname
 bool SearchOptionsMatchFullname(const char * inpath, const SearchOptions * opts) {
 	if (!opts) return false;
 	return _SearchOptionsMatchCommon(inpath, opts->fullname, BFFileSystemPathGetFullname);
 }
 
+// extension
 bool SearchOptionsMatchExtension(const char * inpath, const SearchOptions * opts) {
 	if (!opts) return false;
 	return _SearchOptionsMatchCommon(inpath, opts->ext, BFFileSystemPathGetExtension);
 }
 
+/// directory name
 bool SearchOptionsMatchDir(const char * inpath, const SearchOptions * opts) {
 	if (!opts) return false;
 	return _SearchOptionsMatchCommon(inpath, opts->dir, BFFileSystemPathGetName);
 }
 
+/// name (ie basename without extension)
 bool SearchOptionsMatchName(const char * inpath, const SearchOptions * opts) {
 	if (!opts) return false;
 	return _SearchOptionsMatchCommon(inpath, opts->name, BFFileSystemPathGetName);
 }
 
-int Search(const char * inpath, const SearchOptions * opts) {
-	if (!inpath) return -2; // null inpath
-	else if (BFFileSystemPathIsFile(inpath)) { // if file
-		if (SearchOptionsNone(opts)) { // if no opts, show
-			printf("%s\n", inpath);
-		} else if (
-				SearchOptionsMatchFullname(inpath, opts) ||
-				SearchOptionsMatchExtension(inpath, opts) ||
-				SearchOptionsMatchName(inpath, opts)) {
-			printf("%s\n", inpath);
-		}
-	} else { // if dir
-		int error = 0;
-
-		if (SearchOptionsNone(opts)) { // if no opts, show
-			printf("%s\n", inpath);
-		} else if (SearchOptionsMatchDir(inpath, opts)) {
-			printf("%s\n", inpath);
-		}
-
-		DIR * dir = opendir(inpath);
-
-		if (!dir) return -2;
-		else {
-			struct dirent * entry = 0;
-			while ((entry = readdir(dir)) != NULL) {
-				if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
-					char path[PATH_MAX];
-					snprintf(path, PATH_MAX, "%s/%s", inpath, entry->d_name);
-			
-					error = Search(path, opts);
-					if (error) break;
-				}
-			}
-		}
-		closedir(dir);
-		if (error) return error;
+int ExamineFile(const char * inpath, const SearchOptions * opts) {
+	if (SearchOptionsNone(opts)) { // if no opts, show
+		printf("%s\n", inpath);
+	} else if (
+			SearchOptionsMatchFullname(inpath, opts) ||
+			SearchOptionsMatchExtension(inpath, opts) ||
+			SearchOptionsMatchName(inpath, opts)) {
+		printf("%s\n", inpath);
 	}
 
 	return 0;
+}
+
+int ExamineDirectory(const char * inpath, const SearchOptions * opts) {
+	if (SearchOptionsNone(opts)) { // if no opts, show
+		printf("%s\n", inpath);
+	} else if (SearchOptionsMatchDir(inpath, opts)) {
+		printf("%s\n", inpath);
+	}
+
+	DIR * dir = opendir(inpath);
+
+	int error = 0;
+	if (!dir) error = -2;
+	else {
+		struct dirent * entry = 0;
+		while ((entry = readdir(dir)) != NULL) {
+			if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
+				char path[PATH_MAX];
+				snprintf(path, PATH_MAX, "%s/%s", inpath, entry->d_name);
+		
+				error = Search(path, opts);
+				if (error) break;
+			}
+		}
+	}
+
+	closedir(dir);
+	return error;
+}
+
+int Search(const char * inpath, const SearchOptions * opts) {
+	if (!inpath) return -2; // null inpath
+	else if (BFFileSystemPathIsFile(inpath)) { // if file
+		return ExamineFile(inpath, opts);
+	} else { // if dir
+		return ExamineDirectory(inpath, opts);
+	}
 }
 
