@@ -31,7 +31,12 @@
 
 #define ARG_FLAG_VERBOSE 'v'
 #define FLAG_BIT_VERBOSE (0x01 << 0)
+#define ARG_FLAG_RECURSIVE 'r'
+#define FLAG_BIT_RECURSIVE (0x01 << 1)
 
+/**
+ * |0|0|0|0|0|0|recursive|verbose|
+ */
 typedef char SearchFlags;
 
 typedef struct {
@@ -45,7 +50,11 @@ int Search(const char * inpath, const SearchOptions * opts, const SearchFlags fl
 int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath, SearchFlags * flags);
 
 void help(const char * toolname) {
-	printf("usage: %s <options> <path>\n", toolname);
+	printf("usage: %s [ -<flags> ] [ <options> ] <path>\n", toolname);
+
+	printf("\nflags:\n");
+	printf("  [ %c ] : verbose\n", ARG_FLAG_VERBOSE);
+	printf("  [ %c ] : recursive\n", ARG_FLAG_RECURSIVE);
 
 	printf("\noptions:\n");
 	printf("  [ %s <string> ] : searches for files with fullname (basename + extension)\n", ARG_SEARCH_OPTION_FULLNAME);
@@ -247,10 +256,19 @@ void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFl
  * For directory, we look at the inpath based on options provider
  */
 void ExamineDirectory(const char * inpath, const SearchOptions * opts, const SearchFlags flags) {
+	bool print = false;
 	if (SearchOptionsNone(opts)) { // if no opts, show
 		printf("%s\n", inpath);
 	} else if (SearchOptionsMatchDir(inpath, opts)) {
 		printf("%s\n", inpath);
+	}
+
+	if (print) {
+		if (flags & (FLAG_BIT_VERBOSE)) {
+			printf("file: %s\n", inpath);
+		} else {
+			printf("%s\n", inpath);
+		}
 	}
 }
 
