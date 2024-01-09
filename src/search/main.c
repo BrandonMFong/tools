@@ -278,8 +278,24 @@ bool SearchOptionsMatchName(const char * inpath, const SearchOptions * opts) {
  * looks in the file pointed by inpath for an occurance for word
  */
 bool ExamineFileForWord(const char * inpath, const char * word) {
-	printf("word: %s\n", word);
-	printf("path: %s\n", inpath);
+	if (!inpath || !word) return false;
+
+	FILE * file = fopen(inpath, "r");
+	if (!file) return false;
+	
+	const size_t size = 1024;
+	char buf[size];
+	int lineindex = 1;
+	while ((fgets(buf, size, file)) != NULL) {
+		// print out first occurrence of word
+		if (strstr(buf, word)) {
+			printf("%d: %s", lineindex, buf);
+		}
+		lineindex++;
+	}
+
+	fclose(file);
+
 	return false;
 }
 
