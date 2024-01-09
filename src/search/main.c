@@ -46,7 +46,7 @@ typedef struct {
 	char dir[PATH_MAX];
 } SearchOptions;
 
-int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags);
+int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags, int lvl);
 int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath, SearchFlags * flags);
 
 void help(const char * toolname) {
@@ -82,7 +82,7 @@ int main(int argc, char ** argv) {
 	}
 
 	if (!error) {
-		error = Search(path, &options, flags);
+		error = Search(path, &options, flags, 0);
 	}
 	
 	if (error) {
@@ -92,7 +92,13 @@ int main(int argc, char ** argv) {
 	return error;
 }
 
-int SearchOptionsLoadFromArguments(int argc, char ** argv, int startindex, SearchOptions * opts) {
+int SearchOptionsLoadFromArguments(
+		int argc,
+		char ** argv,
+		int startindex,
+		SearchOptions * opts
+) {
+	if (!argv || !opts) return -4;
 	for (int i = startindex; i < (argc - 1); i++) {
 		if (!strcmp(argv[i], ARG_SEARCH_OPTION_FULLNAME)) {
 			i++; strcpy(opts->fullname, argv[i]);
@@ -112,7 +118,8 @@ int SearchOptionsLoadFromArguments(int argc, char ** argv, int startindex, Searc
 }
 
 /**
- * param arg: we can safely assume that this is not one of the search options. so this could be an unknown argument
+ * param arg: 	we can safely assume that this is not one of the
+ * 				search options. so this could be an unknown argument
  */
 int SearchFlagsLoadFromArgument(const char * arg, SearchFlags * flags) {
 	if (!arg || !flags) return -5;
@@ -126,6 +133,8 @@ int SearchFlagsLoadFromArgument(const char * arg, SearchFlags * flags) {
 		for (int i = 1; i < len; i++) {
 			if (buf[i] == ARG_FLAG_VERBOSE) {
 				*flags |= (FLAG_BIT_VERBOSE);
+			} else if (buf[i] == ARG_FLAG_RECURSIVE) {
+				*flags |= (FLAG_BIT_RECURSIVE);
 			}
 		}
 	}
@@ -272,7 +281,13 @@ void ExamineDirectory(const char * inpath, const SearchOptions * opts, const Sea
 	}
 }
 
-int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags) {
+/**
+ * param inpath: path to search
+ * param opts: search options
+ * param flags: search flags
+ * param lvl: recursion level
+ */
+int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags, int lvl) {
 	int error = 0;
 	if (!inpath) error = -2; // null inpath
 	else if (BFFileSystemPathIsFile(inpath)) { // if file
@@ -281,24 +296,26 @@ int Search(const char * inpath, const SearchOptions * opts, const SearchFlags fl
 		ExamineDirectory(inpath, opts, flags);
 
 		// recursively call Search
-		
-		DIR * dir = opendir(inpath);
+		if ((flags & FLAG_BIT_RECURSIVE) || (lvl < 1)) {
+			lvl++;
+			DIR * dir = opendir(inpath);
 
-		if (!dir) error = -2;
-		else {
-			struct dirent * entry = 0;
-			while ((entry = readdir(dir)) != NULL) {
-				if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
-					char path[PATH_MAX];
-					snprintf(path, PATH_MAX, "%s/%s", inpath, entry->d_name);
-			
-					error = Search(path, opts, flags);
-					if (error) break;
+			if (!dir) error = -2;
+			else {
+				struct dirent * entry = 0;
+				while ((entry = readdir(dir)) != NULL) {
+					if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
+						char path[PATH_MAX];
+						snprintf(path, PATH_MAX, "%s/%s", inpath, entry->d_name);
+				
+						error = Search(path, opts, flags, lvl);
+						if (error) break;
+					}
 				}
 			}
-		}
 
-		closedir(dir);
+			closedir(dir);
+		}
 	}
 
 	return error;
