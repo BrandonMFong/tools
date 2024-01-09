@@ -285,12 +285,19 @@ bool SearchOptionsMatchName(const char * inpath, const SearchOptions * opts) {
 }
 
 /**
+ * reads file from inpath for any occurrence of the `word` on every line
+ *
  * param lines: caller owns memory and must free()
  *
  * return true if word was found. `lines` should contain an output string shows 
  * location of the word. You can print out the entire var `lines`
  */
-bool ExamineFileForWord(const char * inpath, const char * word, char ** lines) {
+bool ExamineFileForWord(
+		const char * inpath,
+		const char * word,
+		const SearchFlags flags,
+		char ** lines
+) {
 	if (!inpath || !word || !lines) return false;
 
 	// open file
@@ -306,25 +313,28 @@ bool ExamineFileForWord(const char * inpath, const char * word, char ** lines) {
 		if (strstr(buf, word)) {
 			foundword = true;
 
-			// figure out size of string we will be appending
-			//
-			// `s` will hold size of string, not including the null
-			// char
-			size_t s = snprintf(0, 0, "%d: %s", lineindex, buf);
-			if (s) {
-				// craft the appending string
-				char * tmp = (char *) malloc(sizeof(char) * (s + 1));
-				snprintf(tmp, s+1, "%d: %s", lineindex, buf);
+			// we will return the lines if we are in verbose mode
+			if (flags & FLAG_BIT_VERBOSE) {
+				// figure out size of string we will be appending
+				//
+				// `s` will hold size of string, not including the null
+				// char
+				size_t s = snprintf(0, 0, "%d: %s", lineindex, buf);
+				if (s) {
+					// craft the appending string
+					char * tmp = (char *) malloc(sizeof(char) * (s + 1));
+					snprintf(tmp, s+1, "%d: %s", lineindex, buf);
 
-				// resize the var
-				size_t lsize = *lines ? strlen(*lines) : 0;
-				*lines = (char *) realloc(*lines, sizeof(char) * (lsize + strlen(tmp) + 1));
-				(*lines)[0] = '\0';
+					// resize the var
+					size_t lsize = *lines ? strlen(*lines) : 0;
+					*lines = (char *) realloc(*lines, sizeof(char) * (lsize + strlen(tmp) + 1));
+					(*lines)[0] = '\0';
 
-				// craft the string
-				strcat(*lines, tmp);
+					// craft the string
+					strcat(*lines, tmp);
 
-				free(tmp);
+					free(tmp);
+				}
 			}
 		}
 		lineindex++;
@@ -365,7 +375,7 @@ void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFl
 			print = true;
 		}
 	} else if (strlen(opts->word)) { // find word
-		print = ExamineFileForWord(inpath, opts->word, &lines);
+		print = ExamineFileForWord(inpath, opts->word, flags, &lines);
 	}
 
 	if (print) {
