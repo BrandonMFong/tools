@@ -143,6 +143,24 @@ int SearchFlagsLoadFromArgument(const char * arg, SearchFlags * flags) {
 }
 
 /**
+ * goes through the options and sees if there are option 
+ * combinations that are not allowed
+ */
+int SearchOptionsAudit(const SearchOptions * opts) {
+	if (!opts) return -6;
+
+	if (strlen(opts->fullname) && (strlen(opts->name) || strlen(opts->ext))) {
+		printf("syntax: Cannot use %s or %s with %s\n",
+				ARG_SEARCH_OPTION_NAME,
+				ARG_SEARCH_OPTION_EXTENSION,
+				ARG_SEARCH_OPTION_FULLNAME);
+		return -6;
+	}
+	
+	return 0;
+}
+
+/**
  * loads SearchOptions with what we find from cmd args
  */
 int ParseArguments(
@@ -167,6 +185,11 @@ int ParseArguments(
 	// get search options
 	if (!error) {
 		error = SearchOptionsLoadFromArguments(argc, argv, i, opts);
+	}
+
+	// audit search options
+	if (!error) {
+		error = SearchOptionsAudit(opts);
 	}
 
 	// get path
@@ -243,7 +266,7 @@ bool SearchOptionsMatchName(const char * inpath, const SearchOptions * opts) {
  */
 void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFlags flags) {
 	bool print = false;
-	if (SearchOptionsNone(opts)) { // if no opts, show
+	if (SearchOptionsNone(opts)) { // if no opts, show inpath
 		print = true;
 	} else if (
 			SearchOptionsMatchFullname(inpath, opts) ||
