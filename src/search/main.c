@@ -75,7 +75,7 @@ void help(const char * toolname) {
 	printf("  [ %s <string> ] : searches for files with extension\n", ARG_SEARCH_OPTION_EXTENSION);
 	printf("  [ %s <string> ] : searches for files with basename\n", ARG_SEARCH_OPTION_NAME);
 	printf("  [ %s <string> ] : searches for directory with the same name\n", ARG_SEARCH_OPTION_DIR);
-	printf("  [ %s <string> ] : searches files that contain exact word\n", ARG_SEARCH_OPTION_WORD);
+	printf("  [ %s <string> ] : searches files for an occurrence of word\n", ARG_SEARCH_OPTION_WORD);
 
 	printf("\nCopyright © 2024 Brando. All rights reserved.\n"); // make this global
 }
@@ -278,17 +278,18 @@ bool SearchOptionsMatchName(const char * inpath, const SearchOptions * opts) {
 
 /**
  * looks in the file pointed by inpath for an occurance for word
+ *
+ * param lines: array of lines that can be printed
  */
-bool ExamineFileForWord(const char * inpath, const char * word) {
-	if (!inpath || !word) return false;
+bool ExamineFileForWord(const char * inpath, const char * word, char ** lines, size_t * size) {
+	if (!inpath || !word || !size) return false;
 
 	FILE * file = fopen(inpath, "r");
 	if (!file) return false;
 	
-	const size_t size = BUFFER_READ_SIZE;
-	char buf[size];
+	char buf[BUFFER_READ_SIZE];
 	int lineindex = 1;
-	while ((fgets(buf, size, file)) != NULL) {
+	while ((fgets(buf, BUFFER_READ_SIZE, file)) != NULL) {
 		// print out first occurrence of word
 		if (strstr(buf, word)) {
 			printf("%d: %s", lineindex, buf);
@@ -306,6 +307,9 @@ bool ExamineFileForWord(const char * inpath, const char * word) {
  */
 void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFlags flags) {
 	bool print = false;
+	char ** lines = NULL;
+	size_t size = 0;
+
 	if (!opts) return;
 
 	if (SearchOptionsNone(opts)) { // if no opts, show inpath
@@ -330,7 +334,7 @@ void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFl
 
 	// if user wants to find an exact word in file
 	} else if (strlen(opts->word)) {
-		ExamineFileForWord(inpath, opts->word);
+		print = ExamineFileForWord(inpath, opts->word, lines, &size);
 	}
 
 	if (print) {
