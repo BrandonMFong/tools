@@ -285,11 +285,6 @@ bool SearchOptionsMatchName(const char * inpath, const SearchOptions * opts) {
 bool ExamineFileForWord(const char * inpath, const char * word, char ** lines) {
 	if (!inpath || !word || !lines) return false;
 
-	// alloc size one to include null term char (ie empty string
-	*lines = (char *) malloc(sizeof(char) * 1);
-	if (!(*lines)) return false;
-	else (*lines)[0] = '\0';
-
 	// open file
 	FILE * file = fopen(inpath, "r");
 	if (!file) return false;
@@ -314,7 +309,9 @@ bool ExamineFileForWord(const char * inpath, const char * word, char ** lines) {
 				snprintf(tmp, s+1, "%d: %s", lineindex, buf);
 
 				// resize the var
-				*lines = (char *) realloc(*lines, sizeof(char) * (strlen(*lines) + strlen(tmp) + 1));
+				size_t lsize = *lines ? strlen(*lines) : 0;
+				*lines = (char *) realloc(*lines, sizeof(char) * (lsize + strlen(tmp) + 1));
+				(*lines)[0] = '\0';
 
 				// craft the string
 				strcat(*lines, tmp);
