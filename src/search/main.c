@@ -296,10 +296,13 @@ int Search(const char * inpath, const SearchOptions * opts, const SearchFlags fl
 		ExamineDirectory(inpath, opts, flags);
 
 		// recursively call Search
+		// 
+		// if no recursion flag, we will at least look one
+		// level in
 		if ((flags & FLAG_BIT_RECURSIVE) || (lvl < 1)) {
 			lvl++;
-			DIR * dir = opendir(inpath);
 
+			DIR * dir = opendir(inpath);
 			if (!dir) error = -2;
 			else {
 				struct dirent * entry = 0;
