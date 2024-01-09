@@ -277,29 +277,58 @@ bool SearchOptionsMatchName(const char * inpath, const SearchOptions * opts) {
 }
 
 /**
- * looks in the file pointed by inpath for an occurance for word
+ * param lines: caller owns memory and must free()
  *
- * param lines: array of lines that can be printed
+ * return true if word was found. `lines` should contain an output string shows 
+ * location of the word. You can print out the entire var `lines`
  */
-bool ExamineFileForWord(const char * inpath, const char * word, char ** lines, size_t * size) {
-	if (!inpath || !word || !size) return false;
+bool ExamineFileForWord(const char * inpath, const char * word, char ** lines) {
+	if (!inpath || !word || !lines) return false;
 
+	// alloc size one to include null term char (ie empty string
+	*lines = (char *) malloc(sizeof(char) * 1);
+	if (!(*lines)) return false;
+	else (*lines)[0] = '\0';
+
+	// open file
 	FILE * file = fopen(inpath, "r");
 	if (!file) return false;
-	
+
+	// read file
 	char buf[BUFFER_READ_SIZE];
 	int lineindex = 1;
-	while ((fgets(buf, BUFFER_READ_SIZE, file)) != NULL) {
+	bool foundword = false; // true if at least one occurrence is found
+	while ((fgets(buf, BUFFER_READ_SIZE, file)) != NULL) { // read line
 		// print out first occurrence of word
 		if (strstr(buf, word)) {
-			printf("%d: %s", lineindex, buf);
+			foundword = true;
+
+			// figure out size of string we will be appending
+			//
+			// `s` will hold size of string, not including the null
+			// char
+			size_t s = snprintf(0, 0, "%d: %s", lineindex, buf);
+			if (s) {
+				// craft the appending string
+				char * tmp = (char *) malloc(sizeof(char) * (s + 1));
+				snprintf(tmp, s+1, "%d: %s", lineindex, buf);
+
+				// resize the var
+				*lines = (char *) realloc(*lines, sizeof(char) * (strlen(*lines) + s));
+
+				// craft the string
+				strcat(*lines, tmp);
+
+				free(tmp);
+			}
 		}
 		lineindex++;
 	}
 
+	// close
 	fclose(file);
 
-	return false;
+	return foundword;
 }
 
 /**
@@ -307,8 +336,7 @@ bool ExamineFileForWord(const char * inpath, const char * word, char ** lines, s
  */
 void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFlags flags) {
 	bool print = false;
-	char ** lines = NULL;
-	size_t size = 0;
+	char * lines = NULL;
 
 	if (!opts) return;
 
@@ -334,16 +362,23 @@ void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFl
 
 	// if user wants to find an exact word in file
 	} else if (strlen(opts->word)) {
-		print = ExamineFileForWord(inpath, opts->word, lines, &size);
+		print = ExamineFileForWord(inpath, opts->word, &lines);
 	}
 
 	if (print) {
 		if (flags & (FLAG_BIT_VERBOSE)) {
 			printf("file: %s\n", inpath);
+
+			// print out `lines` if available			
+			if (lines) {
+				printf("%s", lines);
+			}
 		} else {
 			printf("%s\n", inpath);
 		}
 	}
+
+	free(lines);
 }
 
 /**

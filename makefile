@@ -75,6 +75,5 @@ lib:
 
 debug: CFLAGS += -g
 debug: RUSTFLAGS += -g --extern bflib=$(LIBRUSTPATH)
-debug:
-	@echo "Debug builds...";
+debug: build
 
