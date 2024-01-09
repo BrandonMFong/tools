@@ -15,6 +15,8 @@
 #include <linux/limits.h>
 #endif 
 
+#define BUFFER_READ_SIZE 1024
+
 #define ARG_SEARCH_OPTION_FULLNAME "-fullname"
 #define ARG_SEARCH_OPTION_EXTENSION "-ext"
 #define ARG_SEARCH_OPTION_NAME "-name"
@@ -283,7 +285,7 @@ bool ExamineFileForWord(const char * inpath, const char * word) {
 	FILE * file = fopen(inpath, "r");
 	if (!file) return false;
 	
-	const size_t size = 1024;
+	const size_t size = BUFFER_READ_SIZE;
 	char buf[size];
 	int lineindex = 1;
 	while ((fgets(buf, size, file)) != NULL) {
