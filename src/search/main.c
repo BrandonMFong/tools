@@ -314,7 +314,7 @@ bool ExamineFileForWord(const char * inpath, const char * word, char ** lines) {
 				snprintf(tmp, s+1, "%d: %s", lineindex, buf);
 
 				// resize the var
-				*lines = (char *) realloc(*lines, sizeof(char) * (strlen(*lines) + s));
+				*lines = (char *) realloc(*lines, sizeof(char) * (strlen(*lines) + strlen(tmp) + 1));
 
 				// craft the string
 				strcat(*lines, tmp);
