@@ -44,6 +44,7 @@ typedef struct {
 	char ext[PATH_MAX];
 	char name[PATH_MAX];
 	char dir[PATH_MAX];
+	char word[PATH_MAX];
 } SearchOptions;
 
 /**
@@ -55,7 +56,9 @@ bool SearchOptionsNone(const SearchOptions * opts) {
 		!strlen(opts->ext) &&
 		!strlen(opts->name) && 
 		!strlen(opts->name) && 
-		!strlen(opts->dir);
+		!strlen(opts->dir) &&
+		!strlen(opts->word)
+		;
 }
 
 void help(const char * toolname) {
@@ -120,6 +123,8 @@ int SearchOptionsLoadFromArguments(
 			i++; strcpy(opts->name, argv[i]);
 		} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_DIR)) {
 			i++; strcpy(opts->dir, argv[i]);
+		} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_WORD)) {
+			i++; strcpy(opts->word, argv[i]);
 		} else {
 			printf("unknown option: %s\n", argv[i]);
 			return -4;
@@ -270,6 +275,15 @@ bool SearchOptionsMatchName(const char * inpath, const SearchOptions * opts) {
 }
 
 /**
+ * looks in the file pointed by inpath for an occurance for word
+ */
+bool ExamineFileForWord(const char * inpath, const char * word) {
+	printf("word: %s\n", word);
+	printf("path: %s\n", inpath);
+	return false;
+}
+
+/**
  * For files, we look at the inpath based on options provider
  */
 void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFlags flags) {
@@ -295,6 +309,10 @@ void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFl
 		if (SearchOptionsMatchName(inpath, opts)) {
 			print = true;
 		}
+
+	// if user wants to find an exact word in file
+	} else if (strlen(opts->word)) {
+		ExamineFileForWord(inpath, opts->word);
 	}
 
 	if (print) {
