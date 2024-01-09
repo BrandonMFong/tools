@@ -266,13 +266,27 @@ bool SearchOptionsMatchName(const char * inpath, const SearchOptions * opts) {
  */
 void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFlags flags) {
 	bool print = false;
+	if (!opts) return;
+
 	if (SearchOptionsNone(opts)) { // if no opts, show inpath
 		print = true;
-	} else if (
-			SearchOptionsMatchFullname(inpath, opts) ||
-			SearchOptionsMatchExtension(inpath, opts) ||
+	} else if (strlen(opts->fullname)) {
+		if (SearchOptionsMatchFullname(inpath, opts)) {
+			print = true;
+		}
+	} else if (strlen(opts->ext) && strlen(opts->name)) {
+		if (SearchOptionsMatchExtension(inpath, opts) &&
 			SearchOptionsMatchName(inpath, opts)) {
-		print = true;
+			print = true;
+		}
+	} else if (strlen(opts->ext)) {
+		if (SearchOptionsMatchExtension(inpath, opts)) {
+			print = true;
+		}
+	} else if (strlen(opts->name)) {
+		if (SearchOptionsMatchName(inpath, opts)) {
+			print = true;
+		}
 	}
 
 	if (print) {
