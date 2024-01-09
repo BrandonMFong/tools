@@ -46,6 +46,18 @@ typedef struct {
 	char dir[PATH_MAX];
 } SearchOptions;
 
+/**
+ * true no options were given
+ */
+bool SearchOptionsNone(const SearchOptions * opts) {
+	if (!opts) return false;
+	return !strlen(opts->fullname) &&
+		!strlen(opts->ext) &&
+		!strlen(opts->name) && 
+		!strlen(opts->name) && 
+		!strlen(opts->dir);
+}
+
 int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags, int lvl);
 int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath, SearchFlags * flags);
 
@@ -200,18 +212,6 @@ int ParseArguments(
 	}
 
 	return error;
-}
-
-/**
- * true no options were given
- */
-bool SearchOptionsNone(const SearchOptions * opts) {
-	if (!opts) return false;
-	return !strlen(opts->fullname) &&
-		!strlen(opts->ext) &&
-		!strlen(opts->name) && 
-		!strlen(opts->name) && 
-		!strlen(opts->dir);
 }
 
 /**
