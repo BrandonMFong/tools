@@ -182,6 +182,14 @@ int SearchOptionsAudit(const SearchOptions * opts) {
 				ARG_SEARCH_OPTION_EXTENSION,
 				ARG_SEARCH_OPTION_FULLNAME);
 		return -6;
+	} else if (strlen(opts->word) && (strlen(opts->dir) || strlen(opts->fullname) || strlen(opts->name) || strlen(opts->ext))) {
+		printf("syntax: cannot pass %s, %s, %s, or %s when looking for a word\n", 
+				ARG_SEARCH_OPTION_DIR,
+				ARG_SEARCH_OPTION_NAME,
+				ARG_SEARCH_OPTION_NAME,
+				ARG_SEARCH_OPTION_EXTENSION,
+				ARG_SEARCH_OPTION_FULLNAME);
+		return -6;
 	}
 	
 	return 0;
@@ -356,9 +364,7 @@ void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFl
 		if (SearchOptionsMatchName(inpath, opts)) {
 			print = true;
 		}
-
-	// if user wants to find an exact word in file
-	} else if (strlen(opts->word)) {
+	} else if (strlen(opts->word)) { // find word
 		print = ExamineFileForWord(inpath, opts->word, &lines);
 	}
 
