@@ -58,9 +58,6 @@ bool SearchOptionsNone(const SearchOptions * opts) {
 		!strlen(opts->dir);
 }
 
-int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags, int lvl);
-int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath, SearchFlags * flags);
-
 void help(const char * toolname) {
 	printf("usage: %s [ -<flags> ] [ <options> ] <path>\n", toolname);
 
@@ -77,6 +74,9 @@ void help(const char * toolname) {
 
 	printf("\nCopyright © 2024 Brando. All rights reserved.\n"); // make this global
 }
+
+int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags, int lvl);
+int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath, SearchFlags * flags);
 
 int main(int argc, char ** argv) {
 	int error = 0;
@@ -163,6 +163,14 @@ int SearchOptionsAudit(const SearchOptions * opts) {
 
 	if (strlen(opts->fullname) && (strlen(opts->name) || strlen(opts->ext))) {
 		printf("syntax: Cannot use %s or %s with %s\n",
+				ARG_SEARCH_OPTION_NAME,
+				ARG_SEARCH_OPTION_EXTENSION,
+				ARG_SEARCH_OPTION_FULLNAME);
+		return -6;
+	} else if (strlen(opts->dir) && (strlen(opts->fullname) || strlen(opts->name) || strlen(opts->ext))) {
+		printf("syntax: Cannot use %s with %s, %s, or %s\n",
+				ARG_SEARCH_OPTION_DIR,
+				ARG_SEARCH_OPTION_NAME,
 				ARG_SEARCH_OPTION_NAME,
 				ARG_SEARCH_OPTION_EXTENSION,
 				ARG_SEARCH_OPTION_FULLNAME);
