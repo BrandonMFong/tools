@@ -270,20 +270,20 @@ void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFl
 
 	if (SearchOptionsNone(opts)) { // if no opts, show inpath
 		print = true;
-	} else if (strlen(opts->fullname)) {
+	} else if (strlen(opts->fullname)) { // if fullname was passed
 		if (SearchOptionsMatchFullname(inpath, opts)) {
 			print = true;
 		}
-	} else if (strlen(opts->ext) && strlen(opts->name)) {
+	} else if (strlen(opts->ext) && strlen(opts->name)) { // if extension and name
 		if (SearchOptionsMatchExtension(inpath, opts) &&
 			SearchOptionsMatchName(inpath, opts)) {
 			print = true;
 		}
-	} else if (strlen(opts->ext)) {
+	} else if (strlen(opts->ext)) { // if extension
 		if (SearchOptionsMatchExtension(inpath, opts)) {
 			print = true;
 		}
-	} else if (strlen(opts->name)) {
+	} else if (strlen(opts->name)) { // if name
 		if (SearchOptionsMatchName(inpath, opts)) {
 			print = true;
 		}
