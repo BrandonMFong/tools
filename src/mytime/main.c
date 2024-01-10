@@ -118,7 +118,7 @@ int main(int argc, char * argv[]) {
 				PrintTime(inputEpoch, 0);
 				printf("\n");
 			} else {
-				printf("%ld\n", BFTimeGetCurrentTime());
+				printf("%.2f\n", BFTimeGetCurrentTime());
 			}
 		} else { 
 			do {

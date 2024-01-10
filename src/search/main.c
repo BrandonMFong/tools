@@ -176,7 +176,7 @@ int SearchOptionsAudit(const SearchOptions * opts) {
 				ARG_SEARCH_OPTION_FULLNAME);
 		return -6;
 	} else if (strlen(opts->dir) && (strlen(opts->fullname) || strlen(opts->name) || strlen(opts->ext))) {
-		printf("syntax: Cannot use %s with %s, %s, or %s\n",
+		printf("syntax: Cannot use %s with %s, %s, %s, or %s\n",
 				ARG_SEARCH_OPTION_DIR,
 				ARG_SEARCH_OPTION_NAME,
 				ARG_SEARCH_OPTION_NAME,
@@ -184,7 +184,7 @@ int SearchOptionsAudit(const SearchOptions * opts) {
 				ARG_SEARCH_OPTION_FULLNAME);
 		return -6;
 	} else if (strlen(opts->word) && (strlen(opts->dir) || strlen(opts->fullname) || strlen(opts->name) || strlen(opts->ext))) {
-		printf("syntax: cannot pass %s, %s, %s, or %s when looking for a word\n", 
+		printf("syntax: cannot pass %s, %s, %s, %s, or %s when looking for a word\n", 
 				ARG_SEARCH_OPTION_DIR,
 				ARG_SEARCH_OPTION_NAME,
 				ARG_SEARCH_OPTION_NAME,
@@ -452,12 +452,12 @@ int SearchDirectoryStackPush(SearchDirectoryStack * stack, const char * dir) {
 	if (stack && dir) {
 		if (stack->size < SEARCH_DIRECTORY_STACK_SIZE) {
 			strcpy(stack->dirs[stack->size++], dir);
-			return 0;
 		} else {
 			printf("Search Directory Stack Overflow\n");
 			return -14;
 		}
 	}
+	return 0;
 }
 
 /// Stack Pop
@@ -493,10 +493,13 @@ int SearchDirectoryRecursively(const char * dirpath, const SearchOptions * opts,
 		ExamineDirectory(currpath, opts, flags);
 
 		DIR * dir = opendir(currpath);
-		if (!dir) error = -13;
-		else {
+		if (!dir) {
+			if (flags & FLAG_BIT_VERBOSE) {
+				printf("could not look into: %s\n", currpath);
+			}
+		} else {
 			struct dirent * entry = 0;
-			while ((entry = readdir(dir)) != NULL) {
+			while (!error && ((entry = readdir(dir)) != NULL)) {
 				if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
 					char path[PATH_MAX];
 					snprintf(path, PATH_MAX, "%s/%s", currpath, entry->d_name);
@@ -506,15 +509,16 @@ int SearchDirectoryRecursively(const char * dirpath, const SearchOptions * opts,
 					//
 					// if file, then we can call ExamineFile
 					if (entry->d_type == DT_DIR) { // is dir
-						SearchDirectoryStackPush(&dirstack, path);
+						error = SearchDirectoryStackPush(&dirstack, path);
 					} else { // is file
 						ExamineFile(path, opts, flags);
 					}
 				}
 			}
+
+			closedir(dir);
 		}
 
-		closedir(dir);
 	}
 
 	return 0;
