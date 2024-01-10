@@ -8,7 +8,8 @@ include external/libs/makefiles/libpaths.mk
 include external/libs/bflibc/makefiles/checksum.mk
 include external/libs/bflibc/makefiles/uuid.mk
 
-DIRS = bin
+BIN_PATH = bin/release
+DIRS = bin $(BIN_PATH)
 CTOOLS = getsize mytime getcount ip4domain passgen getpath organize search
 CPPTOOLS =
 BASHTOOLS = rsatool listtools
@@ -35,45 +36,44 @@ GOFLAGS =
 
 build: $(DIRS) $(CTOOLS) $(CPPTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) check
 
-update-dependencies:
-	cd ./external/libs && git pull && make
-
-$(DIRS):
-	mkdir -p $@/
-
-# TODO: how to make target build only when deps change
 
 $(CTOOLS): % : src/%/main.c
-	$(CC) -o bin/$@ $< $(CFLAGS)
+	$(CC) -o $(BIN_PATH)/$@ $< $(CFLAGS)
 
 $(CPPTOOLS): % : src/%/main.cpp
-	$(CPPC) -o bin/$@ $< $(CFLAGS)
+	$(CPPC) -o $(BIN_PATH)/$@ $< $(CFLAGS)
 
 check: % : src/%/main.c
-	$(CC) -o bin/$@ $< -lpthread $(CFLAGS) $(BF_LIB_C_CHECKSUM_FLAGS) 
+	$(CC) -o $(BIN_PATH)/$@ $< -lpthread $(CFLAGS) $(BF_LIB_C_CHECKSUM_FLAGS) 
 
 $(RUSTTOOLS): % : src/%/main.rs
-	$(RUSTC) -o bin/$@ $< $(RUSTFLAGS)
+	$(RUSTC) -o $(BIN_PATH)/$@ $< $(RUSTFLAGS)
 
 $(GOTOOLS): % : src/%/main.go
-	$(GO) build -o bin/$@ $< $(GOFLAGS)
+	$(GO) build -o $(BIN_PATH)/$@ $< $(GOFLAGS)
 
 $(BASHTOOLS): % : src/%/script.sh
 	@bash -n $<
-	@cp -afv $< bin/$@
-	@chmod 755 bin/$@
+	@cp -afv $< $(BIN_PATH)/$@
+	@chmod 755 $(BIN_PATH)/$@
 
 setup: $(DIRS)
 
 clean:
 	rm -rfv $(DIRS)
 
-$(LIBCPATH) : lib
-$(LIBRUSTPATH): lib
-lib:
-	cd external/libs && make
+$(DIRS):
+	mkdir -p $@/
 
 debug: CFLAGS += -g
+debug: BIN_PATH = bin/debug
+debug: DIRS = bin/debug
 debug: RUSTFLAGS += -g --extern bflib=$(LIBRUSTPATH)
-debug: build
+debug: $(DIRS) build
+
+lib-update:
+	cd ./external/libs && git pull && make
+
+lib:
+	cd external/libs && make
 
