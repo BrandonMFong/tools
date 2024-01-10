@@ -3,3 +3,4 @@ bin
 *.swp
 build
 external
+.DS_Store
