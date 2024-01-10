@@ -9,7 +9,7 @@ include external/libs/bflibc/makefiles/checksum.mk
 include external/libs/bflibc/makefiles/uuid.mk
 
 BIN_PATH = bin/release
-DIRS = bin $(BIN_PATH)
+DIRS = $(BIN_PATH) bin
 CTOOLS = getsize mytime getcount ip4domain passgen getpath organize search
 CPPTOOLS =
 BASHTOOLS = rsatool listtools
@@ -24,9 +24,7 @@ CPPC = g++
 RUSTC = rustc
 GO = go
 
-## Compile Flags
-
-# Includes
+## Compiler flags
 CFLAGS += -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) $(LIBCPATH) $(LDFLAGS) $(BF_LIB_C_UUID_FLAGS)
 CPPFLAGS += $(CFLAGS)
 RUSTFLAGS += --extern bflib=$(LIBRUSTPATH)
@@ -35,7 +33,6 @@ GOFLAGS =
 .PHONY: $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) lib
 
 build: $(DIRS) $(CTOOLS) $(CPPTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) check
-
 
 $(CTOOLS): % : src/%/main.c
 	$(CC) -o $(BIN_PATH)/$@ $< $(CFLAGS)
