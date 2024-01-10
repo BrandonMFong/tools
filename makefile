@@ -57,6 +57,14 @@ $(BASHTOOLS): % : src/%/script.sh
 	@cp -afv $< $(BIN_PATH)/$@
 	@chmod 755 $(BIN_PATH)/$@
 
+debug-setup:
+	mkdir -p bin/debug/
+
+debug: CFLAGS += -g
+debug: BIN_PATH = bin/debug
+debug: RUSTFLAGS += -g --extern bflib=$(LIBRUSTPATH)
+debug: debug-setup build
+
 setup: $(DIRS)
 
 clean:
@@ -64,12 +72,6 @@ clean:
 
 $(DIRS):
 	mkdir -p $@/
-
-debug: CFLAGS += -g
-debug: BIN_PATH = bin/debug
-debug: DIRS = bin/debug
-debug: RUSTFLAGS += -g --extern bflib=$(LIBRUSTPATH)
-debug: $(DIRS) build
 
 lib-update:
 	cd ./external/libs && git pull && make
