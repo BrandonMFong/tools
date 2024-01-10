@@ -16,6 +16,7 @@
 #endif 
 
 #define BUFFER_READ_SIZE 1024
+#define SEARCH_DIRECTORY_STACK_SIZE 1024
 
 #define ARG_SEARCH_OPTION_FULLNAME "-fullname"
 #define ARG_SEARCH_OPTION_EXTENSION "-ext"
@@ -80,7 +81,7 @@ void help(const char * toolname) {
 	printf("\nCopyright © 2024 Brando. All rights reserved.\n"); // make this global
 }
 
-int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags, int lvl);
+int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags);
 int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath, SearchFlags * flags);
 
 int main(int argc, char ** argv) {
@@ -99,7 +100,7 @@ int main(int argc, char ** argv) {
 	}
 
 	if (!error) {
-		error = Search(path, &options, flags, 0);
+		error = Search(path, &options, flags);
 	}
 	
 	if (error) {
@@ -380,7 +381,7 @@ void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFl
 
 	if (print) {
 		if (flags & (FLAG_BIT_VERBOSE)) {
-			printf("file: %s\n", inpath);
+			printf("f: %s\n", inpath);
 
 			// print out `lines` if available			
 			if (lines) {
@@ -407,53 +408,115 @@ void ExamineDirectory(const char * inpath, const SearchOptions * opts, const Sea
 
 	if (print) {
 		if (flags & (FLAG_BIT_VERBOSE)) {
-			printf("file: %s\n", inpath);
+			printf("d: %s\n", inpath);
 		} else {
 			printf("%s\n", inpath);
 		}
 	}
 }
 
+int SearchDirectoryRecursively(const char * dirpath, const SearchOptions * opts, const SearchFlags flags);
+
 /**
+ * Searches inpath according to search options
+ *
  * param inpath: path to search
  * param opts: search options
  * param flags: search flags
- * param lvl: recursion level
  */
-int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags, int lvl) {
+int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags) {
 	int error = 0;
-	if (!inpath) error = -2; // null inpath
+	if (!inpath || !opts) error = -2; // null inpath
 	else if (BFFileSystemPathIsFile(inpath)) { // if file
 		ExamineFile(inpath, opts, flags);
 	} else { // if dir
 		ExamineDirectory(inpath, opts, flags);
-
-		// recursively call Search
-		// 
-		// if no recursion flag, we will at least look one
-		// level in
-		if ((flags & FLAG_BIT_RECURSIVE) || (lvl < 1)) {
-			lvl++;
-
-			DIR * dir = opendir(inpath);
-			if (!dir) error = -2;
-			else {
-				struct dirent * entry = 0;
-				while ((entry = readdir(dir)) != NULL) {
-					if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
-						char path[PATH_MAX];
-						snprintf(path, PATH_MAX, "%s/%s", inpath, entry->d_name);
-				
-						error = Search(path, opts, flags, lvl);
-						if (error) break;
-					}
-				}
-			}
-
-			closedir(dir);
+		if (flags & FLAG_BIT_RECURSIVE) {
+			SearchDirectoryRecursively(inpath, opts, flags);
 		}
 	}
 
 	return error;
+}
+
+/**
+ * Custom stack that helps manage stackoverflows
+ */
+typedef struct {
+	char dirs[SEARCH_DIRECTORY_STACK_SIZE][PATH_MAX];
+	int size;
+} SearchDirectoryStack;
+
+/// Stack Push
+int SearchDirectoryStackPush(SearchDirectoryStack * stack, const char * dir) {
+	if (stack && dir) {
+		if (stack->size < SEARCH_DIRECTORY_STACK_SIZE) {
+			strcpy(stack->dirs[stack->size++], dir);
+			return 0;
+		} else {
+			printf("Search Directory Stack Overflow\n");
+			return -14;
+		}
+	}
+}
+
+/// Stack Pop
+void SearchDirectoryStackPop(SearchDirectoryStack * stack, char * dir) {
+	if (stack && dir && (stack->size > 0)) {
+		strcpy(dir, stack->dirs[(stack->size--) - 1]);
+	}
+}
+
+/**
+ * Recursively looks into dirpath's tree
+ *
+ * This function does not do recursion but rather uses a custom stack
+ *
+ * param dirpath: directory path
+ */
+int SearchDirectoryRecursively(const char * dirpath, const SearchOptions * opts, const SearchFlags flags) {
+	int error = 0;
+	SearchDirectoryStack dirstack;
+	if (!dirpath || !opts) return -13;
+
+	// init stack
+	memset(&dirstack, 0, sizeof(SearchDirectoryStack));
+	error = SearchDirectoryStackPush(&dirstack, dirpath);
+
+	// run through entire directory tree
+	while (!error && dirstack.size) {
+		// get top of the stack
+		char currpath[PATH_MAX];
+		SearchDirectoryStackPop(&dirstack, currpath);
+
+		// First examine directory
+		ExamineDirectory(currpath, opts, flags);
+
+		DIR * dir = opendir(currpath);
+		if (!dir) error = -13;
+		else {
+			struct dirent * entry = 0;
+			while ((entry = readdir(dir)) != NULL) {
+				if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
+					char path[PATH_MAX];
+					snprintf(path, PATH_MAX, "%s/%s", currpath, entry->d_name);
+
+					// if path is a dir then we will push it to the stack
+					// and will work on it later
+					//
+					// if file, then we can call ExamineFile
+					if (entry->d_type == DT_DIR) { // is dir
+						SearchDirectoryStackPush(&dirstack, path);
+					} else { // is file
+						ExamineFile(path, opts, flags);
+					}
+				}
+			}
+		}
+
+		closedir(dir);
+	}
+
+	return 0;
 }
 
