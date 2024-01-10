@@ -10,7 +10,7 @@ include external/libs/bflibc/makefiles/uuid.mk
 
 BIN_PATH = bin/release
 DIRS = $(BIN_PATH) bin
-CTOOLS = getsize mytime getcount ip4domain passgen getpath organize search
+CTOOLS = getsize mytime getcount ip4domain passgen getpath organize search check
 CPPTOOLS =
 BASHTOOLS = rsatool listtools
 RUSTTOOLS = stopwatch num2bin num2hex cpy
@@ -30,18 +30,18 @@ CPPFLAGS += $(CFLAGS)
 RUSTFLAGS += --extern bflib=$(LIBRUSTPATH)
 GOFLAGS = 
 
+## Tool Specific
+check_deps = -lpthread $(BF_LIB_C_CHECKSUM_FLAGS) 
+
 .PHONY: $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) lib
 
 build: $(DIRS) $(CTOOLS) $(CPPTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) check
 
 $(CTOOLS): % : src/%/main.c
-	$(CC) -o $(BIN_PATH)/$@ $< $(CFLAGS)
+	$(CC) -o $(BIN_PATH)/$@ $< $(CFLAGS) $($@_deps)
 
 $(CPPTOOLS): % : src/%/main.cpp
 	$(CPPC) -o $(BIN_PATH)/$@ $< $(CFLAGS)
-
-check: % : src/%/main.c
-	$(CC) -o $(BIN_PATH)/$@ $< -lpthread $(CFLAGS) $(BF_LIB_C_CHECKSUM_FLAGS) 
 
 $(RUSTTOOLS): % : src/%/main.rs
 	$(RUSTC) -o $(BIN_PATH)/$@ $< $(RUSTFLAGS)
