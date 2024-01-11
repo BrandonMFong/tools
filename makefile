@@ -37,7 +37,7 @@ check_deps = -lpthread $(BF_LIB_C_CHECKSUM_FLAGS)
 
 .PHONY: $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) lib
 
-build: $(DIRS) $(CTOOLS) $(CPPTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) check
+build: $(DIRS) $(CTOOLS) $(CPPTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS)
 
 setup: $(DIRS)
 
@@ -83,10 +83,14 @@ debug: debug-setup build
 ## Test config
 test-setup:
 	mkdir -p bin/test/
-
 test: CFLAGS += -g -D$(TESTING_MACRO)
 test: CPPFLAGS += -g -D$(TESTING_MACRO)
 test: RUSTFLAGS += -g --extern bflib=$(LIBRUSTPATH)
 test: BIN_PATH = bin/test
-test: test-setup build
+test: test-setup $(CTOOLS) 
+test: TEST_ITEMS = $(wildcard $(BIN_PATH)/*)
+test: $(TEST_ITEMS)
+	@for test in $(TEST_ITEMS); do \
+        ./$$test; \
+    done
 
