@@ -17,6 +17,8 @@ RUSTTOOLS = stopwatch num2bin num2hex cpy
 GOTOOLS = 
 LIBCPATH = external/libs/$(BF_LIB_RPATH_RELEASE_C) 
 LIBRUSTPATH = external/libs/bin/release/rust/release/libbfrust.rlib
+TESTING_MACRO = TESTING
+DEBUG_MACRO = DEBUG
 
 ## Compiler definitions
 CC = gcc
@@ -72,8 +74,8 @@ $(BASHTOOLS): % : src/%/script.sh
 debug-setup:
 	mkdir -p bin/debug/
 
-debug: CFLAGS += -g
-debug: CPPFLAGS += -g
+debug: CFLAGS += -g -D$(DEBUG_MACRO)
+debug: CPPFLAGS += -g -D$(DEBUG_MACRO)
 debug: RUSTFLAGS += -g --extern bflib=$(LIBRUSTPATH)
 debug: BIN_PATH = bin/debug
 debug: debug-setup build
@@ -82,8 +84,8 @@ debug: debug-setup build
 test-setup:
 	mkdir -p bin/test/
 
-test: CFLAGS += -g
-test: CPPFLAGS += -g
+test: CFLAGS += -g -D$(TESTING_MACRO)
+test: CPPFLAGS += -g -D$(TESTING_MACRO)
 test: RUSTFLAGS += -g --extern bflib=$(LIBRUSTPATH)
 test: BIN_PATH = bin/test
 test: test-setup build
