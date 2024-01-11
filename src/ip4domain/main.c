@@ -25,7 +25,7 @@ void BriefDescription() {
 	printf("returns ip address for domain\n");
 }
 
-int main(int argc, char * argv[]) {
+int TOOL_MAIN(int argc, char * argv[]) {
 	int result = 0;
 	char * buf = 0;
 	char ip[(3 * 4) + 4];
@@ -64,4 +64,13 @@ int main(int argc, char * argv[]) {
 
 	return result;
 }
+
+#ifdef TESTING
+
+int TOOL_TEST(int argc, char ** argv) {
+	printf("testing %s\n", argv[0]);
+	return 0;
+}
+
+#endif // TESTING
 

@@ -98,6 +98,6 @@ test: test-setup $(CTOOLS)
 test: TEST_ITEMS = $(wildcard $(BIN_PATH)/*)
 test: $(TEST_ITEMS)
 	@for test in $(TEST_ITEMS); do \
-        #./$$test; \
+        ./$$test; \
     done
 

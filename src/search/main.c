@@ -85,7 +85,7 @@ void help(const char * toolname) {
 int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags);
 int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath, SearchFlags * flags);
 
-int main(int argc, char ** argv) {
+int TOOL_MAIN(int argc, char ** argv) {
 	int error = 0;
 	char path[PATH_MAX];
 	SearchOptions options;
@@ -524,4 +524,13 @@ int SearchDirectoryRecursively(const char * dirpath, const SearchOptions * opts,
 
 	return 0;
 }
+
+#ifdef TESTING
+
+int TOOL_TEST(int argc, char ** argv) {
+	printf("testing %s\n", argv[0]);
+	return 0;
+}
+
+#endif // TESTING
 

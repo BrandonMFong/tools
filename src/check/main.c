@@ -79,7 +79,7 @@ void BriefDescription() {
 void * PThreadReadAndHash(void * _tools);
 int CalculateChecksumForPath(const char * filePath, BFChecksumType checksumType, const char * expected, bool verbose);
 
-int main(int argc, char ** argv) {
+int TOOL_MAIN(int argc, char ** argv) {
 	int error = 0;
 	BFChecksumType checksumType = kBFChecksumTypeUnknown;
 	int argIndex = 1;
@@ -318,4 +318,13 @@ void * PThreadReadAndHash(void * _tools) {
 	BFFree(buf);
 	return 0;
 }
+
+#ifdef TESTING
+
+int TOOL_TEST(int argc, char ** argv) {
+	printf("testing %s\n", argv[0]);
+	return 0;
+}
+
+#endif // TESTING
 

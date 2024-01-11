@@ -25,7 +25,7 @@ void BriefDescription() {
 	printf("prints out absolute path\n");
 }
 
-int main(int argc, char * argv[]) {
+int TOOL_MAIN(int argc, char * argv[]) {
 	strcpy(TOOL_ARG, argv[0]);
 
 	if (argc < 2) {
@@ -42,4 +42,13 @@ int main(int argc, char * argv[]) {
 	
 	return 0;
 }
+
+#ifdef TESTING
+
+int TOOL_TEST(int argc, char ** argv) {
+	printf("testing %s\n", argv[0]);
+	return 0;
+}
+
+#endif // TESTING
 

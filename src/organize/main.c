@@ -54,7 +54,7 @@ void briefDescription() {
 	printf("organizes input files into an output directory\n");
 }
 
-int main(int argc, char ** argv) {
+int TOOL_MAIN(int argc, char ** argv) {
 	int error = 0;
 	int i = 0;
 	char buf[PATH_MAX];
@@ -265,4 +265,13 @@ int Organize() {
 
 	return result;
 }
+
+#ifdef TESTING
+
+int TOOL_TEST(int argc, char ** argv) {
+	printf("testing %s\n", argv[0]);
+	return 0;
+}
+
+#endif // TESTING
 

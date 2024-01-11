@@ -148,3 +148,12 @@ int PrintSize(unsigned long long byteSize) {
 	return 0;
 }
 
+#ifdef TESTING
+
+int TOOL_TEST(int argc, char ** argv) {
+	printf("testing %s\n", argv[0]);
+	return 0;
+}
+
+#endif // TESTING
+
