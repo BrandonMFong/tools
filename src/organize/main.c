@@ -6,8 +6,9 @@
  * 	- rename exe
  */
 
-#include <stdio.h>
 #include <bflibc/bflibc.h>
+#include <ctools/tools.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <dirent.h>

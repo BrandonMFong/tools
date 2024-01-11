@@ -1,13 +1,10 @@
 /**
  * author: Brando 
  * date: 5/1/2022
- *
- * Checklist:
  */
 
-// INCLUDES 
-
 #include <bflibc/bflibc.h>
+#include <ctools/tools.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -15,12 +12,11 @@
 #include <sys/stat.h>
 #include <libgen.h>
 #include <limits.h>
+#include <ctools/tools.h>
 
 #ifdef LINUX
 #include <linux/limits.h>
 #endif
-
-// CONSTANTS
 
 /**
  * Holds the name of the script
@@ -45,8 +41,6 @@ const char * BRIEF_DESCRIPTION = "--brief-description";
  */
 int PrintSize(unsigned long long byteSize);
 
-// FUNCTIONS
-
 void Help() {
 	printf("usage: %s [ %s ] <path>\n", SCRIPT_ARG, VERBOSE_ARG);
 
@@ -59,7 +53,7 @@ void BriefDescription() {
 	printf("returns size of file\n");
 }
 
-int main(int argc, char * argv[]) {
+int TOOL_MAIN(int argc, char * argv[]) {
 	int result = 0;
 	char * buf = 0;
 	unsigned long long size = 0;
