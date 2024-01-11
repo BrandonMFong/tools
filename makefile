@@ -37,6 +37,20 @@ check_deps = -lpthread $(BF_LIB_C_CHECKSUM_FLAGS)
 
 build: $(DIRS) $(CTOOLS) $(CPPTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) check
 
+setup: $(DIRS)
+
+clean:
+	rm -rfv $(DIRS)
+
+$(DIRS):
+	mkdir -p $@/
+
+lib-update:
+	cd ./external/libs && git pull && make
+
+lib:
+	cd external/libs && make
+
 $(CTOOLS): % : src/%/main.c
 	$(CC) -o $(BIN_PATH)/$@ $< $(CFLAGS) $($@_deps)
 
@@ -54,25 +68,23 @@ $(BASHTOOLS): % : src/%/script.sh
 	@cp -afv $< $(BIN_PATH)/$@
 	@chmod 755 $(BIN_PATH)/$@
 
+## Debug config
 debug-setup:
 	mkdir -p bin/debug/
 
 debug: CFLAGS += -g
-debug: BIN_PATH = bin/debug
+debug: CPPFLAGS += -g
 debug: RUSTFLAGS += -g --extern bflib=$(LIBRUSTPATH)
+debug: BIN_PATH = bin/debug
 debug: debug-setup build
 
-setup: $(DIRS)
+## Test config
+test-setup:
+	mkdir -p bin/test/
 
-clean:
-	rm -rfv $(DIRS)
-
-$(DIRS):
-	mkdir -p $@/
-
-lib-update:
-	cd ./external/libs && git pull && make
-
-lib:
-	cd external/libs && make
+test: CFLAGS += -g
+test: CPPFLAGS += -g
+test: RUSTFLAGS += -g --extern bflib=$(LIBRUSTPATH)
+test: BIN_PATH = bin/test
+test: test-setup build
 
