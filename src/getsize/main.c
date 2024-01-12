@@ -164,7 +164,7 @@ int TOOL_TEST(int argc, char ** argv) {
 	printf("TESTING: %s\n", argv[0]);
 
 	LAUNCH_TEST(test_test, p, f);
-	printf("Grade - %.2f%% (%d/%d)\n", (p/(p+f)) * 100, (int) p, (int) (p+f));
+	printf("Grade - %.2f%% (%d/%d)\n", (float) ((p/(p+f)) * 100), (int) p, (int) (p+f));
 
 	return 0;
 }
