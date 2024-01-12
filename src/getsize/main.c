@@ -150,8 +150,22 @@ int PrintSize(unsigned long long byteSize) {
 
 #ifdef TESTING
 
+#include <bflibc/bftests.h>
+
+int test_test(void) {
+	UNIT_TEST_START;
+	int result = 0;
+	UNIT_TEST_END(!result, result);
+	return result;
+}
+
 int TOOL_TEST(int argc, char ** argv) {
-	printf("testing %s\n", argv[0]);
+	int p = 0, f = 0;
+	printf("TESTING: %s\n", argv[0]);
+
+	LAUNCH_TEST(test_test, p, f);
+	printf("Grade - %.2f%% (%d/%d)\n", (p/(p+f)) * 100, (int) p, (int) (p+f));
+
 	return 0;
 }
 
