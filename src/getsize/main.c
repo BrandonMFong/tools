@@ -71,7 +71,8 @@ void BriefDescription() {
 
 int ParseArguments(int argc, char ** argv, char * path, bool * brieflyDescribe, unsigned char * options) {
 	if (!argv || !path || !brieflyDescribe || !options) return -2;
-	for (int i = 0; i < argc; i++) {
+	else if (argc < 2) return -2;
+	for (int i = 1; i < argc; i++) {
 		if (i == (argc - 1)) { // path
 			strcpy(path, argv[i]);
 		} else if (!strcmp(argv[i], BRIEF_DESCRIPTION)) {
@@ -101,7 +102,7 @@ int PathGetSizeInBytes(const char * path, unsigned char options, int * size) {
 	} else if (BFFileSystemPathIsDirectory(path)) {
 		*size = BFFileSystemDirectoryGetSizeUsed(path, options, &error);
 	} else {
-		printf("Unknown file type for '%s'", path);
+		printf("Unknown file type for '%s'\n", path);
 		error = -4;
 	}
 
@@ -126,12 +127,14 @@ int PrintSize(unsigned long long byteSize) {
 
 int GetSize(const char * path, unsigned char options) {
 	if (!path) return -3;
+	
 	// Make sure the path the user provided exists
 	if (!BFFileSystemPathExists(path)) {
-		printf("Path '%s' does not exist!", path);
+		printf("Path '%s' does not exist!\n", path);
 		return -3;
 	}
 
+	// get the size in bytes
 	int size = 0;
 	int error = PathGetSizeInBytes(path, options, &size);
 
