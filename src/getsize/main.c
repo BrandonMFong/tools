@@ -19,11 +19,6 @@
 #endif
 
 /**
- * Holds the name of the script
- */
-char SCRIPT_ARG[PATH_MAX];
-
-/**
  * Allows user to show each path we find
  */
 const char * VERBOSE_ARG = "-v";
@@ -33,109 +28,90 @@ const char * VERBOSE_ARG = "-v";
  */
 const char * BRIEF_DESCRIPTION = "--brief-description";
 
-// PROTOTYPES
-
-/**
- * Prints the byteSize value into a format that represents
- * a comprehensible byte format
- */
-int PrintSize(unsigned long long byteSize);
-
-void Help() {
-	printf("usage: %s [ %s ] <path>\n", SCRIPT_ARG, VERBOSE_ARG);
+void Help(const char * toolname) {
+	printf("usage: %s [ %s ] <path>\n", toolname, VERBOSE_ARG);
 
 	printf("\nArguments:\n");
 	printf("\t%s : Verbose mode\n", VERBOSE_ARG);
 	printf("\t<path> : Can be absolute or relative.  Cannot be a symbolic link\n");
 }
 
+void BriefDescription();
+int ParseArguments(int argc, char ** argv, char * path, bool * brieflyDescribe, unsigned char * options);
+int GetSize(const char * path, unsigned char options);
+
+int TOOL_MAIN(int argc, char * argv[]) {
+	int result = 0;
+	unsigned long long size = 0;
+	char path[PATH_MAX];
+	unsigned char options = 0;
+	bool brieflyDescribe = false;
+
+	if (!result) {
+		result = ParseArguments(argc, argv, path, &brieflyDescribe, &options);
+	}
+
+	if (result) {
+		Help(argv[0]);
+	} else {
+		if (brieflyDescribe) {
+			BriefDescription();
+		} else {
+			result = GetSize(path, options);
+		}
+	}
+
+
+	return result;
+}
+
 void BriefDescription() {
 	printf("returns size of file\n");
 }
 
-int TOOL_MAIN(int argc, char * argv[]) {
-	int result = 0;
-	char * buf = 0;
-	unsigned long long size = 0;
-	char path[PATH_MAX];
-	unsigned char options = 0;
-
-	// Get a copy of the script name 
-	buf = basename(argv[0]);
-	strcpy(SCRIPT_ARG, buf);
-
-	if (!strlen(SCRIPT_ARG)) {
-		result = 1;
-		BFErrorPrint("There was a problemt with the first argument");
-	}
-	
-	// Get the second argument
-	// 
-	// Should be the path to a file
-	if (!result) {
-		if (argc < 2) {
-			Help();
-			result = 1;
-		} else if (argc > 3) {
-			BFErrorPrint("Too many arguments\n");
-			Help();
-			result = 1;
+int ParseArguments(int argc, char ** argv, char * path, bool * brieflyDescribe, unsigned char * options) {
+	if (!argv || !path || !brieflyDescribe || !options) return -2;
+	for (int i = 0; i < argc; i++) {
+		if (i == (argc - 1)) { // path
+			strcpy(path, argv[i]);
+		} else if (!strcmp(argv[i], BRIEF_DESCRIPTION)) {
+			*brieflyDescribe = true;
+		} else if (!strcmp(argv[i], VERBOSE_ARG)) {
+			*options |= kCalculateSizeOptionsVerbose;
 		} else {
-			strcpy(path, argv[argc - 1]);
-
-			if (!strlen(path)) {
-				result = 1;
-				BFErrorPrint("Arg 1 is empty");
-				Help();
-			}
+			printf("unknown arg: %s\n", argv[i]);
+			return -2;
 		}
 	}
-	
-	if (!result) {
-		// See if user wants to show each path we find
-		if (BFArrayStringContainsString(argv, argc, VERBOSE_ARG)) {
-			options |= kCalculateSizeOptionsVerbose;
+	return 0;
+}
 
-		// see if the user wants a brief description
-		} else if (BFArrayStringContainsString(argv, argc, BRIEF_DESCRIPTION)) {
-			result = 1;
-			BriefDescription();
-		}
-	}
-
-	// Make sure the path the user provided exists
-	if (!result) {
-		if (!BFFileSystemPathExists(path)) {
-			BFErrorPrint("Path '%s' does not exist!", path);
-			result = 1;
-		}	
-	}
+int PathGetSizeInBytes(const char * path, unsigned char options, int * size) {
+	if (!path || !size) return -4;
 
 	// Check what type of path this is
 	// and if depending of the type, we 
 	// will calculate the total size of it
-	if (!result) {
-		if (BFFileSystemPathIsSymbolicLink(path)) {
-			result = 1;
-			BFErrorPrint("Path '%s' is a symbolic link.  We cannot calculate size for sym links", path);
-		} else if (BFFileSystemPathIsFile(path)) {
-			size = BFFileSystemFileGetSizeUsed(path, options, &result);
-		} else if (BFFileSystemPathIsDirectory(path)) {
-			size = BFFileSystemDirectoryGetSizeUsed(path, options, &result);
-		} else {
-			result = 1;
-			BFErrorPrint("Unknown file type for '%s'", path);
-		}
+	int error = 0;
+	if (BFFileSystemPathIsSymbolicLink(path)) {
+		printf("Path '%s' is a symbolic link.  We cannot calculate size for sym links\n", path);
+		error = -4;
+	} else if (BFFileSystemPathIsFile(path)) {
+		*size = BFFileSystemFileGetSizeUsed(path, options, &error);
+	} else if (BFFileSystemPathIsDirectory(path)) {
+		*size = BFFileSystemDirectoryGetSizeUsed(path, options, &error);
+	} else {
+		printf("Unknown file type for '%s'", path);
+		error = -4;
 	}
 
-	// Display size
-	if (!result) {
-		result = PrintSize(size);
-	}
-	
-	return result;
+	return error;	
 }
 
+/**
+ * Prints the byteSize value into a format that represents
+ * a comprehensible byte format
+ */
 int PrintSize(unsigned long long byteSize) {
 	char unit[10];
 	
@@ -148,11 +124,30 @@ int PrintSize(unsigned long long byteSize) {
 	return 0;
 }
 
+int GetSize(const char * path, unsigned char options) {
+	if (!path) return -3;
+	// Make sure the path the user provided exists
+	if (!BFFileSystemPathExists(path)) {
+		printf("Path '%s' does not exist!", path);
+		return -3;
+	}
+
+	int size = 0;
+	int error = PathGetSizeInBytes(path, options, &size);
+
+	// Display size
+	if (!error) {
+		error = PrintSize(size);
+	}
+	
+	return error;
+}
+
 #ifdef TESTING
 
 #include <bflibc/bftests.h>
 
-int test_test(void) {
+int test_GettingSizeOfFile(void) {
 	UNIT_TEST_START;
 	int result = 0;
 	UNIT_TEST_END(!result, result);
@@ -163,7 +158,7 @@ int TOOL_TEST(int argc, char ** argv) {
 	int p = 0, f = 0;
 	printf("TESTING: %s\n", argv[0]);
 
-	LAUNCH_TEST(test_test, p, f);
+	LAUNCH_TEST(test_GettingSizeOfFile, p, f);
 	printf("Grade - %.2f%% (%d/%d)\n", (float) ((p/(p+f)) * 100), (int) p, (int) (p+f));
 
 	return 0;
