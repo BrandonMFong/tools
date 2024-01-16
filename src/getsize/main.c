@@ -157,11 +157,38 @@ int test_GettingSizeOfFile(void) {
 	return result;
 }
 
+int test_ParseArguments(void) {
+	UNIT_TEST_START;
+	int result = 0;
+	int err = 0;
+	bool brieflyDescribe = false;
+	unsigned char options = 0;
+	char path[PATH_MAX];
+
+	// no args
+	char *args[] = {"getsize"};
+	err = ParseArguments(sizeof(args) / sizeof(args[0]), args, path, &brieflyDescribe, &options);
+	if (err == 0) result = -1;
+
+	// just path
+	if (!result) {
+		path[0] = '\0';
+		char *args[] = {"getsize", "/tmp/path"};
+		err = ParseArguments(sizeof(args) / sizeof(args[0]), args, path, &brieflyDescribe, &options);
+		if (err != 0) result = -2;
+		else if (strlen(path) == 0) result = -3;
+	}
+
+	UNIT_TEST_END(!result, result);
+	return result;
+}
+
 int TOOL_TEST(int argc, char ** argv) {
 	int p = 0, f = 0;
 	printf("TESTING: %s\n", argv[0]);
 
 	LAUNCH_TEST(test_GettingSizeOfFile, p, f);
+	LAUNCH_TEST(test_ParseArguments, p, f);
 	printf("Grade - %.2f%% (%d/%d)\n", (float) ((p/(p+f)) * 100), (int) p, (int) (p+f));
 
 	return 0;
