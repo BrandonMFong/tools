@@ -475,7 +475,11 @@ void SearchDirectoryStackPop(SearchDirectoryStack * stack, char * dir) {
  *
  * param dirpath: directory path
  */
-int SearchDirectoryRecursively(const char * dirpath, const SearchOptions * opts, const SearchFlags flags) {
+int SearchDirectoryRecursively(
+	const char * dirpath,
+	const SearchOptions * opts,
+	const SearchFlags flags
+) {
 	int error = 0;
 	SearchDirectoryStack dirstack;
 	if (!dirpath || !opts) return -13;
@@ -527,8 +531,93 @@ int SearchDirectoryRecursively(const char * dirpath, const SearchOptions * opts,
 
 #ifdef TESTING
 
+#include <bflibc/bftests.h>
+#include <time.h>
+
+int test_Stack(void) {
+	UNIT_TEST_START;
+	int result = 0;
+	SearchDirectoryStack stack;
+
+	memset(&stack, 0, sizeof(SearchDirectoryStack));
+	if (stack.size) result = 1;
+
+	const char * path0 = "/test/path";
+	if (!result) {
+		result = SearchDirectoryStackPush(&stack, path0);
+	}
+
+	if (!result) {
+		if (stack.size != 1) result = 2;
+	}
+
+	char path1[PATH_MAX];
+	if (!result) {
+		SearchDirectoryStackPop(&stack, path1);
+		if (strcmp(path0, path1)) {
+			result = 3;
+		}
+	}
+
+	UNIT_TEST_END(!result, result);
+	return result;
+}
+
+int test_TestingRandomNumberOfPathsForStack(void) {
+	UNIT_TEST_START;
+	int result = 0;
+	srand(time(0));
+	const int pathcount = rand() % SEARCH_DIRECTORY_STACK_SIZE;	
+	
+	SearchDirectoryStack stack;
+	memset(&stack, 0, sizeof(SearchDirectoryStack));
+	if (stack.size) result = 1;
+
+	int i = pathcount;
+	while (!result && i) {
+		char path[PATH_MAX];
+		snprintf(path, PATH_MAX, "/test/path%d", i);
+		
+		if (!result) {
+			result = SearchDirectoryStackPush(&stack, path);
+		}
+
+		i--;
+	}
+
+	if (!result) {
+		if (stack.size != pathcount) {
+			result = 2;
+		}
+	}
+
+	i = 1;
+	while (!result && (i < stack.size)) {
+		char path[PATH_MAX];
+		SearchDirectoryStackPop(&stack, path);
+		char tmp[PATH_MAX];
+		snprintf(tmp, PATH_MAX, "/test/path%d", i);
+		if (strcmp(path, tmp)) {
+			result = 3;
+			printf("'%s' != '%s'\n", path, tmp);
+		}
+
+		i++;
+	}
+
+	UNIT_TEST_END(!result, result);
+	return result;
+}
+
 int TOOL_TEST(int argc, char ** argv) {
-	printf("testing %s\n", argv[0]);
+	int p = 0, f = 0;
+	printf("TESTING: %s\n", argv[0]);
+
+	LAUNCH_TEST(test_Stack, p, f);
+	LAUNCH_TEST(test_TestingRandomNumberOfPathsForStack, p, f);
+
+	PRINT_GRADE(p, f);
+
 	return 0;
 }
 

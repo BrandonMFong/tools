@@ -189,7 +189,8 @@ int TOOL_TEST(int argc, char ** argv) {
 
 	LAUNCH_TEST(test_GettingSizeOfFile, p, f);
 	LAUNCH_TEST(test_ParseArguments, p, f);
-	printf("Grade - %.2f%% (%d/%d)\n", (float) ((p/(p+f)) * 100), (int) p, (int) (p+f));
+
+	PRINT_GRADE(p, f);
 
 	return 0;
 }
