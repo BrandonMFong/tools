@@ -4,6 +4,7 @@
  */
 
 #include <bflibc/bflibc.h>
+#include <ctools/tools.h>
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
@@ -75,7 +76,7 @@ unsigned long long CountItemsInPath(const char * path, bool recursive, int * err
 	return result;
 }
 
-int main(int argc, char * argv[]) {
+int TOOL_MAIN(int argc, char * argv[]) {
 	int result = 0;
 	bool recursive = false;
 
@@ -106,4 +107,13 @@ int main(int argc, char * argv[]) {
 
 	return result;
 }
+
+#ifdef TESTING
+
+int TOOL_TEST(int argc, char ** argv) {
+	printf("testing %s\n", argv[0]);
+	return 0;
+}
+
+#endif // TESTING
 

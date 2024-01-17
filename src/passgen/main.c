@@ -4,6 +4,7 @@
  */
 
 #include <bflibc/bflibc.h>
+#include <ctools/tools.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -89,7 +90,7 @@ void BriefDescription() {
  */
 char * CreateRandomString(unsigned short  options, int * err);
 
-int main(int argc, char * argv[]) {
+int TOOL_MAIN(int argc, char * argv[]) {
 	int result = 0;
 	unsigned short options = kCreateRandomStringOptionDefault;
 
@@ -230,4 +231,13 @@ char * CreateRandomString(unsigned short options, int * err) {
 
 	return result;
 }
+
+#ifdef TESTING
+
+int TOOL_TEST(int argc, char ** argv) {
+	printf("testing %s\n", argv[0]);
+	return 0;
+}
+
+#endif // TESTING
 

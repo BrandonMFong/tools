@@ -4,6 +4,7 @@
  */
 
 #include <bflibc/bflibc.h>
+#include <ctools/tools.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -79,7 +80,7 @@ void PrintTime(const time_t sec, const long nsec) {
 	printf(", %02d/%02d/%d", tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900); 
 }
 
-int main(int argc, char * argv[]) {
+int TOOL_MAIN(int argc, char * argv[]) {
 	int error = 0;
 	char * buf = basename(argv[0]);
 	strcpy(SCRIPT_ARG, buf);
@@ -141,4 +142,13 @@ int main(int argc, char * argv[]) {
 
 	return error;
 }
+
+#ifdef TESTING
+
+int TOOL_TEST(int argc, char ** argv) {
+	printf("testing %s\n", argv[0]);
+	return 0;
+}
+
+#endif // TESTING
 
