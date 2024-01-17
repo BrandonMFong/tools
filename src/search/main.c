@@ -563,7 +563,7 @@ int test_Stack(void) {
 	return result;
 }
 
-int test_TestingRandomNumberOfPathsForStack(void) {
+int test_LoadAndUnloadStack(void) {
 	UNIT_TEST_START;
 	int result = 0;
 	srand(time(0));
@@ -614,7 +614,7 @@ int TOOL_TEST(int argc, char ** argv) {
 	printf("TESTING: %s\n", argv[0]);
 
 	LAUNCH_TEST(test_Stack, p, f);
-	LAUNCH_TEST(test_TestingRandomNumberOfPathsForStack, p, f);
+	LAUNCH_TEST(test_LoadAndUnloadStack, p, f);
 
 	PRINT_GRADE(p, f);
 
