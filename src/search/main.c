@@ -19,18 +19,20 @@
 #define BUFFER_READ_SIZE 1024
 #define SEARCH_DIRECTORY_STACK_SIZE 1024
 
+#define ARG_BRIEF_DESCRIPTION "--brief-description"
+
 #define ARG_SEARCH_OPTION_FULLNAME "-fullname"
 #define ARG_SEARCH_OPTION_EXTENSION "-ext"
 #define ARG_SEARCH_OPTION_NAME "-name"
 #define ARG_SEARCH_OPTION_DIR "-dir"
-#define ARG_SEARCH_OPTION_WORD "-word"
+#define ARG_SEARCH_OPTION_STRING "-string"
 
 #define ARG_UNKNOWN(arg) ( \
 		strcmp(arg, ARG_SEARCH_OPTION_FULLNAME) && \
 		strcmp(arg, ARG_SEARCH_OPTION_EXTENSION) && \
 		strcmp(arg, ARG_SEARCH_OPTION_NAME) && \
 		strcmp(arg, ARG_SEARCH_OPTION_DIR) && \
-		strcmp(arg, ARG_SEARCH_OPTION_WORD) \
+		strcmp(arg, ARG_SEARCH_OPTION_STRING) \
 		)
 
 #define ARG_FLAG_VERBOSE 'v'
@@ -48,7 +50,7 @@ typedef struct {
 	char ext[PATH_MAX];
 	char name[PATH_MAX];
 	char dir[PATH_MAX];
-	char word[PATH_MAX];
+	char string[PATH_MAX];
 } SearchOptions;
 
 /**
@@ -61,11 +63,15 @@ bool SearchOptionsNone(const SearchOptions * opts) {
 		!strlen(opts->name) && 
 		!strlen(opts->name) && 
 		!strlen(opts->dir) &&
-		!strlen(opts->word)
+		!strlen(opts->string)
 		;
 }
 
-void help(const char * toolname) {
+void BriefDescription() {
+	printf("searches for files, directories, and strings\n");
+}
+
+void Help(const char * toolname) {
 	printf("usage: %s [ -<flags> ] [ <options> ] <path>\n", toolname);
 
 	printf("\nflags:\n");
@@ -77,19 +83,20 @@ void help(const char * toolname) {
 	printf("  [ %s <string> ] : searches for files with extension\n", ARG_SEARCH_OPTION_EXTENSION);
 	printf("  [ %s <string> ] : searches for files with basename\n", ARG_SEARCH_OPTION_NAME);
 	printf("  [ %s <string> ] : searches for directory with the same name\n", ARG_SEARCH_OPTION_DIR);
-	printf("  [ %s <string> ] : searches files for an occurrence of word\n", ARG_SEARCH_OPTION_WORD);
+	printf("  [ %s <string> ] : searches files for an occurrence of string\n", ARG_SEARCH_OPTION_STRING);
 
 	printf("\nCopyright © 2024 Brando. All rights reserved.\n"); // make this global
 }
 
 int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags);
-int ParseArguments(int argc, char ** argv, SearchOptions * opts, char * outpath, SearchFlags * flags);
+int ParseArguments(int argc, char ** argv, SearchOptions * opts, SearchFlags * flags, char * outpath, bool * briefdescription);
 
 int TOOL_MAIN(int argc, char ** argv) {
 	int error = 0;
 	char path[PATH_MAX];
 	SearchOptions options;
 	SearchFlags flags = 0;
+	bool briefdescription = false;
 
 	memset(&options, 0, sizeof(SearchOptions));
 	memset(&path[0], 0, sizeof(PATH_MAX));
@@ -97,52 +104,29 @@ int TOOL_MAIN(int argc, char ** argv) {
 	if (argc < 2) {
 		error = 1;
 	} else {
-		error = ParseArguments(argc, argv, &options, path, &flags);
+		error = ParseArguments(argc, argv, &options, &flags, path, &briefdescription);
 	}
 
 	if (!error) {
-		error = Search(path, &options, flags);
+		if (briefdescription) {
+			BriefDescription();
+		} else {
+			error = Search(path, &options, flags);
+		}
 	}
 	
 	if (error) {
-		help(argv[0]);
+		Help(argv[0]);
 	}
 
 	return error;
-}
-
-int SearchOptionsLoadFromArguments(
-		int argc,
-		char ** argv,
-		int startindex,
-		SearchOptions * opts
-) {
-	if (!argv || !opts) return -4;
-	for (int i = startindex; i < (argc - 1); i++) {
-		if (!strcmp(argv[i], ARG_SEARCH_OPTION_FULLNAME)) {
-			i++; strcpy(opts->fullname, argv[i]);
-		} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_EXTENSION)) {
-			i++; strcpy(opts->ext, argv[i]);
-		} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_NAME)) {
-			i++; strcpy(opts->name, argv[i]);
-		} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_DIR)) {
-			i++; strcpy(opts->dir, argv[i]);
-		} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_WORD)) {
-			i++; strcpy(opts->word, argv[i]);
-		} else {
-			printf("unknown option: %s\n", argv[i]);
-			return -4;
-		}
-	}
-
-	return 0;
 }
 
 /**
  * param arg: 	we can safely assume that this is not one of the
  * 				search options. so this could be an unknown argument
  */
-int SearchFlagsLoadFromArgument(const char * arg, SearchFlags * flags) {
+int ParseArgumentsLoadFlags(const char * arg, SearchFlags * flags) {
 	if (!arg || !flags) return -5;
 	
 	char buf[512];
@@ -156,11 +140,50 @@ int SearchFlagsLoadFromArgument(const char * arg, SearchFlags * flags) {
 				*flags |= (FLAG_BIT_VERBOSE);
 			} else if (buf[i] == ARG_FLAG_RECURSIVE) {
 				*flags |= (FLAG_BIT_RECURSIVE);
+			} else {
+				return -5;
 			}
 		}
 	}
 
 	return 0;
+}
+
+int ParseArgumentsLoad(
+		int argc,
+		char ** argv,
+		SearchOptions * opts,
+		SearchFlags * flags,
+		bool * briefdescription
+) {
+	if (!argv || !opts || !flags || !briefdescription) return -4;
+
+	int error = 0;
+	for (int i = 1; i <= (argc - 1); i++) {
+		if (!strcmp(argv[i], ARG_SEARCH_OPTION_FULLNAME)) {
+			i++; strcpy(opts->fullname, argv[i]);
+		} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_EXTENSION)) {
+			i++; strcpy(opts->ext, argv[i]);
+		} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_NAME)) {
+			i++; strcpy(opts->name, argv[i]);
+		} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_DIR)) {
+			i++; strcpy(opts->dir, argv[i]);
+		} else if (!strcmp(argv[i], ARG_SEARCH_OPTION_STRING)) {
+			i++; strcpy(opts->string, argv[i]);
+		} else if (!strcmp(argv[i], ARG_BRIEF_DESCRIPTION)) {
+			*briefdescription = true;
+		} else {
+			// if unknown, will see if these are flags
+			error = ParseArgumentsLoadFlags(argv[i], flags);
+		}
+
+		if (error) {
+			printf("unknown arg: %s\n", argv[i]);
+			break;
+		}
+	}
+
+	return error;
 }
 
 /**
@@ -184,8 +207,8 @@ int SearchOptionsAudit(const SearchOptions * opts) {
 				ARG_SEARCH_OPTION_EXTENSION,
 				ARG_SEARCH_OPTION_FULLNAME);
 		return -6;
-	} else if (strlen(opts->word) && (strlen(opts->dir) || strlen(opts->fullname) || strlen(opts->name) || strlen(opts->ext))) {
-		printf("syntax: cannot pass %s, %s, %s, %s, or %s when looking for a word\n", 
+	} else if (strlen(opts->string) && (strlen(opts->dir) || strlen(opts->fullname) || strlen(opts->name) || strlen(opts->ext))) {
+		printf("syntax: cannot pass %s, %s, %s, %s, or %s when looking for a string\n", 
 				ARG_SEARCH_OPTION_DIR,
 				ARG_SEARCH_OPTION_NAME,
 				ARG_SEARCH_OPTION_NAME,
@@ -204,24 +227,19 @@ int ParseArguments(
 		int argc, 
 		char ** argv, 
 		SearchOptions * opts, 
-		char * outpath, 
-		SearchFlags * flags
+		SearchFlags * flags,
+		char * outpath,
+		bool * briefdescription
 ) {
 	int error = 0;
-	int i = 1;
 
-	if (!opts || !argv || !outpath) {
+	if (!opts || !argv || !outpath || !briefdescription || !flags) {
 		error = -3;
-	
-	// if unknown, see if these are flags
-	} else if (ARG_UNKNOWN(argv[i])) {
-		error = SearchFlagsLoadFromArgument(argv[i], flags);
-		i++;
 	}
 
 	// get search options
 	if (!error) {
-		error = SearchOptionsLoadFromArguments(argc, argv, i, opts);
+		error = ParseArgumentsLoad(argc, argv, opts, flags, briefdescription);
 	}
 
 	// audit search options
@@ -231,9 +249,7 @@ int ParseArguments(
 
 	// get path
 	if (!error) {
-		if (realpath(argv[argc - 1], outpath) == 0) { // get abs path
-			error = -3;
-		}
+		realpath(argv[argc - 1], outpath);
 	}
 
 	return error;
@@ -287,20 +303,20 @@ bool SearchOptionsMatchName(const char * inpath, const SearchOptions * opts) {
 }
 
 /**
- * reads file from inpath for any occurrence of the `word` on every line
+ * reads file from inpath for any occurrence of the `string` on every line
  *
  * param lines: caller owns memory and must free()
  *
- * return true if word was found. `lines` should contain an output string shows 
- * location of the word. You can print out the entire var `lines`
+ * return true if string was found. `lines` should contain an output string shows 
+ * location of the string. You can print out the entire var `lines`
  */
-bool ExamineFileForWord(
+bool ExamineFileForString(
 		const char * inpath,
-		const char * word,
+		const char * string,
 		const SearchFlags flags,
 		char ** lines
 ) {
-	if (!inpath || !word || !lines) return false;
+	if (!inpath || !string|| !lines) return false;
 
 	// open file
 	FILE * file = fopen(inpath, "r");
@@ -309,11 +325,11 @@ bool ExamineFileForWord(
 	// read file
 	char buf[BUFFER_READ_SIZE];
 	int lineindex = 1;
-	bool foundword = false; // true if at least one occurrence is found
+	bool foundstring = false; // true if at least one occurrence is found
 	while ((fgets(buf, BUFFER_READ_SIZE, file)) != NULL) { // read line
-		// print out first occurrence of word
-		if (strstr(buf, word)) {
-			foundword = true;
+		// print out first occurrence of string 
+		if (strstr(buf, string)) {
+			foundstring = true;
 
 			// we will return the lines if we are in verbose mode
 			if (flags & FLAG_BIT_VERBOSE) {
@@ -345,7 +361,7 @@ bool ExamineFileForWord(
 	// close
 	fclose(file);
 
-	return foundword;
+	return foundstring;
 }
 
 /**
@@ -376,8 +392,8 @@ void ExamineFile(const char * inpath, const SearchOptions * opts, const SearchFl
 		if (SearchOptionsMatchName(inpath, opts)) {
 			print = true;
 		}
-	} else if (strlen(opts->word)) { // find word
-		print = ExamineFileForWord(inpath, opts->word, flags, &lines);
+	} else if (strlen(opts->string)) { // find string 
+		print = ExamineFileForString(inpath, opts->string, flags, &lines);
 	}
 
 	if (print) {
