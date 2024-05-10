@@ -14,5 +14,7 @@
 #define TOOL_MAIN main
 #endif // TESTING
 
+#define PRINT_COPYRIGHT printf("\nCopyright © 2024 Brando. All rights reserved.\n")
+
 #endif // TOOLS_H
 

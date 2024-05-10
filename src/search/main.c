@@ -85,7 +85,7 @@ void Help(const char * toolname) {
 	printf("  [ %s <string> ] : searches for directory with the same name\n", ARG_SEARCH_OPTION_DIR);
 	printf("  [ %s <string> ] : searches files for an occurrence of string\n", ARG_SEARCH_OPTION_STRING);
 
-	printf("\nCopyright © 2024 Brando. All rights reserved.\n"); // make this global
+	PRINT_COPYRIGHT;
 }
 
 int Search(const char * inpath, const SearchOptions * opts, const SearchFlags flags);

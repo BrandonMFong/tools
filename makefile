@@ -11,11 +11,10 @@ include external/libs/bflibc/makefiles/uuid.mk
 BIN_PATH = bin/release
 DIRS = $(BIN_PATH) bin
 CTOOLS = getsize mytime getcount ip4domain passgen getpath organize search check
-CPPTOOLS =
+CPPTOOLS = spellcheck
 BASHTOOLS = rsatool listtools
 RUSTTOOLS = stopwatch num2bin num2hex cpy
 GOTOOLS = 
-LIBCPATH = external/libs/$(BF_LIB_RPATH_RELEASE_C) 
 LIBRUSTPATH = external/libs/bin/release/rust/release/libbfrust.rlib
 TESTING_MACRO = TESTING
 DEBUG_MACRO = DEBUG
@@ -27,8 +26,8 @@ RUSTC = rustc
 GO = go
 
 ## Compiler flags
-CFLAGS += -Icommon -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) $(LIBCPATH) $(LDFLAGS) $(BF_LIB_C_UUID_FLAGS)
-CPPFLAGS += $(CFLAGS)
+CFLAGS += -Icommon -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) external/libs/$(BF_LIB_RPATH_RELEASE_C) $(BF_LIB_C_UUID_FLAGS)
+CPPFLAGS += -std=c++20 -Icommon -Iexternal/libs/$(BF_LIB_RPATH_RELEASE) external/libs/$(BF_LIB_RPATH_RELEASE_CPP) $(BF_LIB_C_UUID_FLAGS)
 RUSTFLAGS += --extern bflib=$(LIBRUSTPATH)
 GOFLAGS = 
 
@@ -57,7 +56,7 @@ $(CTOOLS): % : src/%/main.c
 	$(CC) -o $(BIN_PATH)/$@ $< $(CFLAGS) $($@_deps)
 
 $(CPPTOOLS): % : src/%/main.cpp
-	$(CPPC) -o $(BIN_PATH)/$@ $< $(CFLAGS)
+	$(CPPC) -o $(BIN_PATH)/$@ $< $(CPPFLAGS)
 
 $(RUSTTOOLS): % : src/%/main.rs
 	$(RUSTC) -o $(BIN_PATH)/$@ $< $(RUSTFLAGS)
@@ -78,7 +77,8 @@ debug-clean:
 	rm -rfv bin/debug/
 
 debug: CFLAGS += -g -D$(DEBUG_MACRO)
-debug: CPPFLAGS += -g -D$(DEBUG_MACRO)
+debug: LIBCPPPATH = external/libs/$(BF_LIB_RPATH_DEBUG_CPP) 
+debug: CPPFLAGS = -g -D$(DEBUG_MACRO) -std=c++20 -Icommon -Iexternal/libs/$(BF_LIB_RPATH_DEBUG) $(LIBCPPPATH) $(LDFLAGS) $(BF_LIB_C_UUID_FLAGS)
 debug: RUSTFLAGS += -g --extern bflib=$(LIBRUSTPATH)
 debug: BIN_PATH = bin/debug
 debug: debug-setup build
@@ -94,7 +94,7 @@ test: CFLAGS += -g -D$(TESTING_MACRO)
 test: CPPFLAGS += -g -D$(TESTING_MACRO)
 test: RUSTFLAGS += -g --extern bflib=$(LIBRUSTPATH)
 test: BIN_PATH = bin/test
-test: test-setup $(CTOOLS) 
+test: test-setup $(CTOOLS) $(CPPTOOLS)
 test: TEST_ITEMS = $(wildcard $(BIN_PATH)/*)
 test: $(TEST_ITEMS)
 	@for test in $(TEST_ITEMS); do \
