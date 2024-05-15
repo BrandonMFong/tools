@@ -10,10 +10,10 @@ include external/libs/bflibc/makefiles/uuid.mk
 
 BIN_PATH = bin/release
 DIRS = $(BIN_PATH) bin
-CTOOLS = getsize mytime getcount ip4domain passgen getpath organize search check
+CTOOLS = getsize mytime getcount ip4domain passgen getpath organize search check getinfo
 CPPTOOLS = spellcheck
 BASHTOOLS = rsatool listtools
-RUSTTOOLS = stopwatch num2bin num2hex cpy
+RUSTTOOLS = stopwatch cpy
 GOTOOLS = 
 LIBRUSTPATH = external/libs/bin/release/rust/release/libbfrust.rlib
 TESTING_MACRO = TESTING
@@ -32,11 +32,13 @@ RUSTFLAGS += --extern bflib=$(LIBRUSTPATH)
 GOFLAGS = 
 
 ## Tool Specific
+
+# tool: check
 check_deps = -lpthread $(BF_LIB_C_CHECKSUM_FLAGS) 
 
 .PHONY: $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) lib
 
-build: $(DIRS) $(CTOOLS) $(CPPTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS)
+build: $(CTOOLS) $(CPPTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS)
 
 setup: $(DIRS)
 
@@ -52,19 +54,19 @@ lib-update:
 lib:
 	cd external/libs && make
 
-$(CTOOLS): % : src/%/main.c
+$(CTOOLS): % : src/%/main.c $(DIRS)
 	$(CC) -o $(BIN_PATH)/$@ $< $(CFLAGS) $($@_deps)
 
-$(CPPTOOLS): % : src/%/main.cpp
+$(CPPTOOLS): % : src/%/main.cpp $(DIRS)
 	$(CPPC) -o $(BIN_PATH)/$@ $< $(CPPFLAGS)
 
-$(RUSTTOOLS): % : src/%/main.rs
+$(RUSTTOOLS): % : src/%/main.rs $(DIRS)
 	$(RUSTC) -o $(BIN_PATH)/$@ $< $(RUSTFLAGS)
 
-$(GOTOOLS): % : src/%/main.go
+$(GOTOOLS): % : src/%/main.go $(DIRS)
 	$(GO) build -o $(BIN_PATH)/$@ $< $(GOFLAGS)
 
-$(BASHTOOLS): % : src/%/script.sh
+$(BASHTOOLS): % : src/%/script.sh $(DIRS)
 	@bash -n $<
 	@cp -afv $< $(BIN_PATH)/$@
 	@chmod 755 $(BIN_PATH)/$@

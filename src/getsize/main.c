@@ -116,7 +116,7 @@ int PathGetSizeInBytes(const char * path, unsigned char options, int * size) {
 int PrintSize(unsigned long long byteSize) {
 	char unit[10];
 	
-	if (BFByteGetString(byteSize, unit)) {
+	if (BFByteGetString(byteSize, 0, unit)) {
 		BFErrorPrint("Error with getting byte representation");
 	} else {
 		printf("%s\n", unit);
