@@ -1,0 +1,85 @@
+#!/bin/bash
+# 
+# author: brando
+# date: 5/15/24
+#
+
+
+## CONSTANTS
+
+SCRIPT_NAME=$(basename $0);
+SCRIPT_PATH=$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P );
+V_ARGS=( "$@" );
+C_ARGS=${#V_ARGS[@]};
+
+## GLOBALS
+
+source $SCRIPT_PATH/install_utils.sh
+
+# 
+# help()
+#
+# returns none
+function help() {
+	printf "usage: $SCRIPT_NAME\n";
+	printf "\n";
+	printf "Installs tools to environment\n";
+	printf "\n";
+	printf "Copyright © 2024 Brando. All rights reserved.\n";
+}
+
+#
+# install()
+#
+# returns error code
+function install() {
+	local targetpath=$TARGET_PATH;
+
+	# make the goto utils dir
+	if [ ! -d $targetpath ]; then
+		printf "error: could not find $targetpath\n";
+		return 1;
+	fi
+
+	# copy components
+	for comp in "${COMPONENTS[@]}"
+	do
+		cp -afv $SCRIPT_PATH/$comp $targetpath;
+		if [ $? -ne 0 ]; then
+			printf "error: cp returned $?\n";
+			return $?;
+		elif [ ! -f $targetpath/$comp ]; then
+			printf "error: could not copy over component: $comp\n";
+			return 2;
+		fi
+	done
+
+	return 0;
+}
+
+#
+# main()
+#
+# exits with an error code
+function main() {
+	arguments_read;
+	if [ $? -ne 0 ]; then
+		exit $?;
+	fi
+
+	if [ $gShowHelp == true ]; then
+		help;
+	else
+		install;
+		if [ $? -ne 0 ]; then
+			exit $?;
+		else
+			printf "Installation complete\n";
+		fi
+	fi
+
+	exit 0;
+}
+
+main;
+

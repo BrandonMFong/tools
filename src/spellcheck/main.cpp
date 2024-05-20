@@ -12,6 +12,7 @@
  * default dictionary location will be local
  */
 #define WORDS_DICTIONARY_REF_DEFAULT "/usr/share/dict/words"
+#define BRIEF_DESCRIPTION_ARG "--brief-description"
 
 using namespace BF;
 
@@ -45,7 +46,11 @@ void Help(const char * toolname) {
 	PRINT_COPYRIGHT;
 }
 
-int ParseArguments(int argc, char ** argv, SpellcheckTools * opts);
+void BriefDescription() {
+	printf("checks spelling of word or content\n");
+}
+
+int ParseArguments(int argc, char ** argv, SpellcheckTools * opts, bool * brieflyDescribe);
 int Spellcheck(const SpellcheckTools * tools);
 
 int TOOL_MAIN(int argc, char ** argv) {
@@ -54,10 +59,13 @@ int TOOL_MAIN(int argc, char ** argv) {
 
 	SpellcheckToolsSetDefault(&tools);
 
-	error = ParseArguments(argc, argv, &tools);
+	bool brieflyDescribe = false;
+	error = ParseArguments(argc, argv, &tools, &brieflyDescribe);
 
 	if (error) {
 		Help(argv[0]);
+	} else if (brieflyDescribe) {
+		BriefDescription();
 	} else {
 		error = Spellcheck(&tools);
 	}
@@ -65,12 +73,14 @@ int TOOL_MAIN(int argc, char ** argv) {
 	return error;
 }
 
-int ParseArguments(int argc, char ** argv, SpellcheckTools * tools) {
+int ParseArguments(int argc, char ** argv, SpellcheckTools * tools, bool * brieflyDescribe) {
 	int error = 0;
-	if (!argv || !tools || (argc < 2)) return -2;
+	if (!argv || !tools || !brieflyDescribe || (argc < 2)) return -2;
 
 	for (int i = 1; i < argc; i++) {
-		if (i == (argc-1)) { // subject
+		if (!strcmp(argv[i], BRIEF_DESCRIPTION_ARG)) {
+			*brieflyDescribe = true;
+		} else if (i == (argc-1)) { // subject
 			tools->subject = argv[i];
 		}
 	}

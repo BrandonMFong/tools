@@ -1,6 +1,6 @@
 #!/bin/bash
 
-tools=(check cpy getcount getpath getsize ip4domain mytime organize passgen rsatool stopwatch search);
+tools=(check cpy getcount getinfo getpath getsize ip4domain mytime organize passgen rsatool search spellcheck stopwatch);
 for tool in "${tools[@]}"
 do
 	printf "$tool: ";

@@ -8,6 +8,15 @@ include external/libs/makefiles/libpaths.mk
 include external/libs/bflibc/makefiles/checksum.mk
 include external/libs/bflibc/makefiles/uuid.mk
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+	BUILD_TYPE=linux
+else 
+ifeq ($(UNAME_S),Darwin)
+	BUILD_TYPE=macos
+endif
+endif
+ 
 BIN_PATH = bin/release
 DIRS = $(BIN_PATH) bin
 CTOOLS = getsize mytime getcount ip4domain passgen getpath organize search check getinfo
@@ -15,9 +24,14 @@ CPPTOOLS = spellcheck
 BASHTOOLS = rsatool listtools
 RUSTTOOLS = stopwatch cpy
 GOTOOLS = 
+INSTALL_SCRIPTS = install uninstall install_utils.sh
 LIBRUSTPATH = external/libs/bin/release/rust/release/libbfrust.rlib
 TESTING_MACRO = TESTING
 DEBUG_MACRO = DEBUG
+COMPONENTS = $(CTOOLS) $(CPPTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) $(INSTALL_SCRIPTS)
+
+PACKAGE_NAME = tools
+PACKAGE_COMPONENTS = $(patsubst %, $(PACKAGE_NAME)/%, $(COMPONENTS))
 
 ## Compiler definitions
 CC = gcc
@@ -36,14 +50,13 @@ GOFLAGS =
 # tool: check
 check_deps = -lpthread $(BF_LIB_C_CHECKSUM_FLAGS) 
 
-.PHONY: $(CTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS) lib
-
-build: $(CTOOLS) $(CPPTOOLS) $(BASHTOOLS) $(RUSTTOOLS) $(GOTOOLS)
+build: $(COMPONENTS)
 
 setup: $(DIRS)
 
 clean:
 	rm -rfv $(DIRS)
+	rm -rfv $(PACKAGE_NAME)
 
 $(DIRS):
 	mkdir -p $@/
@@ -67,6 +80,11 @@ $(GOTOOLS): % : src/%/main.go $(DIRS)
 	$(GO) build -o $(BIN_PATH)/$@ $< $(GOFLAGS)
 
 $(BASHTOOLS): % : src/%/script.sh $(DIRS)
+	@bash -n $<
+	@cp -afv $< $(BIN_PATH)/$@
+	@chmod 755 $(BIN_PATH)/$@
+
+$(INSTALL_SCRIPTS) : % : scripts/% $(DIRS)
 	@bash -n $<
 	@cp -afv $< $(BIN_PATH)/$@
 	@chmod 755 $(BIN_PATH)/$@
@@ -102,4 +120,14 @@ test: $(TEST_ITEMS)
 	@for test in $(TEST_ITEMS); do \
         ./$$test; \
     done
+
+package: $(PACKAGE_NAME) $(PACKAGE_COMPONENTS)
+	zip -r $(BIN_PATH)/$(PACKAGE_NAME)-$(BUILD_TYPE).zip $(PACKAGE_NAME)
+	tar vczf $(BIN_PATH)/$(PACKAGE_NAME)-$(BUILD_TYPE).tar.gz $(PACKAGE_NAME)
+
+$(PACKAGE_NAME):
+	mkdir -p $@
+
+$(PACKAGE_NAME)/%: $(BIN_PATH)/%
+	@cp -afv $< $(PACKAGE_NAME)
 
