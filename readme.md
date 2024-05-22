@@ -1,5 +1,7 @@
 # Tools I use pretty often
 
+I treat this repo as playground for myself. I like to try out new programming languages. Let me know what you think.
+
 ## Setup
 - `./configure`
 - `make lib`
@@ -12,6 +14,7 @@
 - `make package`
 
 ## Tools available:
+```
 check: hash calculator & comparitor
 cpy: copy tool
 getcount: counts items in path (recursive option available)
@@ -26,4 +29,5 @@ rsatool: encryption and description tool for small messages
 search: searches for files, directories, and strings
 spellcheck: checks spelling of word or content
 stopwatch: simple stop watch
+```
 
