@@ -50,7 +50,9 @@ GOFLAGS =
 # tool: check
 check_deps = -lpthread $(BF_LIB_C_CHECKSUM_FLAGS) 
 
-build: $(COMPONENTS)
+build: release
+
+release: $(COMPONENTS)
 
 setup: $(DIRS)
 

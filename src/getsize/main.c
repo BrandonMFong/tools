@@ -69,16 +69,22 @@ void BriefDescription() {
 	printf("returns size of file\n");
 }
 
-int ParseArguments(int argc, char ** argv, char * path, bool * brieflyDescribe, unsigned char * options) {
+int ParseArguments(
+	int argc,
+	char ** argv,
+	char * path,
+	bool * brieflyDescribe,
+	unsigned char * options
+) {
 	if (!argv || !path || !brieflyDescribe || !options) return -2;
 	else if (argc < 2) return -2;
 	for (int i = 1; i < argc; i++) {
-		if (i == (argc - 1)) { // path
-			strcpy(path, argv[i]);
-		} else if (!strcmp(argv[i], BRIEF_DESCRIPTION)) {
+		if (!strcmp(argv[i], BRIEF_DESCRIPTION)) {
 			*brieflyDescribe = true;
 		} else if (!strcmp(argv[i], VERBOSE_ARG)) {
 			*options |= kCalculateSizeOptionsVerbose;
+		} else if (i == (argc - 1)) { // path
+			strcpy(path, argv[i]);
 		} else {
 			printf("unknown arg: %s\n", argv[i]);
 			return -2;
