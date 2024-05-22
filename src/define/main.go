@@ -11,39 +11,56 @@ import (
     "net/http"
 )
 
+type BFError struct {
+	message string
+}
+
+func (err *BFError) Error() string {
+	return err.message
+}
+
 func main() {
 	Define("hello")
 }
 
-type DictionaryEntry struct {
-	valid bool
-	word string
-	definition string
-}
-
 func Define(word string) {
-	ent := GetDefinition(word)
-	fmt.Printf("%s = %s\n", ent.word, ent.definition)
+	data, err := GetDefinitionData(word)
+	if err != nil {
+		fmt.Println("error: ", err)
+	} else {
+		fmt.Println("word: ", word)
+		DictionaryAPIRawJsonPrintMeanings(data)
+	}
 }
 
-func GetDefinition(word string) DictionaryEntry {
-	jsonData := FetchRawJsonDefinition(word)
+func DictionaryAPIRawJsonPrintMeanings(data []map[string]interface{}) {
+	ent := data[0]
+	fmt.Println(ent["meanings"])
+	meanings := ent["meanings"]
+	fmt.Println(meanings)
+}
+
+/**
+creates dictionary entry
+*/
+func GetDefinitionData(word string) ([]map[string]interface{}, error) {
+	jsonData := DictionaryAPIRawJsonFetchData(word)
 	var data []map[string]interface{}
 	err := json.Unmarshal([]byte(jsonData), &data)
 	if err != nil {
 		fmt.Printf("could not unmarshal json: %s\n", err)
-		return DictionaryEntry{valid: false}
+		return data, &BFError{message: "could not parse dictionary data"}
 	}
 
-	return DictionaryEntry{valid: true, word: word, definition: "test"}
+	return data, nil
 }
 
 /**
 calls the dictionaryapi.dev api for word
 */
-func FetchRawJsonDefinition(word string) string {
+func DictionaryAPIRawJsonFetchData(word string) string {
 	// Define the URL
-    url := "https://api.dictionaryapi.dev/api/v2/entries/en/hello"
+    url := fmt.Sprintf("https://api.dictionaryapi.dev/api/v2/entries/en/%s", word)
 
     // Make the HTTP GET request
     resp, err := http.Get(url)
