@@ -12,23 +12,36 @@ import (
 )
 
 func main() {
-	define()
+	Define("hello")
 }
 
-func define() {
-	jsonData := fetchDefinition()
+type DictionaryEntry struct {
+	valid bool
+	word string
+	definition string
+}
+
+func Define(word string) {
+	ent := GetDefinition(word)
+	fmt.Printf("%s = %s\n", ent.word, ent.definition)
+}
+
+func GetDefinition(word string) DictionaryEntry {
+	jsonData := FetchRawJsonDefinition(word)
 	var data []map[string]interface{}
 	err := json.Unmarshal([]byte(jsonData), &data)
 	if err != nil {
 		fmt.Printf("could not unmarshal json: %s\n", err)
-		return
+		return DictionaryEntry{valid: false}
 	}
 
-	fmt.Printf("json map: %v\n", data)
-
+	return DictionaryEntry{valid: true, word: word, definition: "test"}
 }
 
-func fetchDefinition() string {
+/**
+calls the dictionaryapi.dev api for word
+*/
+func FetchRawJsonDefinition(word string) string {
 	// Define the URL
     url := "https://api.dictionaryapi.dev/api/v2/entries/en/hello"
 
@@ -59,5 +72,5 @@ func fetchDefinition() string {
 
     // Optionally, parse the content based on its format (JSON, XML, etc.)
 	return string(body)
-
 }
+
