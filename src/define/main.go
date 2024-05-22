@@ -12,7 +12,11 @@ import (
 )
 
 func main() {
-	jsonData := define()
+	define()
+}
+
+func define() {
+	jsonData := fetchDefinition()
 	var data []map[string]interface{}
 	err := json.Unmarshal([]byte(jsonData), &data)
 	if err != nil {
@@ -21,9 +25,10 @@ func main() {
 	}
 
 	fmt.Printf("json map: %v\n", data)
+
 }
 
-func define() string {
+func fetchDefinition() string {
 	// Define the URL
     url := "https://api.dictionaryapi.dev/api/v2/entries/en/hello"
 
@@ -54,5 +59,5 @@ func define() string {
 
     // Optionally, parse the content based on its format (JSON, XML, etc.)
 	return string(body)
-}
 
+}
