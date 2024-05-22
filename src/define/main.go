@@ -20,17 +20,35 @@ func (err *BFError) Error() string {
 	return err.message
 }
 
+func help() {
+	fmt.Printf("usage: %s <word>\n", os.Args[0])
+	fmt.Println()
+	fmt.Println("Copyright © 2024 Brando. All rights reserved.")
+}
+
 func main() {
-	err := Define("hello")
+	word, err := ArgumentsRead()
 	if err != nil {
 		fmt.Println("error:", err)
+		help()
+		os.Exit(1)
+	}
+
+	err = Define(word)
+	if err != nil {
+		fmt.Println("error:", err)
+		os.Exit(1)
 	}
 
 	os.Exit(0)
 }
 
-func ArgumentsRead() {
-
+func ArgumentsRead() (string, error) {
+	if len(os.Args) < 2 {
+		return "", &BFError{message: "no arguments"}
+	}
+	
+	return os.Args[len(os.Args) - 1], nil
 }
 
 func Define(word string) error {
