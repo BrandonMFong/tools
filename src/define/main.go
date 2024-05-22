@@ -13,15 +13,13 @@ import (
 
 func main() {
 	jsonData := define()
-
-	var data map[string]interface{}
+	var data []map[string]interface{}
 	err := json.Unmarshal([]byte(jsonData), &data)
 	if err != nil {
 		fmt.Printf("could not unmarshal json: %s\n", err)
 		return
 	}
 
-	fmt.Printf("json data: %s\n", jsonData)
 	fmt.Printf("json map: %v\n", data)
 }
 
@@ -55,7 +53,6 @@ func define() string {
     }
 
     // Optionally, parse the content based on its format (JSON, XML, etc.)
-	fmt.Printf("data %s", string(body))
 	return string(body)
 }
 
