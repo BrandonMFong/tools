@@ -55,6 +55,7 @@ func define() string {
     }
 
     // Optionally, parse the content based on its format (JSON, XML, etc.)
+	fmt.Printf("data %s", string(body))
 	return string(body)
 }
 
