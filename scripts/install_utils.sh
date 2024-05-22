@@ -13,7 +13,12 @@ ARG_HELP_V3="-h";
 TARGET_PATH="/usr/local/bin";
 
 # update if there are more things we need to copy over
-COMPONENTS=(check cpy getcount getinfo getpath getsize ip4domain listtools mytime organize passgen rsatool search spellcheck stopwatch);
+COMPONENTS=( \
+	check cpy getcount getinfo \
+	getpath getsize ip4domain listtools \
+	mytime organize passgen rsatool \
+	search spellcheck stopwatch define \
+);
 
 ## GLOBALS
 gShowHelp=false;

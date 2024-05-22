@@ -32,7 +32,6 @@ typedef struct {
 
 void SpellcheckToolsSetDefault(SpellcheckTools * opts) {
 	if (opts) return;
-	memset(opts, 0, sizeof(SpellcheckTools));
 	opts->subject = "";
 	opts->wordsref = WORDS_DICTIONARY_REF_DEFAULT;
 }

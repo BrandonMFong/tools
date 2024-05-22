@@ -23,7 +23,7 @@ CTOOLS = getsize mytime getcount ip4domain passgen getpath organize search check
 CPPTOOLS = spellcheck
 BASHTOOLS = rsatool listtools
 RUSTTOOLS = stopwatch cpy
-GOTOOLS = 
+GOTOOLS = define
 INSTALL_SCRIPTS = install uninstall install_utils.sh
 LIBRUSTPATH = external/libs/bin/release/rust/release/libbfrust.rlib
 TESTING_MACRO = TESTING
@@ -50,7 +50,9 @@ GOFLAGS =
 # tool: check
 check_deps = -lpthread $(BF_LIB_C_CHECKSUM_FLAGS) 
 
-build: $(COMPONENTS)
+build: release
+
+release: $(COMPONENTS)
 
 setup: $(DIRS)
 
