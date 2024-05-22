@@ -31,7 +31,7 @@
 #define STAT_MOD_TYPE_SOCKET 's'
 #define STAT_MOD_TYPE_UNKNOWN '?'
 
-int help(const char * toolname) {
+void help(const char * toolname) {
 	printf("usage: %s [ -<flags> ] <path>\n", toolname);
 
 	printf("\nflags:\n");
@@ -85,9 +85,9 @@ int ArgumentsRead(int argc, char * argv[], Arguments * args) {
 		} else {
 			for (int i = 1; i < len; i++) {
 				if (arg[i] == ARG_FLAG_RECURSIVE) {
-					args->recursive = 1;
+					args->recursive = 0x01;
 				} else if (arg[i] == ARG_FLAG_HELP) {
-					args->showhelp = 1;
+					args->showhelp = 0x01;
 				}
 			}
 		}
