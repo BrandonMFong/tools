@@ -35,9 +35,18 @@ func Define(word string) {
 
 func DictionaryAPIRawJsonPrintMeanings(data []map[string]interface{}) {
 	ent := data[0]
-	fmt.Println(ent["meanings"])
-	meanings := ent["meanings"]
-	fmt.Println(meanings)
+	meanings := ent["meanings"].([]interface{})
+
+	fmt.Println("meanings:")
+	for i, meaning := range meanings {
+		m := meaning.(map[string]interface{})
+		fmt.Printf("  %d : %s\n", i, m["partOfSpeech"])
+		defs := m["definitions"].([]interface{})
+		for _, def := range defs {
+			d := def.(map[string]interface{})
+			fmt.Println("      -", d["definition"])
+		}
+	}
 }
 
 /**
