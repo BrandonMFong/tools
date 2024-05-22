@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
     "net/http"
+	"os"
 )
 
 type BFError struct {
@@ -20,17 +21,28 @@ func (err *BFError) Error() string {
 }
 
 func main() {
-	Define("hello")
+	err := Define("hello")
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
+	os.Exit(0)
 }
 
-func Define(word string) {
+func ArgumentsRead() {
+
+}
+
+func Define(word string) error {
 	data, err := GetDefinitionData(word)
 	if err != nil {
-		fmt.Println("error: ", err)
+		return err
 	} else {
 		fmt.Println("word: ", word)
 		DictionaryAPIRawJsonPrintMeanings(data)
 	}
+
+	return nil
 }
 
 func DictionaryAPIRawJsonPrintMeanings(data []map[string]interface{}) {
