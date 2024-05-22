@@ -12,6 +12,8 @@ import (
 	"os"
 )
 
+const ARG_BRIEF_DESCRIPTION = "--brief-description"
+
 type BFError struct {
 	message string
 }
@@ -26,12 +28,19 @@ func help() {
 	fmt.Println("Copyright © 2024 Brando. All rights reserved.")
 }
 
+func BriefDescription() {
+	fmt.Println("access dictionaryapi.dev to find definition for word")
+}
+
 func main() {
-	word, err := ArgumentsRead()
+	word, briefdesc, err := ArgumentsRead()
 	if err != nil {
 		fmt.Println("error:", err)
 		help()
 		os.Exit(1)
+	} else if briefdesc {
+		BriefDescription();
+		os.Exit(0)
 	}
 
 	err = Define(word)
@@ -43,12 +52,23 @@ func main() {
 	os.Exit(0)
 }
 
-func ArgumentsRead() (string, error) {
+/**
+reads arguments
+
+returns: (word, brief description flag, error)
+*/
+func ArgumentsRead() (string, bool, error) {
 	if len(os.Args) < 2 {
-		return "", &BFError{message: "no arguments"}
+		return "", false, &BFError{message: "no arguments"}
 	}
 	
-	return os.Args[len(os.Args) - 1], nil
+	arg := os.Args[len(os.Args) - 1]
+
+	if arg == ARG_BRIEF_DESCRIPTION {
+		return "", true, nil
+	}
+
+	return arg, false, nil
 }
 
 func Define(word string) error {
