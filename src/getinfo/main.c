@@ -32,6 +32,14 @@
 #define STAT_MOD_TYPE_SOCKET 's'
 #define STAT_MOD_TYPE_UNKNOWN '?'
 
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
 void help(const char * toolname) {
 	printf("usage: %s [ -<flags> ] <path>\n", toolname);
 
@@ -157,6 +165,19 @@ int StatGetModDate(struct stat * st, char * buf, size_t bufsize) {
 	return 0;
 }
 
+const char * StatGetModeTypeColor(struct stat * st) {
+	switch (st->st_mode & S_IFMT) {
+	case S_IFBLK:	return ANSI_COLOR_RED; // STAT_MOD_TYPE_BDEV;
+	case S_IFCHR:	return ANSI_COLOR_RED; // STAT_MOD_TYPE_CDEV;
+	case S_IFDIR:	return ANSI_COLOR_MAGENTA; // STAT_MOD_TYPE_DIR;
+	case S_IFIFO:	return ANSI_COLOR_RED; // STAT_MOD_TYPE_FIFO;
+	case S_IFLNK:	return ANSI_COLOR_CYAN; // STAT_MOD_TYPE_SYMLINK;
+	case S_IFREG:	return ANSI_COLOR_GREEN; // STAT_MOD_TYPE_FILE;
+	case S_IFSOCK: 	return ANSI_COLOR_RED; // STAT_MOD_TYPE_SOCKET;
+	default: 		return ANSI_COLOR_GREEN; // STAT_MOD_TYPE_UNKNOWN;
+	}
+}
+
 int PrintPath(const char * path, const Arguments * args) {
 	char tmp[PATH_MAX]; 
 	char * base = NULL;
@@ -185,7 +206,13 @@ int PrintPath(const char * path, const Arguments * args) {
 	// get permissions
 	const mode_t m = st.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
 
-	printf("| %-1c-%03o %-21s %10s %s\n", StatGetModeType(&st), m, dt, sizebuf, base);
+	const char modetype = StatGetModeType(&st);
+	const char * color = StatGetModeTypeColor(&st);
+
+	printf("| %-1c-%03o %-21s %10s %s%s%s\n", modetype, m, dt, sizebuf,
+			color,
+			base,
+			ANSI_COLOR_RESET);
 
 	return 0;
 }
