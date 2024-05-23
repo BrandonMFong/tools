@@ -18,7 +18,7 @@ I treat this repo as playground for myself. I like to try out new programming la
 check: hash calculator & comparitor
 cpy: copy tool
 getcount: counts items in path (recursive option available)
-getinfo: error: path '' does not exist
+getinfo: lists directory
 getpath: prints out absolute path
 getsize: returns size of file
 ip4domain: returns ip address for domain

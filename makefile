@@ -13,7 +13,16 @@ ifeq ($(UNAME_S),Linux)
 	BUILD_TYPE=linux
 else 
 ifeq ($(UNAME_S),Darwin)
-	BUILD_TYPE=macos
+    UNAME_P := $(shell uname -p)
+    ifeq ($(UNAME_P),x86_64)
+		BUILD_TYPE=macos-intel
+    endif
+    ifneq ($(filter %86,$(UNAME_P)),)
+		BUILD_TYPE=macos-intel
+    endif
+    ifneq ($(filter arm%,$(UNAME_P)),)
+		BUILD_TYPE=macos-arm
+    endif
 endif
 endif
  

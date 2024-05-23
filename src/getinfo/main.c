@@ -21,6 +21,7 @@
 
 #define ARG_FLAG_RECURSIVE 'r'
 #define ARG_FLAG_HELP 'h'
+#define ARG_BRIEF_DESCRIPTION "--brief-description"
 
 #define STAT_MOD_TYPE_BDEV 'b'
 #define STAT_MOD_TYPE_CDEV 'c'
@@ -55,10 +56,15 @@ void help(const char * toolname) {
 	PRINT_COPYRIGHT;
 }
 
+void BriefDescription() {
+	printf("lists directory\n");
+}
+
 typedef struct {
 	char path[PATH_MAX];
 	int showhelp : 1;
 	int recursive : 1;
+	bool briefDescription;
 } Arguments;
 
 int ArgumentsRead(int argc, char * argv[], Arguments * args) {
@@ -80,16 +86,16 @@ int ArgumentsRead(int argc, char * argv[], Arguments * args) {
 	if (len == 0) {
 		printf("error: argument is emptpy somehow\n");
 		return 1;
+	} else if (!strcmp(arg, ARG_BRIEF_DESCRIPTION)) {
+		args->briefDescription = true;
+	} else if (arg[0] != '-') { // if not a flag
+		strncpy(args->path, arg, PATH_MAX);
 	} else {
-		if (arg[0] != '-') { // if not a flag
-			strncpy(args->path, arg, PATH_MAX);
-		} else {
-			for (int i = 1; i < len; i++) {
-				if (arg[i] == ARG_FLAG_RECURSIVE) {
-					args->recursive = 0x01;
-				} else if (arg[i] == ARG_FLAG_HELP) {
-					args->showhelp = 0x01;
-				}
+		for (int i = 1; i < len; i++) {
+			if (arg[i] == ARG_FLAG_RECURSIVE) {
+				args->recursive = 0x01;
+			} else if (arg[i] == ARG_FLAG_HELP) {
+				args->showhelp = 0x01;
 			}
 		}
 	}
@@ -111,6 +117,8 @@ int main(int argc, char * argv[]) {
 	if (!error) {
 		if (args.showhelp) {
 			help(argv[0]);
+		} else if (args.briefDescription) {
+			BriefDescription();
 		} else {
 			ListDir(&args);
 		}
