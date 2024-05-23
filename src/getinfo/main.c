@@ -62,15 +62,16 @@ typedef struct {
 } Arguments;
 
 int ArgumentsRead(int argc, char * argv[], Arguments * args) {
-	if (argc < 2) {
-		printf("error: not enough arguments\n");
-		return 1;
-	} else if (argc > 2) {
+	if (argc > 2) {
 		printf("error: too many arguments\n");
 		return 1;
 	} else if (!args) {
 		printf("error: params emtpy\n");
 		return 1;
+	} else if (argc == 1) {
+		// no path provided
+		// should show current dir
+		return 0;
 	}
 
 	char arg[32];
@@ -101,6 +102,10 @@ int ListDir(const Arguments * args);
 int main(int argc, char * argv[]) {
 	Arguments args;
 	memset(&args, 0, sizeof(args));
+
+	// default is current path
+	strncpy(args.path, ".", PATH_MAX);
+
 	int error = ArgumentsRead(argc, argv, &args);
 
 	if (!error) {
