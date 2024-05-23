@@ -32,6 +32,7 @@
 #define STAT_MOD_TYPE_SOCKET 's'
 #define STAT_MOD_TYPE_UNKNOWN '?'
 
+// https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
