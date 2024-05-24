@@ -14,6 +14,7 @@
 #include <dirent.h>
 #include <libgen.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 #ifdef LINUX
 #include <linux/limits.h>
@@ -89,7 +90,8 @@ int ArgumentsRead(int argc, char * argv[], Arguments * args) {
 		return 0;
 	}
 
-	char arg[32];
+	char arg[PATH_MAX];
+	memset(arg, 0, sizeof(arg));
 	strncpy(arg, argv[1], sizeof(arg));
 	const size_t len = strlen(arg);
 	if (len == 0) {
@@ -187,9 +189,32 @@ int PrintPath(const char * path, const Arguments * args) {
 
 	// get info
 	struct stat st;
-	if (stat(path, &st) == -1) {
-		printf("error: stat\n");
+
+	// see if file is a symlink
+	if (lstat(path, &st) == -1) {
+		printf("error: lstat %d\n", errno);
 		return 1;
+	}
+
+	char buf[PATH_MAX];
+	char linkdesc[PATH_MAX];
+	memset(linkdesc, 0, sizeof(linkdesc));
+	memset(buf, 0, sizeof(buf));
+
+	// if the file isn't a symlink, default to 
+	// reading it as a reg entry
+	//
+	// if link, then we will describe what
+	// it is pointing to
+	if (!S_ISLNK(st.st_mode)) {
+		if (stat(path, &st) == -1) {
+			printf("error: stat %d\n", errno);
+			return 1;
+		}
+	} else {
+		snprintf(linkdesc, PATH_MAX, " -> %s", 
+				readlink(path, buf, sizeof(buf)) == -1 ? 
+				"?" : buf);
 	}
 
 	// get date
@@ -210,10 +235,13 @@ int PrintPath(const char * path, const Arguments * args) {
 	const char modetype = StatGetModeType(&st);
 	const char * color = StatGetModeTypeColor(&st);
 
-	printf("| %-1c-%03o %-21s %10s %s%s%s\n", modetype, m, dt, sizebuf,
+	printf("| %-1c-%03o %-21s %10s %s%s%s%s", modetype, m, dt, sizebuf,
 			color,
 			base,
-			ANSI_COLOR_RESET);
+			ANSI_COLOR_RESET,
+			strlen(linkdesc) == 0 ? "" : linkdesc);
+
+	printf("\n");
 
 	return 0;
 }
