@@ -37,57 +37,93 @@ fn brief_description() {
 
 fn main() {
     let mut error = 0;
-    let args: Vec<String> = env::args().collect();
+    let (h, brief_desc, srcs, dest) = read_arguments();
 
-    // The last two args should be the source and destination path
-    // respectively
-    if args.len() > 2 {
-        let source = &args[args.len() - 2];
-        let dest = &args[args.len() - 1];
-        error = copy_from_source_to_destination(source, dest);
-    } else if args.len() > 1 {
-        let arg = &args[1];
-        if arg == ARG_BRIEF_DESCRIPTION {
-            brief_description();
-        } else if arg.starts_with("-") {
-            if arg.contains(ARG_HELP) {
-                help();
-            }
-        }
-    } else {
+    if h {
         help();
+    } else if brief_desc {
+        brief_description();
+    } else {
+        error = copy_from_source_to_destination(&srcs, &dest);
     }
 
     std::process::exit(error);
 }
 
 /**
- * Copies all items in s to d
+ * reads arguments
+ *
+ * return (
+ * 0 : help
+ * 1 : brief description switch
+ * 2 : source paths
+ * 3 : destination
+ * )
  */
-fn copy_from_source_to_destination(s: &String, d: &String) -> i32 {
-    // vector of source/destination pairs
-    let mut flows: Vec<FileFlow> = Vec::new();
+fn read_arguments() -> (bool, bool, Vec<String>, String) {
+    let args: Vec<String> = env::args().collect();
+    let mut help: bool = false;
+    let mut src: Vec<String> = Vec::new();
+    let mut dest: String = String::new();
+    let mut brief_description: bool = false;
 
-    // Get full paths for params
-    let full_source_path = canonicalize(s).unwrap().into_os_string().into_string().unwrap();
-    let full_dest_path = canonicalize(d).unwrap().into_os_string().into_string().unwrap();
+    if args.len() < 2 {
+        help = true;
+    }
 
-    // Find all items in source directory
-    println!(" - Unfolding sources for all leaf items");
-    print!(" - Items found: 0");
-    let mut counter = 0;
-    match find_leaf_files(s, &mut counter) {
-        Err(e) => {
-            eprintln!(" ! Experienced an error in: {} - {}", type_name::<fn()>(), e.kind()); 
-            return -1;
-        } Ok(files) => {
-            for file in files {
-                flows.push(FileFlow::new(&full_source_path, &file, &full_dest_path));
+    for i in 1..args.len() {
+        let arg = &args[i];
+
+        // if this is a flag
+        if (i == 1) && arg.starts_with("-") {
+            if arg == ARG_BRIEF_DESCRIPTION {
+                brief_description = true;
+            } else if arg.contains(ARG_HELP) {
+                help = true;
+            }
+        } else {
+            if i < (args.len() - 1) {
+                src.push(arg.clone());
+            } else {
+                dest = arg.clone();
             }
         }
     }
 
-    println!();
+    return (help, brief_description, src, dest);
+}
+
+/**
+ * Copies all items in s to d
+ */
+fn copy_from_source_to_destination(s: &Vec<String>, d: &String) -> i32 {
+    // vector of source/destination pairs
+    let mut flows: Vec<FileFlow> = Vec::new();
+
+    println!(" - Unfolding sources for all leaf items");
+    print!(" - Items found: 0");
+
+    let mut counter = 0;
+    let full_dest_path = canonicalize(d).unwrap().into_os_string().into_string().unwrap();
+    for source in s.iter() {
+        let full_source_path = canonicalize(source).unwrap().into_os_string().into_string().unwrap();
+    
+        // Find all items in source directory
+        match find_leaf_files(source, &mut counter) {
+            Err(e) => {
+                eprintln!(" ! Experienced an error in: {} - {}", type_name::<fn()>(), e.kind()); 
+                return -1;
+            } Ok(files) => {
+                for file in files {
+                    flows.push(FileFlow::new(&full_source_path, &file, &full_dest_path));
+                }
+            }
+        }
+    }
+
+    // Get full paths for params
+
+       println!();
 
     // Do copy
     // 
