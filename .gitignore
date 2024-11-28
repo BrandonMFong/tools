@@ -2,7 +2,6 @@ a.out
 bin
 *.swp
 build
-external
 .DS_Store
 tools
 
