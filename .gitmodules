@@ -7,3 +7,6 @@
 [submodule "src/define"]
 	path = src/define
 	url = git@github.com:BrandonMFong/define.git
+[submodule "src/listdir"]
+	path = src/listdir
+	url = git@github.com:BrandonMFong/listdir.git
