@@ -10,3 +10,6 @@
 [submodule "src/listdir"]
 	path = src/listdir
 	url = git@github.com:BrandonMFong/listdir.git
+[submodule "src/getpath"]
+	path = src/getpath
+	url = git@github.com:BrandonMFong/getpath.git
