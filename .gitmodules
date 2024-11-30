@@ -19,3 +19,6 @@
 [submodule "src/organize"]
 	path = src/organize
 	url = git@github.com:BrandonMFong/organize.git
+[submodule "src/passgen"]
+	path = src/passgen
+	url = git@github.com:BrandonMFong/passgen.git
