@@ -4,3 +4,6 @@
 [submodule "src/cpy"]
 	path = src/cpy
 	url = git@github.com:BrandonMFong/cpy.git
+[submodule "src/define"]
+	path = src/define
+	url = git@github.com:BrandonMFong/define.git
