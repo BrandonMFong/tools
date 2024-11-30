@@ -13,3 +13,6 @@
 [submodule "src/getpath"]
 	path = src/getpath
 	url = git@github.com:BrandonMFong/getpath.git
+[submodule "src/mytime"]
+	path = src/mytime
+	url = git@github.com:BrandonMFong/mytime.git
