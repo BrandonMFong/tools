@@ -16,3 +16,6 @@
 [submodule "src/mytime"]
 	path = src/mytime
 	url = git@github.com:BrandonMFong/mytime.git
+[submodule "src/organize"]
+	path = src/organize
+	url = git@github.com:BrandonMFong/organize.git
