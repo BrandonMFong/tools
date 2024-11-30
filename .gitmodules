@@ -22,3 +22,6 @@
 [submodule "src/passgen"]
 	path = src/passgen
 	url = git@github.com:BrandonMFong/passgen.git
+[submodule "src/search"]
+	path = src/search
+	url = git@github.com:BrandonMFong/search.git
