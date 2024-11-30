@@ -1,3 +1,6 @@
 [submodule "src/check"]
 	path = src/check
 	url = git@github.com:BrandonMFong/check.git
+[submodule "src/cpy"]
+	path = src/cpy
+	url = git@github.com:BrandonMFong/cpy.git
