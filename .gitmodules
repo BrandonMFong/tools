@@ -25,3 +25,6 @@
 [submodule "src/search"]
 	path = src/search
 	url = git@github.com:BrandonMFong/search.git
+[submodule "src/spellcheck"]
+	path = src/spellcheck
+	url = git@github.com:BrandonMFong/spellcheck.git
