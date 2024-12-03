@@ -28,3 +28,6 @@
 [submodule "src/spellcheck"]
 	path = src/spellcheck
 	url = git@github.com:BrandonMFong/spellcheck.git
+[submodule "src/archiver"]
+	path = src/archiver
+	url = git@github.com:BrandonMFong/archiver.git

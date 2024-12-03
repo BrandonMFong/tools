@@ -5,11 +5,25 @@
 DIRS = bin build
 DIRS_CLEAN = $(addsuffix -clean,$(DIRS))
 CONFIG = release
-SOURCES = check cpy define getpath listdir mytime organize passgen search spellcheck
+SOURCES = archiver check cpy define getpath listdir mytime organize passgen search spellcheck
 SOURCES_BUILD = $(addsuffix -build,$(SOURCES))
 SOURCES_CLEAN = $(addsuffix -clean,$(SOURCES))
 SOURCES_DEPS = $(addsuffix -deps,$(SOURCES))
 SOURCES_INIT = $(addsuffix -init,$(SOURCES))
+
+help:
+	@echo "Usage:"
+	@echo "	make <target> <variables>"
+	@echo ""
+	@echo "Target(s):"
+	@echo "	clean			cleans build and bin folder, as well as the sources'"
+	@echo "	build 			builds release verions"
+	@echo "	init 			initializes the submodules"
+	@echo "	dependencies		builds all dependencies in the sources' external directory"
+	@echo ""
+	@echo "Example(s):"
+	@echo "	Build for the first time"
+	@echo "		make init dependencies build"
 
 setup: $(DIRS)
 $(DIRS):
