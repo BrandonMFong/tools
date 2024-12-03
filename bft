@@ -1,6 +1,0 @@
-#!/usr/bin/python3
-__author__ = "brando"
-__date__ = "12/2/24"
-
-print("hello world")
-
