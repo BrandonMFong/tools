@@ -7,6 +7,7 @@ DIRS_CLEAN = $(addsuffix -clean,$(DIRS))
 CONFIG = release
 SOURCES = check cpy define getpath listdir mytime organize passgen search spellcheck
 SOURCES_BUILD = $(addsuffix -build,$(SOURCES))
+SOURCES_CLEAN = $(addsuffix -clean,$(SOURCES))
 SOURCES_DEPS = $(addsuffix -deps,$(SOURCES))
 SOURCES_INIT = $(addsuffix -init,$(SOURCES))
 
@@ -14,9 +15,11 @@ setup: $(DIRS)
 $(DIRS):
 	mkdir -p $@
 
-clean: $(DIRS_CLEAN)
+clean: $(DIRS_CLEAN) $(SOURCES_CLEAN)
 $(DIRS_CLEAN):
 	rm -rfv $(subst -clean,,$@)
+$(SOURCES_CLEAN):
+	cd src/$(subst -clean,,$@) && make clean
 
 build: setup $(SOURCES_BUILD)
 $(SOURCES_BUILD):
