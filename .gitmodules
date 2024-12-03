@@ -31,3 +31,6 @@
 [submodule "src/archiver"]
 	path = src/archiver
 	url = git@github.com:BrandonMFong/archiver.git
+[submodule "src/chat"]
+	path = src/chat
+	url = git@github.com:BrandonMFong/chat.git

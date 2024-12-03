@@ -5,7 +5,7 @@
 DIRS = bin build
 DIRS_CLEAN = $(addsuffix -clean,$(DIRS))
 CONFIG = release
-SOURCES = archiver check cpy define getpath listdir mytime organize passgen search spellcheck
+SOURCES = archiver chat check cpy define getpath listdir mytime organize passgen search spellcheck
 SOURCES_BUILD = $(addsuffix -build,$(SOURCES))
 SOURCES_CLEAN = $(addsuffix -clean,$(SOURCES))
 SOURCES_DEPS = $(addsuffix -deps,$(SOURCES))
